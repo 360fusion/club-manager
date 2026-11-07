@@ -82,7 +82,7 @@ const tierClass = (reached) => [
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
       <CharitySubNav :clubSlug="club.slug" activeTab="festival" />
 
-      <PageHeader title="Provincial Festival information" :description="`Relief Chest ref: ${target.relief_chest_ref} · target milestones and member honour qualifications`">
+      <PageHeader title="Provincial Festival information" :description="target.relief_chest_ref ? `Relief Chest ref: ${target.relief_chest_ref} · target milestones and member honour qualifications` : 'Target milestones and member honour qualifications'">
         <template #actions>
           <Button size="sm" @click="showTargetModal = true">
             <template #icon><UiIcon name="settings" /></template>
@@ -91,7 +91,16 @@ const tierClass = (reached) => [
         </template>
       </PageHeader>
 
-      <Card>
+      <!-- Until a target is set there are no tiers to reach, so say what to do instead of showing every tier as reached. -->
+      <Card v-if="!(target.target_amount > 0)">
+        <div class="space-y-3 text-center py-6">
+          <p class="text-sm font-semibold text-slate-900 dark:text-white">No Festival set up yet</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Add your Province's Festival target and honour tiers to track what the lodge has raised towards them.</p>
+          <Button size="sm" @click="showTargetModal = true">Set up the Festival</Button>
+        </div>
+      </Card>
+
+      <Card v-else>
         <template #header>
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>

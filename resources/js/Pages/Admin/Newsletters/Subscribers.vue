@@ -114,7 +114,7 @@ const channelOptions = computed(() => [{ value: 'all', label: 'All channels' }, 
                   <th scope="col" class="p-3 font-medium">Channel</th>
                   <th scope="col" class="p-3 font-medium">Source</th>
                   <th scope="col" class="p-3 font-medium">Status</th>
-                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                  <th scope="col" class="relative p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">

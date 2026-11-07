@@ -39,7 +39,7 @@ const submit = () => {
         <h1 class="text-2xl font-semibold text-white">
           Set a new password
         </h1>
-        <p class="text-xs text-slate-400">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           Enter your email and choose a strong new password for your account.
         </p>
       </div>

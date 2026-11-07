@@ -20,21 +20,21 @@ defineProps({
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-3">
         <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active users</div>
         <div class="text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">
-          {{ metrics.total_members || 300 }}
+          {{ metrics.total_members }}
         </div>
-        <div class="text-xs font-semibold text-slate-400">
-          +100.00
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          Active members on the roster or with an account
         </div>
       </div>
 
       <!-- 2. Total Sales Card -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-3">
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total sales</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Money received</div>
         <div class="text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">
-          {{ $cs }}{{ metrics.monthly_dues_est || '2,500' }}
+          {{ $cs }}{{ metrics.monthly_dues_est }}
         </div>
-        <div class="text-xs font-semibold text-slate-400">
-          +20.00
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          Paid invoices, dues and event payments, all time
         </div>
       </div>
 
@@ -72,61 +72,31 @@ defineProps({
     <!-- Bottom Section Dual Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       
-      <!-- Left Panel: Today Agenda -->
+      <!-- Left Panel: Events -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white">Today</h2>
-
-        <div class="space-y-6 divide-y divide-slate-100 dark:divide-slate-800">
-          
-          <!-- Item 1: Club members meeting -->
-          <div class="flex items-start gap-4 pt-2 first:pt-0">
-            <div class="text-xs font-semibold text-slate-400 w-20 pt-1 space-y-1 text-right">
-              <div>08:00am</div>
-              <div>10:00am</div>
-            </div>
-            <div class="w-1 bg-blue-500 rounded-full self-stretch min-h-[48px]"></div>
-            <div class="space-y-1.5 flex-1">
-              <div class="text-sm font-bold text-slate-800 dark:text-slate-100">Club members meeting</div>
-              <div class="flex items-center gap-2">
-                <span class="w-10 h-3 bg-slate-200 dark:bg-slate-700 rounded-full inline-block"></span>
-                <span class="w-16 h-3 bg-slate-200 dark:bg-slate-700 rounded-full inline-block"></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Item 2: Cheer & dance -->
-          <div class="flex items-start gap-4 pt-6">
-            <div class="text-xs font-semibold text-slate-400 w-20 pt-1 space-y-1 text-right">
-              <div>11:00am</div>
-              <div>01:00pm</div>
-            </div>
-            <div class="w-1 bg-rose-500 rounded-full self-stretch min-h-[48px]"></div>
-            <div class="space-y-1.5 flex-1">
-              <div class="text-sm font-bold text-slate-800 dark:text-slate-100">Cheer & dance</div>
-              <div class="flex items-center gap-2">
-                <span class="w-8 h-3 bg-slate-200 dark:bg-slate-700 rounded-full inline-block"></span>
-                <span class="w-12 h-3 bg-slate-200 dark:bg-slate-700 rounded-full inline-block"></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Item 3: Conditioning -->
-          <div class="flex items-start gap-4 pt-6">
-            <div class="text-xs font-semibold text-slate-400 w-20 pt-1 space-y-1 text-right">
-              <div>03:00pm</div>
-              <div>08:00pm</div>
-            </div>
-            <div class="w-1 bg-amber-500 rounded-full self-stretch min-h-[48px]"></div>
-            <div class="space-y-1.5 flex-1">
-              <div class="text-sm font-bold text-slate-800 dark:text-slate-100">Conditioning</div>
-              <div class="flex items-center gap-2">
-                <span class="w-12 h-3 bg-slate-200 dark:bg-slate-700 rounded-full inline-block"></span>
-                <span class="w-8 h-3 bg-slate-200 dark:bg-slate-700 rounded-full inline-block"></span>
-              </div>
-            </div>
-          </div>
-
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Events</h2>
+          <Link :href="route('admin.events.index', { clubSlug: club.slug })" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">View all events →</Link>
         </div>
+        <dl class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <dt class="text-xs font-semibold text-slate-500 dark:text-slate-400">Events</dt>
+            <dd class="text-2xl font-extrabold text-slate-900 dark:text-white">{{ metrics.events_count }}</dd>
+          </div>
+          <div class="space-y-1">
+            <dt class="text-xs font-semibold text-slate-500 dark:text-slate-400">Bookings attending</dt>
+            <dd class="text-2xl font-extrabold text-slate-900 dark:text-white">{{ metrics.attending_rsvps }} <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">of {{ metrics.total_rsvps }}</span></dd>
+          </div>
+          <div class="space-y-1">
+            <dt class="text-xs font-semibold text-slate-500 dark:text-slate-400">Taken for events</dt>
+            <dd class="text-2xl font-extrabold text-slate-900 dark:text-white">{{ $cs }}{{ metrics.total_event_revenue }}</dd>
+          </div>
+          <div class="space-y-1">
+            <dt class="text-xs font-semibold text-slate-500 dark:text-slate-400">Attending rate</dt>
+            <dd class="text-2xl font-extrabold text-slate-900 dark:text-white">{{ metrics.attendance_rate }}%</dd>
+          </div>
+        </dl>
+        <p v-if="!metrics.events_count" class="text-sm text-slate-500 dark:text-slate-400">No events yet. Add one from Events to take bookings and payments.</p>
       </div>
 
       <!-- Right Panel: Meetings Summary -->
@@ -154,8 +124,8 @@ defineProps({
 
             <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
               <div class="flex items-center gap-3">
-                <span class="flex items-center gap-1"><UiIcon name="calendar" /> {{ m.meeting_date }} at {{ m.starts_at }}</span>
-                <span v-if="m.venue" class="hidden sm:flex items-center gap-1 text-slate-400"><UiIcon name="building" /> {{ m.venue }}</span>
+                <span class="flex items-center gap-1"><UiIcon name="calendar" /> {{ m.meeting_date }}<template v-if="m.starts_at"> at {{ m.starts_at }}</template></span>
+                <span v-if="m.venue" class="hidden sm:flex items-center gap-1 text-slate-500 dark:text-slate-400"><UiIcon name="building" /> {{ m.venue }}</span>
               </div>
               <div class="flex items-center gap-2 text-[11px] font-bold">
                 <span class="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60">{{ m.dining_count }} dining</span>
@@ -165,10 +135,10 @@ defineProps({
           </div>
         </div>
 
-        <div v-else class="p-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-          <div class="flex justify-center text-slate-400"><UiIcon name="document" :size="20" /></div>
+        <div v-else class="p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+          <div class="flex justify-center text-slate-500 dark:text-slate-400"><UiIcon name="document" :size="20" /></div>
           <div class="font-semibold text-slate-700 dark:text-slate-200 text-sm">No upcoming meetings scheduled</div>
-          <p class="text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>
+          <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>
           <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
             <UiIcon name="plus" class="inline-block align-text-bottom" /> Add meeting
           </Link>

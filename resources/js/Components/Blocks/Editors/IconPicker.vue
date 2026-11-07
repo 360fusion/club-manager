@@ -39,7 +39,7 @@ const pick = (key) => {
             :aria-label="`${label}: ${modelValue ? BLOCK_ICONS[modelValue]?.label || modelValue : 'none'}`"
             @click="open = !open"
         >
-            <span class="flex h-5 w-5 items-center justify-center text-base text-gold-600 dark:text-gold-400"><Icon v-if="modelValue" :name="modelValue" /><span v-else class="text-slate-400">–</span></span>
+            <span class="flex h-5 w-5 items-center justify-center text-base text-gold-600 dark:text-gold-400"><Icon v-if="modelValue" :name="modelValue" /><span v-else class="text-slate-500 dark:text-slate-400">–</span></span>
             <span class="truncate">{{ modelValue ? BLOCK_ICONS[modelValue]?.label : 'No icon' }}</span>
         </button>
 

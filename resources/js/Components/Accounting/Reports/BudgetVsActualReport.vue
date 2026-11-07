@@ -47,7 +47,7 @@ defineProps({
               <td class="py-2 px-3 text-right tabular-nums">{{ formatMoney((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).actual || 0) }}</td>
               <td
                 class="py-2 px-3 text-right tabular-nums"
-                :class="((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) > 0 ? (acc.type === 'expense' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400') : 'text-slate-500 dark:text-slate-400'"
+                :class="((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) > 0 ? (acc.type === 'expense' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400') : 'text-slate-500 dark:text-slate-400'"
               >
                 {{ formatMoney((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) }}
               </td>

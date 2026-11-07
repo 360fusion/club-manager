@@ -24,7 +24,7 @@
                     </span>
                 @endif
             </div>
-            <h1 class="truncate text-xl font-semibold text-slate-900 dark:text-white">{{ $meeting->title }}: live minutes</h1>
+            <h2 class="truncate text-xl font-semibold text-slate-900 dark:text-white">{{ $meeting->title }}: live minutes</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400">Live minutes with @mention routing, task delegation and notice of motion tagging.</p>
         </div>
 
@@ -158,7 +158,7 @@
                 <dl class="grid grid-cols-3 gap-1.5 text-center">
                     <div class="rounded-xl border border-emerald-200 bg-emerald-50/60 p-2 dark:border-emerald-800/60 dark:bg-emerald-950/60">
                         <dd class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{{ $presentCount }}</dd>
-                        <dt class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Present</dt>
+                        <dt class="text-xs font-medium text-emerald-700 dark:text-emerald-400">Present</dt>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/50">
                         <dd class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $apologyCount }}</dd>
@@ -209,7 +209,7 @@
 
                 <div class="relative min-w-[150px]">
                     <div class="relative">
-                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-400" aria-hidden="true">@</span>
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-500 dark:text-slate-400" aria-hidden="true">@</span>
                         <input
                             type="text"
                             wire:model.live.debounce.250ms="memberQuery"
@@ -389,7 +389,7 @@
                                             </button>
                                             <span @class([
                                                 'break-words font-medium leading-snug',
-                                                'text-slate-400 line-through' => $isDone,
+                                                'text-slate-500 dark:text-slate-400 line-through' => $isDone,
                                                 'text-slate-900 dark:text-white' => ! $isDone,
                                             ])>
                                                 {{ $task->title }}
@@ -537,7 +537,7 @@
     >
         <span x-show="type === 'error'" class="font-semibold text-rose-300">Error:</span>
         <span x-text="message"></span>
-        <button type="button" @click="show = false" aria-label="Dismiss" class="ml-2 cursor-pointer rounded-lg p-0.5 text-slate-400 hover:text-white">
+        <button type="button" @click="show = false" aria-label="Dismiss" class="ml-2 cursor-pointer rounded-lg p-0.5 text-slate-500 dark:text-slate-400 hover:text-white">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
     </div>

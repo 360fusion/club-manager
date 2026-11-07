@@ -118,7 +118,7 @@ const inputClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2
                         <p class="text-xs text-slate-500 dark:text-slate-400">
                             From <strong class="text-slate-700 dark:text-slate-200">{{ correction.suggester.name }}</strong> ·
                             <a :href="`mailto:${correction.suggester.email}`" class="text-blue-600 hover:underline dark:text-blue-400">{{ correction.suggester.email }}</a>
-                            <span :class="correction.suggester.email_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"> ({{ correction.suggester.email_verified ? 'verified' : 'not verified' }})</span>
+                            <span :class="correction.suggester.email_verified ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"> ({{ correction.suggester.email_verified ? 'verified' : 'not verified' }})</span>
                             · account since {{ correction.suggester.joined }} · sent {{ correction.created_at }}
                         </p>
 

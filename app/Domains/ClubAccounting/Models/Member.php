@@ -361,7 +361,7 @@ class Member extends Model
     }
 
     /**
-     * @return list<string>
+     * @return list<string|LodgeOffice> an office from a roster is its code, one from the member record is the enum
      */
     public function getActiveOfficesAttribute(): array
     {

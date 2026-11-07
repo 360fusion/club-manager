@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, provide } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AccountMenu from '@/Components/AccountMenu.vue';
 import Alert from '@/Components/Ui/Alert.vue';
@@ -22,7 +22,8 @@ const slug = computed(() => props.club?.slug ?? null);
 const side = computed(() => navMode.value === 'side');
 
 const currentRole = computed(() => (page.props.auth?.clubs ?? []).find((club) => club.slug === slug.value)?.role ?? 'member');
-const isStaff = computed(() => Boolean(props.club) && currentRole.value !== 'member');
+// Members and visitors have no admin screens; every other role is lodge staff.
+const isStaff = computed(() => Boolean(props.club) && !['member', 'visitor'].includes(currentRole.value));
 // Coaches are not allowed the analytics dashboard, so send them to events instead.
 const adminHome = computed(() => (currentRole.value === 'coach' ? route('admin.events.index', { clubSlug: slug.value }) : route('admin.analytics', { slug: slug.value })));
 
@@ -70,6 +71,9 @@ const nav = computed(() => (slug.value
         ...item,
         href: item.key === 'directory' ? route('directory.index') : item.key === 'subscriptions' ? route('portal.subscriptions') : route(allRoutes[item.key]),
     }))));
+
+// This layout renders the page's <h1>, so PageHeader titles become <h2>.
+provide('layoutHasHeading', true);
 </script>
 
 <template>
@@ -96,7 +100,7 @@ const nav = computed(() => (slug.value
                             :aria-current="activeTab === item.key ? 'page' : undefined"
                             :class="['flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors', activeTab === item.key ? 'bg-slate-700/70 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white']"
                         >
-                            <svg class="h-5 w-5 shrink-0" :class="activeTab === item.key ? 'text-blue-400' : 'text-slate-400'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" :d="ICONS[item.key]" /></svg>
+                            <svg class="h-5 w-5 shrink-0" :class="activeTab === item.key ? 'text-blue-400' : 'text-slate-500 dark:text-slate-400'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" :d="ICONS[item.key]" /></svg>
                             {{ item.label }}
                         </Link>
                     </li>

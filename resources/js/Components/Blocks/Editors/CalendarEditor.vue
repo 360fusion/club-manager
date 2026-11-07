@@ -11,7 +11,7 @@ defineProps({
 <template>
     <div class="space-y-3 text-xs">
         <div>
-            <label :for="`block-${index}-cal-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
+            <label :for="`block-${index}-cal-heading`" :class="LABEL">Heading <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
             <input :id="`block-${index}-cal-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. What's on" :class="INPUT" />
         </div>
 

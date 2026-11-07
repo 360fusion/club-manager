@@ -9,7 +9,7 @@
                         {{ $meeting->displayStatusLabel() }}
                     </x-badge>
                 </div>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ $meeting->title }}</h1>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $meeting->title }}</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-3">
                     <span>{{ $meeting->meeting_date->format('l, jS F Y \a\t H:i') }}</span>
                     <span>{{ $meeting->location ?: 'Lodge Committee Room' }}</span>
@@ -76,7 +76,7 @@
                                 <button
                                     type="button"
                                     wire:click="removeAttendee({{ $att->id }})"
-                                    class="ml-1 rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800 dark:hover:text-rose-400 cursor-pointer"
+                                    class="ml-1 rounded-xl p-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800 dark:hover:text-rose-400 cursor-pointer"
                                     title="Remove from roll call"
                                     aria-label="Remove {{ $att->name }} from roll call"
                                 >
@@ -161,7 +161,7 @@
                             <button
                                 type="button"
                                 @click="complianceModal = 'vetting'"
-                                class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                                class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                                 title="Why is this here? Rule 159 explained"
                                 aria-label="Rule 159 compliance info"
                             >
@@ -205,7 +205,7 @@
                             <button
                                 type="button"
                                 @click="complianceModal = 'audit'"
-                                class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                                class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                                 title="Why is this here? Rule 158 explained"
                                 aria-label="Rule 158 compliance info"
                             >
@@ -390,7 +390,7 @@
             <button
                 type="button"
                 @click="complianceModal = null"
-                class="absolute top-4 right-4 rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
+                class="absolute top-4 right-4 rounded-xl p-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
                 aria-label="Close explainer"
             >
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>

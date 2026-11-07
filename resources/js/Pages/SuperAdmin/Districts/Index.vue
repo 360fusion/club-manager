@@ -135,7 +135,7 @@ const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2
             <Card padding="sm" class="space-y-4">
                 <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                     <div class="relative flex-1 max-w-md">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-500">
                             <UiIcon name="search" />
                         </div>
                         <input
@@ -150,7 +150,7 @@ const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2
                             @click="searchQuery = ''"
                             type="button"
                             aria-label="Clear search"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white"
                         ><UiIcon name="x" /></button>
                     </div>
                     <div class="text-xs text-slate-500 font-medium dark:text-slate-400">
@@ -226,7 +226,7 @@ const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2
                             </tr>
                             <tr v-if="filteredDistricts.length === 0">
                                 <td colspan="7" class="py-12 px-4 text-center text-slate-500 dark:text-slate-400">
-                                    <div class="flex justify-center text-slate-400 dark:text-slate-500"><UiIcon name="search" :size="20" /></div>
+                                    <div class="flex justify-center text-slate-500 dark:text-slate-500"><UiIcon name="search" :size="20" /></div>
                                     <p class="mt-2 font-semibold text-sm text-slate-700 dark:text-slate-300">No entries match your filters</p>
                                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Try another search term or choose 'All'.</p>
                                 </td>

@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\CharityGrant;
-use App\Enums\ClubMemberStatus;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\ClubRole;
 use App\Http\Requests\MeetingAdmin\GenerateSeasonRequest;
-use App\Mail\MeetingSummonsMail;
 use App\Models\Meeting;
 use App\Models\RecurringRule;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
 use App\Services\MeetingScheduleService;
-use App\Services\RsvpTokenService;
+use App\Services\SummonsSender;
 use App\Support\NodeBinaries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -36,8 +35,9 @@ class MeetingSummonsController extends Controller
             ->firstOrFail();
 
         $members = $club->users()->wherePivot('role', '!=', 'visitor')->get();
-        $secretaryUser = $club->users()->wherePivotIn('role', [ClubRole::Coach->value, ClubRole::Secretary->value])->first() ?: $club->users->first();
-        $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
+        // No stand-ins: a summons must not name someone else as Secretary or Master when the lodge has not said who they are.
+        $secretaryUser = $club->users()->wherePivotIn('role', [ClubRole::Coach->value, ClubRole::Secretary->value])->wherePivot('status', 'active')->first();
+        $worshipfulMaster = Member::where('club_id', $club->id)->active()->where('current_office', LodgeOffice::WorshipfulMaster->value)->first();
 
         $charityGrants = CharityGrant::where('club_id', $club->id)
             ->with(['proposer', 'seconder'])
@@ -91,7 +91,7 @@ class MeetingSummonsController extends Controller
     /**
      * Publish summons & issue passwordless tokens to members.
      */
-    public function publishSummons(string $clubSlug, int $id, RsvpTokenService $tokenService): RedirectResponse
+    public function publishSummons(string $clubSlug, int $id, SummonsSender $summons): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
@@ -102,26 +102,19 @@ class MeetingSummonsController extends Controller
             'summons_published_at' => Carbon::now(),
         ]);
 
+        // Only people who have not had it yet are emailed: links already sent keep working, and anyone who joined since gets one.
+        $sent = $summons->sendToNewRecipients($club, $meeting);
+
         if ($alreadyPublished) {
-            // A new token would replace the one already emailed, so links people hold would stop working.
-            return redirect()->back()->with('success', 'Summons updated. Members keep the RSVP links they were already sent.');
-        }
-
-        $expiresAt = Carbon::parse($meeting->meeting_date)->endOfDay();
-        $members = $club->users()
-            ->wherePivot('status', ClubMemberStatus::Active->value)
-            ->wherePivot('role', '!=', ClubRole::Visitor->value)
-            ->get();
-
-        foreach ($members as $member) {
-            $token = $tokenService->createTokenForUser($meeting, $member, $expiresAt);
-            Mail::to($member->email)->send(new MeetingSummonsMail($club, $meeting, $member, $token));
+            return redirect()->back()->with('success', $sent
+                ? "Summons updated and emailed to {$sent} ".Str::plural('person', $sent).' who had not had it yet.'
+                : 'Summons updated. Everyone has already been sent it, and their RSVP links still work.');
         }
 
         app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
         app(ClubNotifier::class)->toFollowers($club, $meeting);
 
-        return redirect()->back()->with('success', "Summons published and emailed to {$members->count()} members, each with their own RSVP link.");
+        return redirect()->back()->with('success', "Summons published and emailed to {$sent} ".Str::plural('person', $sent).', each with their own RSVP link.');
     }
 
     /**

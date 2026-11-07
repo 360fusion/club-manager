@@ -59,7 +59,7 @@ const submit = () => {
           <h1 class="text-2xl font-semibold text-white mt-2">
             {{ isExistingUser ? `Welcome back, ${user.name}!` : `Welcome to ${club.name}!` }}
           </h1>
-          <p v-if="club.tagline" class="text-xs text-slate-400 mt-0.5">
+          <p v-if="club.tagline" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {{ club.tagline }}
           </p>
         </div>
@@ -72,7 +72,7 @@ const submit = () => {
         </div>
         <div class="font-semibold text-sm text-slate-100">{{ user.name }}</div>
         <div class="text-xs font-mono text-blue-400">{{ user.email }}</div>
-        <p v-if="isExistingUser" class="text-[11px] text-slate-400 pt-1">
+        <p v-if="isExistingUser" class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
           You already have an active Club Manager account. Enter your password to log in and access <strong>{{ club.name }}</strong>.
         </p>
       </div>

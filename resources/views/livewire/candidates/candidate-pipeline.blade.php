@@ -5,7 +5,7 @@
     <x-card>
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Candidate Pipeline</h1>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Candidate Pipeline</h2>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">From first enquiry to initiation, with every step and decision recorded</p>
             </div>
             <x-button wire:click="openCreateModal">

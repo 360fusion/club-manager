@@ -47,8 +47,8 @@ const dynamicNote = computed(() => ({
 
 const HEADING = 'text-sm font-bold text-slate-900 dark:text-white';
 const BODY = 'text-xs text-slate-600 dark:text-slate-300 whitespace-pre-line';
-const MUTED = 'text-[11px] text-slate-400';
-const EMPTY = 'italic text-slate-400';
+const MUTED = 'text-[11px] text-slate-500 dark:text-slate-400';
+const EMPTY = 'italic text-slate-500 dark:text-slate-400';
 const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700';
 </script>
 
@@ -64,7 +64,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
         <!-- Single image -->
         <div v-else-if="type === 'image'" class="flex items-center gap-3">
             <img v-if="block.url" :src="block.url" alt="" loading="lazy" :class="[THUMB, 'w-28 h-20 shrink-0']" />
-            <div v-else :class="[THUMB, 'w-28 h-20 shrink-0 flex items-center justify-center text-slate-400']">No image</div>
+            <div v-else :class="[THUMB, 'w-28 h-20 shrink-0 flex items-center justify-center text-slate-500 dark:text-slate-400']">No image</div>
             <p v-if="block.caption" :class="BODY">{{ block.caption }}</p>
             <p v-else :class="MUTED">Image, {{ block.size || 'large' }}, {{ block.position || 'center' }}</p>
         </div>
@@ -98,7 +98,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
                 <span v-if="video" class="absolute inset-0 flex items-center justify-center" aria-hidden="true">
                     <span class="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center text-[11px]">▶</span>
                 </span>
-                <span v-else class="absolute inset-0 flex items-center justify-center text-slate-400 text-center px-2">{{ block.url ? 'Not a YouTube link' : 'No video' }}</span>
+                <span v-else class="absolute inset-0 flex items-center justify-center text-slate-500 dark:text-slate-400 text-center px-2">{{ block.url ? 'Not a YouTube link' : 'No video' }}</span>
             </div>
             <div class="min-w-0 space-y-0.5">
                 <p v-if="block.title" :class="HEADING">{{ block.title }}</p>
@@ -144,7 +144,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
                     label="Map preview"
                     radius="rounded-lg"
                 />
-                <div v-else :class="[THUMB, 'h-24 flex items-center justify-center text-slate-400 text-center px-2']">No location set</div>
+                <div v-else :class="[THUMB, 'h-24 flex items-center justify-center text-slate-500 dark:text-slate-400 text-center px-2']">No location set</div>
             </div>
             <div class="min-w-0 space-y-0.5">
                 <p v-if="block.heading" :class="HEADING">{{ block.heading }}</p>
@@ -195,7 +195,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
         <!-- Image & Text -->
         <div v-else-if="type === 'media_text'" class="flex items-center gap-3">
             <img v-if="block.image_url" :src="block.image_url" alt="" loading="lazy" :class="[THUMB, 'w-28 h-20 shrink-0']" />
-            <div v-else :class="[THUMB, 'w-28 h-20 shrink-0 flex items-center justify-center text-slate-400']">No photo</div>
+            <div v-else :class="[THUMB, 'w-28 h-20 shrink-0 flex items-center justify-center text-slate-500 dark:text-slate-400']">No photo</div>
             <div class="min-w-0 space-y-0.5">
                 <p v-if="block.eyebrow" :class="[MUTED, 'uppercase tracking-wider font-bold']">{{ block.eyebrow }}</p>
                 <p :class="HEADING">{{ block.title || 'Image & text' }}</p>

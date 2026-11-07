@@ -215,7 +215,7 @@ const saveBusinessAccount = () => {
             <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Included platform features and modules</h4>
             <div class="flex flex-wrap gap-2">
               <Badge v-for="(module, idx) in currentPlan.modules" :key="idx">
-                <UiIcon name="check" :size="12" class="text-emerald-600 dark:text-emerald-400" />
+                <UiIcon name="check" :size="12" class="text-emerald-700 dark:text-emerald-400" />
                 <span>{{ module }}</span>
               </Badge>
             </div>

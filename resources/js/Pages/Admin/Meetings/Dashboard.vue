@@ -233,7 +233,7 @@ const isPastMeeting = computed(() => {
                   <th scope="col" class="p-3 font-medium">Summons and attendance</th>
                   <th scope="col" class="p-3 font-medium">Dietary notes</th>
                   <th scope="col" class="p-3 font-medium">Payment and reference</th>
-                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                  <th scope="col" class="relative p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -257,9 +257,9 @@ const isPastMeeting = computed(() => {
                       <button type="button" class="cursor-pointer rounded-full" title="Click to toggle paid/unpaid status" @click="setPaymentStatus(v.id, v.payment_status === 'paid' ? 'unpaid' : 'paid')">
                         <Badge :variant="paymentBadge(v.payment_status)[0]">{{ paymentBadge(v.payment_status)[1] }}</Badge>
                       </button>
-                      <div class="mt-0.5 font-mono text-xs text-slate-400">{{ v.payment_reference || '-' }}</div>
+                      <div class="mt-0.5 font-mono text-xs text-slate-500 dark:text-slate-400">{{ v.payment_reference || '-' }}</div>
                     </div>
-                    <span v-else class="text-xs text-slate-400">No payment due</span>
+                    <span v-else class="text-xs text-slate-500 dark:text-slate-400">No payment due</span>
                   </td>
                   <td class="p-3 text-right">
                     <Button variant="secondary" size="sm" @click="openManualRsvpModal(v.id)">Edit</Button>
@@ -279,7 +279,7 @@ const isPastMeeting = computed(() => {
                   <th scope="col" class="p-3 font-medium">Dietary requirements</th>
                   <th scope="col" class="p-3 font-medium">Registered visitors and guests</th>
                   <th scope="col" class="p-3 font-medium">Payment and reference</th>
-                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                  <th scope="col" class="relative p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -295,16 +295,16 @@ const isPastMeeting = computed(() => {
                         {{ g.guest_name }} <span class="text-slate-500 dark:text-slate-400">({{ g.home_club_lodge || 'Visitor' }})</span>
                       </div>
                     </div>
-                    <span v-else class="text-slate-400">-</span>
+                    <span v-else class="text-slate-500 dark:text-slate-400">-</span>
                   </td>
                   <td class="p-3">
                     <div v-if="r.attendance_status === 'attending_dining' || r.guests?.some(g => g.attending_dining)">
                       <button type="button" class="cursor-pointer rounded-full" title="Click to toggle paid/unpaid status" @click="setPaymentStatus(r.user_id, r.payment_status === 'paid' ? 'unpaid' : 'paid')">
                         <Badge :variant="paymentBadge(r.payment_status)[0]">{{ paymentBadge(r.payment_status)[1] }}</Badge>
                       </button>
-                      <div class="mt-0.5 font-mono text-xs text-slate-400">{{ r.payment_reference || '-' }}</div>
+                      <div class="mt-0.5 font-mono text-xs text-slate-500 dark:text-slate-400">{{ r.payment_reference || '-' }}</div>
                     </div>
-                    <span v-else class="text-xs text-slate-400">No payment due</span>
+                    <span v-else class="text-xs text-slate-500 dark:text-slate-400">No payment due</span>
                   </td>
                   <td class="p-3 text-right">
                     <Button variant="secondary" size="sm" @click="openManualRsvpModal(r.user_id)">Edit</Button>

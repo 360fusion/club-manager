@@ -55,7 +55,7 @@ const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg
                 role="menu"
                 class="absolute right-0 z-40 mt-1 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900"
               >
-                <div class="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <div class="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Bank account and payment providers
                 </div>
 
@@ -209,7 +209,7 @@ const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg
 
         <div class="space-y-4 p-6">
           <div v-if="!journalEntries.length" class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-800 dark:bg-slate-800/50">
-            <UiIcon name="document" :size="20" class="mx-auto mb-2 text-slate-400" />
+            <UiIcon name="document" :size="20" class="mx-auto mb-2 text-slate-500 dark:text-slate-400" />
             <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">No journal entries yet</span>
             <span class="text-xs text-slate-500 dark:text-slate-400">Use "Add journal entry" above to post your first double-entry transaction.</span>
           </div>
@@ -250,7 +250,7 @@ const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg
                       <td class="py-1.5 text-slate-800 dark:text-slate-100">
                         <span class="mr-2 tabular-nums text-slate-500 dark:text-slate-400">{{ item.account_code }}</span>
                         <span>{{ item.account_name }}</span>
-                        <span v-if="item.memo" class="ml-2 italic text-slate-400">({{ item.memo }})</span>
+                        <span v-if="item.memo" class="ml-2 italic text-slate-500 dark:text-slate-400">({{ item.memo }})</span>
                       </td>
                       <td class="py-1.5 text-right tabular-nums text-slate-900 dark:text-white">
                         {{ item.debit > 0 ? formatMoney(item.debit) : '-' }}

@@ -55,7 +55,7 @@ defineProps({
                         <th class="p-3">Old address</th>
                         <th class="p-3">Goes to</th>
                         <th class="p-3">Type</th>
-                        <th class="p-3 text-right"><span class="sr-only">Actions</span></th>
+                        <th class="relative p-3 text-right"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-mono">

@@ -34,7 +34,7 @@ const submit = () => {
         <h1 class="text-2xl font-semibold text-white">
           Create a member account
         </h1>
-        <p class="text-xs text-slate-400">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           Sign up to join club events, manage memberships, and receive notifications.
         </p>
       </div>
@@ -84,7 +84,7 @@ const submit = () => {
         </Button>
 
         <div class="text-center pt-2">
-          <Link :href="route('login')" class="text-xs text-slate-400 hover:text-white transition-colors">
+          <Link :href="route('login')" class="text-xs text-slate-500 dark:text-slate-400 hover:text-white transition-colors">
             Already have an account? <strong class="font-medium text-blue-400">Log in</strong>
           </Link>
         </div>

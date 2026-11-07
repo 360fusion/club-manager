@@ -79,7 +79,7 @@ const EMPTY = 'p-3 border border-dashed border-slate-300 dark:border-slate-700 r
                 </label>
 
                 <div v-if="headerFooterForm.announcement_enabled" class="space-y-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
-                    <div :class="['rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700', !announcementPreview ? 'p-3 text-center text-slate-400 italic bg-white dark:bg-slate-900' : '']">
+                    <div :class="['rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700', !announcementPreview ? 'p-3 text-center text-slate-500 dark:text-slate-400 italic bg-white dark:bg-slate-900' : '']">
                         <AnnouncementBar v-if="announcementPreview" :announcement="announcementPreview" club-slug="preview" :interactive="false" />
                         <span v-else>Type your message to see the bar</span>
                     </div>
@@ -244,7 +244,7 @@ const EMPTY = 'p-3 border border-dashed border-slate-300 dark:border-slate-700 r
                         <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerFooterForm.footer_nav_page_ids === null ? `All ${publishedNavPages.length} menu pages` : `${footerNavPages.length} of ${publishedNavPages.length} menu pages` }}</p>
                         <div class="flex flex-wrap gap-1.5">
                             <Badge v-for="navPage in footerNavPages" :key="navPage.id">{{ navPage.title }}</Badge>
-                            <span v-if="!footerNavPages.length" class="text-slate-400 italic">{{ publishedNavPages.length ? 'No pages chosen, so the column will be empty.' : 'No pages are in the top menu yet.' }}</span>
+                            <span v-if="!footerNavPages.length" class="text-slate-500 dark:text-slate-400 italic">{{ publishedNavPages.length ? 'No pages chosen, so the column will be empty.' : 'No pages are in the top menu yet.' }}</span>
                         </div>
                     </div>
                     <p v-else :class="EMPTY">Hidden. The footer won't list your pages.</p>

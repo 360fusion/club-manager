@@ -107,4 +107,13 @@ class SecurityReviewFixesTest extends TestCase
             ->call('updateGrantApprovalStatus', $grant->id, 'disbursed');
         $this->assertSame(GrantApprovalStatus::Disbursed, $grant->fresh()->approval_status, 'an administrator can record the payment');
     }
+
+    public function test_the_admin_dashboard_shows_real_figures_not_made_up_ones(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.analytics', $this->club->slug))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('metrics.monthly_dues_est', '0.00')
+                ->where('metrics.total_members', 1));
+    }
 }

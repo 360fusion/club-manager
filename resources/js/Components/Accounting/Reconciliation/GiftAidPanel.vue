@@ -201,7 +201,7 @@ const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded
                 <!-- Donor / Person -->
                 <td class="py-3 px-3.5 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                   <div class="flex items-center gap-1.5">
-                    <UiIcon name="user" :size="14" class="text-slate-400" />
+                    <UiIcon name="user" :size="14" class="text-slate-500 dark:text-slate-400" />
                     <span>{{ item.donor_name }}</span>
                   </div>
                 </td>

@@ -33,7 +33,7 @@ const cancel = () => router.delete(route('account.privacy.cancel'), { preserveSc
 <template>
   <MembersLayout title="Data and privacy" active-tab="">
     <div class="max-w-3xl space-y-6">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Data and privacy</h1>
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Data and privacy</h2>
 
       <Alert v-if="closureRequestedAt" variant="warning">
         <div class="flex flex-wrap items-center justify-between gap-3">

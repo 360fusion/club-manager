@@ -627,3 +627,12 @@ Not done from the comparison: audit log of superadmin actions, impersonation, `d
 
 ## Self-registration needs an admin (2026-11-03)
 Visitor sign-up (`/{slug}/visitor-register`) now creates the club membership as `pending` instead of `active`; the lodge checks it under Waiting for approval (members page / overview) and activates it with Approve, which keeps the visitor role. Joining through the main register form was already pending. Everything else that attaches someone as active is an admin action or an accepted invitation. Test: `VisitorRegistrationTest`.
+
+## Walkthrough fixes: the top five (2026-11-06)
+From `results/walkthrough-{secretary,member-phone,visitor}.md`. Tests: `WalkthroughFixesTest` (all fail on the old code), `MemberAreaTest` changed (visitors now get the summons email).
+1. A new lodge could not save Club settings: the default matrix gives meetings to `secretary`, the form only accepted six roles. It now accepts every role except visitor.
+2. The summons went only to people active at the moment of publishing. `SummonsSender` emails every active member and registered visitor who has not had it yet: on publishing, on publishing again (only newcomers; links already sent keep working), and when someone becomes active (invite accepted, join or visitor request approved) for upcoming published meetings.
+3. Approved visitors got nothing: covered by 2; the pending list on the Users page now says "Visitor from {home lodge}".
+4. The summons PDF invented officers (13 sample names saved from the meeting form), the Master (the lodge's first user), a phone number, a secretary email and a 6:00pm rehearsal. The form now starts from the lodge's own officers (`lodgeOfficers`, roster else member offices) or an empty list; the PDF shows Master, Secretary, email, phone and rehearsal only when the lodge has them.
+5. Visitors counted as staff (Admin button, "members waiting" item): staff checks now exclude visitors. The inbox item counts real requests (not unanswered invites), only for `manage_members`, and links to the Users page where Approve/Reject are.
+Not done: a welcome email or sign-in link for an approved visitor (they reply through the summons link), the visitor's limited summons view in the member area, and the rest of the walkthrough lists.

@@ -27,7 +27,7 @@ const revoke = (token) => {
 <template>
   <MembersLayout title="API tokens" active-tab="">
     <div class="max-w-3xl space-y-6">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">API tokens</h1>
+      <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">API tokens</h2>
 
       <Alert v-if="newToken" variant="success">
         <p class="font-semibold">Copy your new token now. It is shown only once.</p>
@@ -53,7 +53,7 @@ const revoke = (token) => {
       <Card padding="none" class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="border-b border-slate-200 bg-slate-50 font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-            <tr><th class="p-3">Name</th><th class="p-3">Can do</th><th class="p-3">Last used</th><th class="p-3">Expires</th><th class="p-3"><span class="sr-only">Revoke</span></th></tr>
+            <tr><th class="p-3">Name</th><th class="p-3">Can do</th><th class="p-3">Last used</th><th class="p-3">Expires</th><th class="relative p-3"><span class="sr-only">Revoke</span></th></tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
             <tr v-for="t in tokens" :key="t.id">

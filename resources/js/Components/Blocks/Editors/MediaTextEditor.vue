@@ -27,7 +27,7 @@ defineEmits(['media']);
                 </div>
             </div>
             <div class="flex gap-3">
-                <div class="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-[10px] text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+                <div class="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-[10px] text-slate-500 dark:text-slate-400 dark:border-slate-700 dark:bg-slate-800">
                     <img v-if="block.image_url" :src="block.image_url" alt="" class="h-full w-full object-cover" />
                     <span v-else>No photo</span>
                 </div>
@@ -47,7 +47,7 @@ defineEmits(['media']);
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-                <label :for="`block-${index}-mt-eyebrow`" :class="LABEL">Small label <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-mt-eyebrow`" :class="LABEL">Small label <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-mt-eyebrow`" v-model="block.eyebrow" type="text" maxlength="80" placeholder="e.g. About us" :class="INPUT" />
             </div>
             <div class="sm:col-span-2">
@@ -64,7 +64,7 @@ defineEmits(['media']);
 
         <div :class="[CARD, 'grid grid-cols-1 gap-3 sm:grid-cols-2']">
             <div>
-                <label :for="`block-${index}-mt-button`" :class="LABEL">Button label <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-mt-button`" :class="LABEL">Button label <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-mt-button`" v-model="block.button_label" type="text" maxlength="80" :class="SMALL_INPUT" />
             </div>
             <LinkField v-model="block.button_url" :pages="pages" :club="club" label="Button" />

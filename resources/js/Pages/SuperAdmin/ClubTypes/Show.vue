@@ -219,7 +219,7 @@ function handleSwitchOrder(event) {
         </div>
 
         <div v-else class="p-8 text-center space-y-2">
-          <UiIcon name="building" :size="20" class="mx-auto text-slate-400" />
+          <UiIcon name="building" :size="20" class="mx-auto text-slate-500 dark:text-slate-400" />
           <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">No {{ clubType.name }} clubs registered yet</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400">Clubs registered under this order preset will appear here.</p>
         </div>

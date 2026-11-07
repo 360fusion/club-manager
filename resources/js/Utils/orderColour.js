@@ -12,7 +12,7 @@ const PALETTE = {
     yellow: { label: 'Yellow', tile: 'bg-yellow-400 text-slate-900', soft: 'bg-yellow-50 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300', dot: 'bg-yellow-400' },
     lime: { label: 'Lime', tile: 'bg-lime-600 text-white', soft: 'bg-lime-50 text-lime-800 dark:bg-lime-950/50 dark:text-lime-300', dot: 'bg-lime-500' },
     green: { label: 'Green', tile: 'bg-green-600 text-white', soft: 'bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300', dot: 'bg-green-500' },
-    emerald: { label: 'Emerald', tile: 'bg-emerald-600 text-white', soft: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300', dot: 'bg-emerald-500' },
+    emerald: { label: 'Emerald', tile: 'bg-emerald-700 text-white', soft: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300', dot: 'bg-emerald-500' },
     teal: { label: 'Teal', tile: 'bg-teal-600 text-white', soft: 'bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300', dot: 'bg-teal-500' },
     cyan: { label: 'Cyan', tile: 'bg-cyan-600 text-white', soft: 'bg-cyan-50 text-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-300', dot: 'bg-cyan-500' },
     sky: { label: 'Light blue', tile: 'bg-sky-600 text-white', soft: 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300', dot: 'bg-sky-400' },

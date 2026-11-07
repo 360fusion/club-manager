@@ -103,7 +103,7 @@ const cell = 'w-full rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 t
                       <th scope="col" class="px-3 py-2.5 font-medium">Memo</th>
                       <th scope="col" class="w-32 px-3 py-2.5 text-right font-medium">Debit ({{ $cs }})</th>
                       <th scope="col" class="w-32 px-3 py-2.5 text-right font-medium">Credit ({{ $cs }})</th>
-                      <th scope="col" class="w-10 px-2 py-2.5"><span class="sr-only">Remove</span></th>
+                      <th scope="col" class="relative w-10 px-2 py-2.5"><span class="sr-only">Remove</span></th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -117,7 +117,7 @@ const cell = 'w-full rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 t
                       <td class="p-2"><input :value="item.debit" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" :aria-label="`Debit, line ${index + 1}`" :class="[cell, 'text-right tabular-nums']" @input="setAmount(item, 'debit', $event.target.value)" /></td>
                       <td class="p-2"><input :value="item.credit" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" :aria-label="`Credit, line ${index + 1}`" :class="[cell, 'text-right tabular-nums']" @input="setAmount(item, 'credit', $event.target.value)" /></td>
                       <td class="p-2 text-center">
-                        <button type="button" :disabled="form.items.length <= 2" :aria-label="`Remove line ${index + 1}`" class="rounded-xl p-1 text-slate-400 hover:text-rose-600 disabled:opacity-30 dark:hover:text-rose-400" @click="removeLine(index)">
+                        <button type="button" :disabled="form.items.length <= 2" :aria-label="`Remove line ${index + 1}`" class="rounded-xl p-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 disabled:opacity-30 dark:hover:text-rose-400" @click="removeLine(index)">
                           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
                         </button>
                       </td>

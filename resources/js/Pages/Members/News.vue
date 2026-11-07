@@ -117,7 +117,7 @@ const groups = computed(() => {
         <div class="space-y-6">
             <div class="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">News</h1>
+                    <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">News</h2>
                     <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ posts.total }} {{ posts.total === 1 ? 'article' : 'articles' }} from {{ scopeClub ? scopeClub.name : 'your clubs' }}</p>
                 </div>
             </div>
@@ -157,7 +157,7 @@ const groups = computed(() => {
                                 <DateTile :date="post.at" :colour="post.club.colour" />
 
                                 <div class="min-w-0 flex-1 space-y-2">
-                                    <h3 class="text-lg font-semibold leading-snug text-slate-900 dark:text-white">
+                                    <h3 class="break-words text-lg font-semibold leading-snug text-slate-900 dark:text-white">
                                         <Link :href="route('member.posts.show', { slug: post.club.slug, id: post.id })" class="hover:text-blue-600 dark:hover:text-blue-300">{{ post.title }}</Link>
                                     </h3>
 

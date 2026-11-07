@@ -47,7 +47,7 @@ const errorFor = (index, field) => props.errors[`${props.idPrefix}.${index}.${fi
       <p v-if="help" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ help }}</p>
     </div>
 
-    <p v-if="!rows.length" class="text-xs text-slate-400 dark:text-slate-500 py-2">No ranks yet. Add the first one below.</p>
+    <p v-if="!rows.length" class="text-xs text-slate-500 dark:text-slate-500 py-2">No ranks yet. Add the first one below.</p>
 
     <ul class="space-y-2">
       <li v-for="(row, index) in rows" :key="index" class="flex flex-wrap items-start gap-2">

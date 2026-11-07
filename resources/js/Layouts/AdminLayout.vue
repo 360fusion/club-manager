@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, provide, ref } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
@@ -68,10 +68,17 @@ const currentActiveTab = computed(() => {
 
   return props.activeTab || 'dashboard';
 });
+
+// This layout renders the page's <h1>, so PageHeader titles become <h2>.
+provide('layoutHasHeading', true);
 </script>
 
 <template>
   <Head :title="`${title} - ClubAdmin`" />
+
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
+    Skip to main content
+  </a>
 
   <div class="min-h-screen bg-slate-100 text-slate-800 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-slate-200">
     
@@ -83,8 +90,8 @@ const currentActiveTab = computed(() => {
         </div>
         <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
       </div>
-      <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen ? 'true' : 'false'" @click="sidebarOpen = !sidebarOpen" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white">
+        <svg class="w-6 h-6" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
@@ -117,7 +124,7 @@ const currentActiveTab = computed(() => {
                 </div>
               </div>
             </div>
-            <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition-all transform" :class="{ 'rotate-180': switcherOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-white transition-all transform" :class="{ 'rotate-180': switcherOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -130,7 +137,7 @@ const currentActiveTab = computed(() => {
             v-if="switcherOpen" 
             class="absolute top-full left-4 right-4 mt-2 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 backdrop-blur-md"
           >
-            <div class="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-800">
+            <div class="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-800">
               Switch Workspace ({{ userClubs.length || 1 }})
             </div>
 
@@ -150,7 +157,7 @@ const currentActiveTab = computed(() => {
                   </div>
                   <div class="truncate">
                     <div class="truncate font-semibold">{{ c.name }}</div>
-                    <div class="text-[10px] text-slate-400 capitalize">{{ c.role }}</div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{{ c.role }}</div>
                   </div>
                 </div>
                 <span v-if="c.slug === clubSlug" class="text-blue-400 text-xs">✓</span>
@@ -166,7 +173,7 @@ const currentActiveTab = computed(() => {
         </div>
 
         <!-- Navigation Links -->
-        <nav class="p-3 space-y-0.5 text-sm font-medium">
+        <nav aria-label="Club admin" class="p-3 space-y-0.5 text-sm font-medium">
           <!-- 1. Dashboard / Analytics -->
           <Link 
             :href="route('admin.analytics', clubSlug)" 
@@ -334,7 +341,7 @@ const currentActiveTab = computed(() => {
     </aside>
 
     <!-- Main Right Content Area -->
-    <main class="flex-1 overflow-y-auto flex flex-col min-w-0">
+    <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto flex flex-col min-w-0 focus:outline-none">
       
       <!-- Top Title Bar -->
       <header class="bg-white border-b border-slate-200 px-6 md:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
@@ -346,7 +353,7 @@ const currentActiveTab = computed(() => {
         <!-- Quick Actions & User Profile Dropdown -->
         <div class="flex items-center gap-3">
           <Link :href="route('member.dashboard', clubSlug)" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 dark:border-emerald-800/60 dark:text-emerald-300">
-            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
             <span>Switch to member portal</span>
@@ -370,7 +377,7 @@ const currentActiveTab = computed(() => {
               <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 hidden sm:inline-block max-w-[120px] truncate dark:text-slate-200 dark:group-hover:text-blue-300">
                 {{ page.props.auth?.user?.name || 'Account' }}
               </span>
-              <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform dark:group-hover:text-slate-300" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 transition-transform dark:group-hover:text-slate-300" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -393,7 +400,7 @@ const currentActiveTab = computed(() => {
 
               <!-- Global Account Links -->
               <div class="py-1 space-y-1">
-                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Global Account
                 </div>
 
@@ -433,7 +440,7 @@ const currentActiveTab = computed(() => {
 
               <!-- Active Club Links -->
               <div class="py-1 border-t border-slate-100 space-y-1 dark:border-slate-800">
-                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Active Club Context
                 </div>
 
@@ -464,7 +471,7 @@ const currentActiveTab = computed(() => {
                   @click="userMenuOpen = false"
                   class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all dark:text-emerald-300 dark:hover:bg-slate-800"
                 >
-                  <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
                   <span>Switch to member portal</span>

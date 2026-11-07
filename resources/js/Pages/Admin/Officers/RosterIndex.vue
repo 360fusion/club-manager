@@ -764,7 +764,7 @@ const installCurrentRoster = () => {
               >
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <span class="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <span v-if="off.is_assistant" class="text-slate-400" aria-hidden="true">↳</span>
+                    <span v-if="off.is_assistant" class="text-slate-500 dark:text-slate-400" aria-hidden="true">↳</span>
                     <span>{{ off.label }}</span>
                   </span>
                   <Badge v-if="getPreviousYearOfficerName(off.value)">

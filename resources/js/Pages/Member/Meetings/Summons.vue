@@ -60,7 +60,7 @@ const linkButtonClass = 'inline-flex items-center justify-center rounded-xl bord
             {{ club.name.substring(0, 2).toUpperCase() }}
           </div>
 
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{{ club.name }}</h1>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{{ club.name }}</h2>
           <p v-if="club.lodge_number" class="text-sm font-semibold text-slate-500 dark:text-slate-400">No. {{ club.lodge_number }}</p>
           <Badge variant="info">Official meeting summons</Badge>
           <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 pt-2">{{ meeting.title || 'Regular meeting' }}</h2>

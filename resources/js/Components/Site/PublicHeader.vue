@@ -2,7 +2,7 @@
 // Renders a club's public-site header. Used by both the website builder's live preview (Admin/PageList.vue,
 // interactive: false) and the real public page (Public/Site.vue, interactive: true), so what an admin
 // configures is exactly what a visitor sees.
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import SiteAccountMenu from '@/Components/Site/SiteAccountMenu.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
@@ -35,6 +35,10 @@ const homeHref = computed(() => props.resolveUrl(`/site/${props.club.slug}`));
 
 const navHref = (item) => props.resolveUrl(item.is_homepage ? `/site/${props.club.slug}` : `/site/${props.club.slug}/${item.slug}`);
 
+// Below md the menu folds behind a button, so a site with many pages does not fill a phone's first screen with links.
+const menuOpen = ref(false);
+const hasMenu = computed(() => props.mode !== 'logo_only' && (props.navigation.length > 0 || ctaEnabled.value));
+
 const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (props.currentPage?.is_homepage && item.is_homepage);
 </script>
 
@@ -46,7 +50,7 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
         </div>
 
         <div :class="['max-w-7xl mx-auto px-6 flex', isCentered ? 'flex-col items-center py-5 gap-4' : 'min-h-20 py-3 items-center justify-between flex-wrap gap-y-2']">
-            <component :is="Tag" :href="interactive ? homeHref : undefined" class="flex items-center gap-3 group shrink-0">
+            <component :is="Tag" :href="interactive ? homeHref : undefined" class="flex min-w-0 items-center gap-3 group">
                 <template v-if="showLogo">
                     <img
                         v-if="club.logo_url"
@@ -58,20 +62,39 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                         <UiIcon name="award" :size="20" />
                     </div>
                 </template>
-                <div>
-                    <div :class="['font-extrabold text-lg transition-colors', theme.headerHeading || theme.headingText]">{{ club.name }}</div>
+                <div class="min-w-0">
+                    <div :class="['break-words font-extrabold text-lg transition-colors', theme.headerHeading || theme.headingText]">{{ club.name }}</div>
                     <div v-if="showTagline && club.tagline" :class="['text-xs', theme.headerBody || theme.bodyText]">{{ club.tagline }}</div>
                 </div>
             </component>
 
-            <nav v-if="mode !== 'logo_only'" :class="['flex items-center gap-1 sm:gap-2 flex-wrap', isCentered ? 'justify-center' : '']">
+            <button
+                v-if="hasMenu"
+                type="button"
+                :class="['md:hidden inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold', theme.navInactive]"
+                :aria-expanded="menuOpen ? 'true' : 'false'"
+                aria-controls="site-menu"
+                @click="menuOpen = !menuOpen"
+            >
+                <UiIcon :name="menuOpen ? 'x' : 'dots'" />
+                Menu
+            </button>
+
+            <nav
+                v-if="mode !== 'logo_only'"
+                id="site-menu"
+                aria-label="Site"
+                :class="[menuOpen ? 'flex' : 'hidden', 'md:flex w-full md:w-auto flex-col md:flex-row items-stretch md:items-center gap-1 sm:gap-2 md:flex-wrap', isCentered ? 'md:justify-center' : '']"
+            >
                 <component
                     :is="Tag"
                     v-for="item in navigation"
                     :key="item.id"
                     :href="interactive ? navHref(item) : undefined"
                     :class="isActiveNavItem(item) ? theme.navActive : theme.navInactive"
-                    class="px-3 py-1.5 rounded-xl text-sm font-semibold border transition-all"
+                    :aria-current="isActiveNavItem(item) ? 'page' : undefined"
+                    class="min-w-0 truncate md:max-w-[14rem] px-3 py-2.5 md:py-1.5 rounded-xl text-sm font-semibold border transition-all"
+                    @click="menuOpen = false"
                 >
                     {{ item.title }}
                 </component>
@@ -81,7 +104,8 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                     v-if="ctaEnabled"
                     :href="interactive ? resolveUrl(settings.header_cta_link) : undefined"
                     :class="theme.headerCta || theme.heroCta"
-                    class="ml-1 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow transition-all"
+                    class="md:ml-1 px-3.5 py-2.5 md:py-1.5 rounded-xl text-xs font-bold text-center shadow transition-all"
+                    @click="menuOpen = false"
                 >
                     {{ settings.header_cta_text }}
                 </component>

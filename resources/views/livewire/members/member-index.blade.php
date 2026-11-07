@@ -138,7 +138,7 @@
                             </button>
                         </th>
                         <th class="px-4 py-3">Portal account</th>
-                        <th class="px-4 py-3 text-right"><span class="sr-only">Actions</span></th>
+                        <th class="relative px-4 py-3 text-right"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -183,7 +183,7 @@
                                         <x-badge>Prov: {{ $m->provincial_rank }}</x-badge>
                                     @endif
                                     @if(!$m->grand_rank && !$m->provincial_rank)
-                                        <span class="text-slate-400">—</span>
+                                        <span class="text-slate-500 dark:text-slate-400">—</span>
                                     @endif
                                 </div>
                             </td>
@@ -195,7 +195,7 @@
                             <td class="px-4 py-4">
                                 <span class="inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium {{ $account->badgeClass() }}">{{ $account->label() }}</span>
                                 @if($account->isInvitePending() && $m->acct_invited_at)
-                                    <span class="mt-1 block text-xs text-slate-400">Sent {{ \Illuminate\Support\Carbon::parse($m->acct_invited_at)->format('j M Y') }}</span>
+                                    <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">Sent {{ \Illuminate\Support\Carbon::parse($m->acct_invited_at)->format('j M Y') }}</span>
                                 @endif
                             </td>
 

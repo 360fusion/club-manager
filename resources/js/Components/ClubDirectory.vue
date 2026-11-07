@@ -80,11 +80,11 @@ const submitSubscription = () => {
             </h2>
 
             <div v-if="directory.clubs.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <Card v-for="club in directory.clubs" :key="club.id">
+                <Card v-for="club in directory.clubs" :key="club.id" class="min-w-0">
                     <div class="flex h-full flex-col gap-3">
                         <div>
                             <Badge v-if="club.lodge_number" variant="info">No. {{ club.lodge_number }}</Badge>
-                            <h3 class="mt-1.5 text-base font-semibold text-slate-900 dark:text-white">{{ club.name }}</h3>
+                            <h3 class="mt-1.5 break-words text-base font-semibold text-slate-900 dark:text-white">{{ club.name }}</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400">{{ club.town_city }} · {{ club.province_region }}</p>
                         </div>
 

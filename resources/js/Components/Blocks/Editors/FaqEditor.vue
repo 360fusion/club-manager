@@ -34,11 +34,11 @@ const move = (i, by) => {
     <div class="space-y-3 text-xs">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-                <label :for="`block-${index}-faq-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-faq-heading`" :class="LABEL">Heading <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-faq-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Frequently asked questions" :class="INPUT" />
             </div>
             <div>
-                <label :for="`block-${index}-faq-intro`" :class="LABEL">Intro <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-faq-intro`" :class="LABEL">Intro <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-faq-intro`" v-model="block.intro" type="text" maxlength="500" :class="INPUT" />
             </div>
         </div>

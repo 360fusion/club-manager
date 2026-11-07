@@ -26,6 +26,10 @@ const user = page.props.auth?.user;
 <template>
   <Head :title="`${title} - Superadmin`" />
 
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
+    Skip to main content
+  </a>
+
   <div class="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-white">
     
     <!-- Sidebar Navigation -->
@@ -43,7 +47,7 @@ const user = page.props.auth?.user;
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="space-y-1 text-xs font-medium">
+        <nav aria-label="Superadmin" class="space-y-1 text-xs font-medium">
           <Link
             :href="route('superadmin.dashboard')"
             :class="[
@@ -240,7 +244,7 @@ const user = page.props.auth?.user;
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 min-w-0 p-6 md:p-10 space-y-8 overflow-y-auto">
+    <main id="main-content" tabindex="-1" class="flex-1 min-w-0 p-6 md:p-10 space-y-8 overflow-y-auto focus:outline-none">
       <FlashMessages />
       <slot />
     </main>

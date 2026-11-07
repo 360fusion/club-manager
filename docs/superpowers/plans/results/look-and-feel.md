@@ -89,3 +89,20 @@ Tested against the e2e app (PostgreSQL `club_manager_e2e`, frontend as built). T
 ## Not run
 
 Payment double-click (a dues or event payment on throwaway data); a visible spinner or disabled state under a slow network (no throttling in this pane); server-side validation errors on the long admin forms (event, settings), where the browser's "required" check fires first; the bank import preview modal and reconciliation workspace interactions beyond load, overflow and contrast; website builder drag and drop, block editors at phone width and its Escape/focus behaviour; the committee live minute taker; screen reader speech (VoiceOver/NVDA); real touch devices and Safari/Firefox; print and PDF output; "near me" lodge search; tablet portrait editing flows in the builder; text-only zoom (browser font size) as opposed to viewport narrowing; colour contrast for images and charts (none found) and for the website themes other than the lodge's own.
+
+## Fixed (6 Nov 2026)
+
+Checked in the browser on e2e at 375 and 1280: no sideways scroll, one `<h1>` and one `<main>` on members, admin and public pages listed below.
+- F160: the 13 table headers hidden with `sr-only` are now `relative`, so they stay inside their scroll box (members, import, meeting and dining tables, subscribers, journal form, reports, redirects, API tokens).
+- F161, F162: directory cards and lodge cards are `min-w-0` (grid items no longer grow to their longest line); the public header has tighter gaps on phones and a labelled `nav`.
+- F163: the club site menu folds behind a "Menu" button below `md` (`aria-expanded`, current page `aria-current`), long titles truncate.
+- F164: the admin dashboard no longer invents figures (no 300 members or £2,500 fallback, no "+100.00", no members x £180 revenue, no fake "Today" schedule); it shows real events, bookings and takings, upcoming meetings only, and no invented 18:30 start.
+- F165: the Festival page says "No Festival set up yet" with a set-up button until a target exists.
+- F166: one `<h1>` per page: members and club admin layouts own it, page titles and `PageHeader` there are `<h2>` (Livewire views too).
+- F167, F168: skip link and `<main id="main-content">` on admin, superadmin, public and Livewire layouts; labelled `nav`s; the mobile admin menu button has a name and `aria-expanded`.
+- F169: light-mode grey text darkened (251 places, `text-slate-500` with dark mode unchanged), green buttons and green text one shade darker.
+- F170: profile labels tied to their fields.
+- F171: every `Button` is at least 44 px tall below `sm`; events filter pills 40 px.
+- F172: `prefers-reduced-motion` turns off animations, transitions and smooth scrolling.
+- F174: long news titles wrap, the events filter row wraps.
+Not fixed: F173 (alert roles, modal focus traps, click-only divs), F175 (draft lost on expired session), E6 (button disables ~200 ms after click), tap sizes of raw `<button>`s and links outside the `Button` component.

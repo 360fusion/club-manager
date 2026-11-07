@@ -15,7 +15,7 @@ defineProps({
 <template>
 <Card v-if="trashedPages.length" padding="none" class="overflow-hidden">
     <div class="p-6 border-b border-slate-200 dark:border-slate-800">
-        <h2 class="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white"><UiIcon name="trash" class="text-slate-400" /> Trash</h2>
+        <h2 class="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white"><UiIcon name="trash" class="text-slate-500 dark:text-slate-400" /> Trash</h2>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Deleted pages stay here until restored or removed permanently.</p>
     </div>
     <div class="divide-y divide-slate-200 dark:divide-slate-800">

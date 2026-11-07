@@ -162,7 +162,7 @@ const statusBadgeClass = (status) => {
           </div>
           <div class="space-y-1 overflow-hidden">
             <div class="flex flex-wrap items-center gap-3">
-              <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">{{ member.name }}</h1>
+              <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">{{ member.name }}</h2>
               <span
                 :class="[
                   'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium capitalize whitespace-nowrap',

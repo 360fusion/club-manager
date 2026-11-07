@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Invitation\AcceptRequest;
 use App\Models\User;
+use App\Services\SummonsSender;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -44,6 +45,7 @@ class InvitationController extends Controller
                 'status' => 'active',
             ]);
             $this->invitations->linkMatchingMember($club, $user);
+            app(SummonsSender::class)->sendUpcomingTo($club, $user);
 
             return redirect()->route('member.dashboard', ['slug' => $club->slug])
                 ->with('success', "Welcome to {$club->name}! You now have access to your new club portal.");
@@ -114,6 +116,7 @@ class InvitationController extends Controller
         }
 
         $this->invitations->linkMatchingMember($club, $user);
+        app(SummonsSender::class)->sendUpcomingTo($club, $user);
 
         // Accepting is not a sign-in: someone with two-factor on signs in the normal way and passes that step.
         if ($user->two_factor_confirmed_at) {

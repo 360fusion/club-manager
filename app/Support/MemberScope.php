@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Models\Club;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -100,6 +101,6 @@ final class MemberScope
 
     public function isStaffIn(int $clubId): bool
     {
-        return $this->roleIn($clubId) !== 'member';
+        return ! in_array($this->roleIn($clubId), [null, ClubRole::Member->value, ClubRole::Visitor->value], true);
     }
 }

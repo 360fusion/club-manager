@@ -81,7 +81,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
             </div>
 
             <ul v-else class="grid gap-3 md:grid-cols-2">
-                <li v-for="lodge in lodges.data" :key="lodge.slug" class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                <li v-for="lodge in lodges.data" :key="lodge.slug" class="min-w-0 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <Link :href="route('lodges.show', lodge.slug)" class="block truncate text-base font-semibold hover:text-blue-600 dark:hover:text-blue-400">{{ lodge.name }}</Link>
@@ -107,7 +107,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                         <Badge v-if="lodge.next[0].installation" variant="warning" class="ml-1">Installation</Badge>
                     </p>
                     <p v-else-if="lodge.meets_text" class="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{{ lodge.meets_text }}</p>
-                    <p v-else class="mt-2 text-sm text-slate-400">Meeting times not listed yet.</p>
+                    <p v-else class="mt-2 text-sm text-slate-500 dark:text-slate-400">Meeting times not listed yet.</p>
                 </li>
             </ul>
 
@@ -118,7 +118,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                         :href="link.url"
                         preserve-scroll
                         :class="['rounded-xl border px-3 py-1.5 text-sm', link.active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800']"><span v-html="link.label" /></Link>
-                    <span v-else class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-400 dark:border-slate-800" v-html="link.label" />
+                    <span v-else class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400 dark:border-slate-800" v-html="link.label" />
                 </template>
             </nav>
         </div>

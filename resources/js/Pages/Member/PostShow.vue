@@ -67,9 +67,9 @@ const getFileIcon = (mimeOrName) => {
             <span>By {{ post.author_name }}</span>
           </div>
 
-          <h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+          <h2 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
             {{ post.title }}
-          </h1>
+          </h2>
 
           <div v-if="post.tags?.length" class="flex flex-wrap gap-1.5">
             <NewsTagPill v-for="tag in post.tags" :key="tag.slug" :tag="tag" :club-slug="club.slug" />

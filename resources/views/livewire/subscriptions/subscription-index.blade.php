@@ -11,7 +11,7 @@
     <x-card>
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Subscriptions</h1>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Subscriptions</h2>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">UGLE Rule 181 arrears audit and accounts receivable ledger integration</p>
             </div>
 

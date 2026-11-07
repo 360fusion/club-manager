@@ -15,12 +15,12 @@ defineProps({
             <input :id="`block-${index}-motto-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Fraternus Amor Maneto" :class="INPUT" />
         </div>
         <div>
-            <label :for="`block-${index}-motto-text`" :class="LABEL">Text <span class="font-normal text-slate-400">(optional, plain text)</span></label>
+            <label :for="`block-${index}-motto-text`" :class="LABEL">Text <span class="font-normal text-slate-500 dark:text-slate-400">(optional, plain text)</span></label>
             <textarea :id="`block-${index}-motto-text`" v-model="block.text" rows="4" maxlength="1500" :class="INPUT"></textarea>
             <p :class="HINT">A new line starts a new paragraph.</p>
         </div>
         <div>
-            <label :for="`block-${index}-motto-tagline`" :class="LABEL">Italic tagline <span class="font-normal text-slate-400">(optional)</span></label>
+            <label :for="`block-${index}-motto-tagline`" :class="LABEL">Italic tagline <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
             <input :id="`block-${index}-motto-tagline`" v-model="block.tagline" type="text" maxlength="200" placeholder="e.g. Brotherly Love Remains." :class="INPUT" />
         </div>
         <div :class="CARD">

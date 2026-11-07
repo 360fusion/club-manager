@@ -291,7 +291,7 @@ function handleSwitchProvince(event) {
             </div>
 
             <div v-else class="p-6 text-center bg-slate-50 rounded-xl border border-slate-200 space-y-1 dark:bg-slate-950/40 dark:border-slate-800">
-              <span class="flex justify-center text-slate-400"><UiIcon name="building" :size="20" /></span>
+              <span class="flex justify-center text-slate-500 dark:text-slate-400"><UiIcon name="building" :size="20" /></span>
               <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300">No lodges registered in this province yet</h4>
               <p class="text-xs text-slate-500 dark:text-slate-400">New lodges assigned to {{ province.name }} will appear here.</p>
             </div>

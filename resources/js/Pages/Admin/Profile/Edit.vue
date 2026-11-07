@@ -149,10 +149,11 @@ const updatePassword = () => {
           <!-- Name & Email Inputs -->
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              <label for="profile-name" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Name
               </label>
               <input
+                id="profile-name"
                 v-model="profileForm.name"
                 type="text"
                 required
@@ -162,10 +163,11 @@ const updatePassword = () => {
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              <label for="profile-email" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Email Address
               </label>
               <input
+                id="profile-email"
                 v-model="profileForm.email"
                 type="email"
                 required
@@ -179,10 +181,11 @@ const updatePassword = () => {
             </div>
 
             <div v-if="emailChanged">
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              <label for="profile-current-password" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Current password
               </label>
               <input
+                id="profile-current-password"
                 v-model="profileForm.current_password"
                 type="password"
                 autocomplete="current-password"
@@ -213,10 +216,11 @@ const updatePassword = () => {
 
         <form @submit.prevent="updatePassword" class="space-y-4 max-w-lg">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            <label for="profile-password-current-password" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Current Password
             </label>
             <input
+                id="profile-password-current-password"
               v-model="passwordForm.current_password"
               type="password"
               required
@@ -227,10 +231,11 @@ const updatePassword = () => {
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            <label for="profile-password-password" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               New Password
             </label>
             <input
+                id="profile-password-password"
               v-model="passwordForm.password"
               type="password"
               required
@@ -241,10 +246,11 @@ const updatePassword = () => {
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            <label for="profile-password-password-confirmation" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Confirm New Password
             </label>
             <input
+                id="profile-password-password-confirmation"
               v-model="passwordForm.password_confirmation"
               type="password"
               required
@@ -256,7 +262,7 @@ const updatePassword = () => {
           <button
             type="submit"
             :disabled="passwordForm.processing"
-            class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20"
+            class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20"
           >
             {{ passwordForm.processing ? 'Updating password...' : 'Update password' }}
           </button>

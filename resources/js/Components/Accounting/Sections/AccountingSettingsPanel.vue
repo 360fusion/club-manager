@@ -69,7 +69,7 @@ const CHECKBOX = 'rounded border-slate-300 text-blue-600 accent-blue-600 focus:r
                 <span v-if="settings.address_line_1">{{ settings.address_line_1 }}</span>
                 <span v-if="settings.city" class="block">{{ settings.city }}, {{ settings.postcode }}</span>
                 <span class="block text-xs text-slate-500 dark:text-slate-400">{{ settings.country || 'United Kingdom' }}</span>
-                <span v-if="!settings.address_line_1 && !settings.city" class="italic text-slate-400">Not set</span>
+                <span v-if="!settings.address_line_1 && !settings.city" class="italic text-slate-500 dark:text-slate-400">Not set</span>
               </div>
               <div>
                 <span :class="LABEL">Contact details</span>

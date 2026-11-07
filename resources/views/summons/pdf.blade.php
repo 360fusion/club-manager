@@ -368,8 +368,13 @@
 
         <!-- Master Name -->
         <div style="font-size: 11pt; font-weight: bold;">
-          {{ $meeting->cover_worshipful_master ?? ($worshipfulMaster?->name ? 'WBro '.$worshipfulMaster->name : '') }}<br>
-          <span style="font-size: 10pt; font-weight: normal; letter-spacing: 1px;">MASTER</span>
+          @php
+            $masterName = $meeting->cover_worshipful_master ?? $worshipfulMaster?->formatted_rank_name;
+          @endphp
+          @if(filled($masterName))
+            {{ $masterName }}<br>
+            <span style="font-size: 10pt; font-weight: normal; letter-spacing: 1px;">MASTER</span>
+          @endif
         </div>
 
       </div>
@@ -431,8 +436,12 @@
 
       <div class="section-title">SECRETARY CONTACT DETAILS</div>
       <div style="font-size: 8.5pt; line-height: 1.3;">
-        Email: {{ $secretaryUser->email ?? ('secretary@' . $club->slug . '.org') }}<br>
-        Tel: {{ $club->settings['phone'] ?? '07718 903347' }}
+        @if($secretaryUser?->email)
+          Email: {{ $secretaryUser->email }}<br>
+        @endif
+        @if(filled($club->settings['phone'] ?? null))
+          Tel: {{ $club->settings['phone'] }}
+        @endif
       </div>
 
       <div style="margin-top: 10px; font-size: 8pt; font-style: italic; color: #333; border-top: 1px solid #ddd; pt: 4px;">
@@ -494,12 +503,12 @@
 
       <div style="font-size: 8.5pt; margin-top: 6px;">
         <strong>Dress:</strong> {{ $meeting->dress_code ?? 'Dinner Jacket, White Gloves' }}<br>
-        <strong>Rehearsal:</strong> {{ $meeting->rehearsal_text ?? ('The rehearsal should it be necessary will be at ' . ($meeting->rehearsal_starts_at ?: '6:00pm') . ' at ' . $meeting->venue . '.') }}
+        <strong>Rehearsal:</strong> {{ $meeting->rehearsal_text ?? ($meeting->rehearsal_starts_at ? 'The rehearsal should it be necessary will be at ' . substr($meeting->rehearsal_starts_at, 0, 5) . ' at ' . $meeting->venue . '.' : 'None arranged.') }}
       </div>
 
       <div class="section-title">FESTIVE BOARD</div>
       <div class="notice-box" style="background: #fdfdfd; border: 1px solid #ccc; padding: 6px 8px; font-size: 8.5pt;">
-        {{ $meeting->festive_board_theme ?? ($club->name.' will be holding their Festive Board.') }} Please confirm your attendance to {{ $secretaryUser->name ?? 'Secretary' }} by emailing {{ $secretaryUser->email ?? 'secretary@lodge.org' }}.<br>
+        {{ $meeting->festive_board_theme ?? ($club->name.' will be holding their Festive Board.') }} Please confirm your attendance to {{ $secretaryUser->name ?? 'the Secretary' }}{{ $secretaryUser?->email ? ' by emailing '.$secretaryUser->email : '' }}, or reply with your RSVP link.<br>
         Price: <strong>{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($meeting->dining_cost_member, 2) }}</strong><br>
         @php
           $payeeSortCode = $meeting->bank_sort_code ?: ($club->settings['bank_sort_code'] ?? '');

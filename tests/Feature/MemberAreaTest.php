@@ -407,9 +407,11 @@ class MemberAreaTest extends TestCase
 
         $this->actingAs($admin)->post($publish);
 
-        Mail::assertQueued(MeetingSummonsMail::class, 2);
+        // Registered visitors are promised summonses and RSVP links; pending and past people get nothing.
+        Mail::assertQueued(MeetingSummonsMail::class, 3);
         Mail::assertQueued(MeetingSummonsMail::class, fn ($mail) => $mail->hasTo($this->member->email));
-        foreach ([$pending, $past, $visitor] as $excluded) {
+        Mail::assertQueued(MeetingSummonsMail::class, fn ($mail) => $mail->hasTo($visitor->email));
+        foreach ([$pending, $past] as $excluded) {
             Mail::assertNotQueued(MeetingSummonsMail::class, fn ($mail) => $mail->hasTo($excluded->email));
         }
         $this->assertDatabaseMissing('meeting_rsvps', ['meeting_id' => $meeting->id, 'user_id' => $pending->id]);
@@ -420,7 +422,7 @@ class MemberAreaTest extends TestCase
         // Publishing again must not issue new links (they would replace the ones already sent) or send more mail.
         $this->actingAs($admin)->post($publish);
 
-        Mail::assertQueued(MeetingSummonsMail::class, 2);
+        Mail::assertQueued(MeetingSummonsMail::class, 3);
         $this->get(route('summons.rsvp.show', ['token' => $token]))->assertInertia(fn ($page) => $page->component('Summons/Rsvp'));
     }
 

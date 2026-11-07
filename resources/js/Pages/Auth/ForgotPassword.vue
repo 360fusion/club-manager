@@ -33,7 +33,7 @@ const submit = () => {
         <h1 class="text-2xl font-semibold text-white">
           Forgot your password?
         </h1>
-        <p class="text-xs text-slate-400">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           Enter your registered email address and we'll send you a password reset link.
         </p>
       </div>
@@ -58,7 +58,7 @@ const submit = () => {
         </Button>
 
         <div class="text-center pt-2">
-          <Link :href="route('login')" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+          <Link :href="route('login')" class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-white transition-colors">
             <UiIcon name="arrow-left" /> Back to login
           </Link>
         </div>

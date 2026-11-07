@@ -87,7 +87,7 @@ const filterClubs = () => {
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-semibold text-white tracking-tight">My active workspaces</h2>
-                        <p class="text-xs text-slate-400 mt-1">You belong to {{ userClubs.length }} club workspaces across different roles.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">You belong to {{ userClubs.length }} club workspaces across different roles.</p>
                     </div>
                 </div>
 
@@ -106,7 +106,7 @@ const filterClubs = () => {
                             </div>
 
                             <h3 class="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors">{{ userClub.name }}</h3>
-                            <p class="text-xs text-slate-400">Status: <Badge :variant="userClub.status === 'active' ? 'success' : userClub.status === 'pending' ? 'warning' : 'neutral'" class="capitalize">{{ userClub.status }}</Badge></p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Status: <Badge :variant="userClub.status === 'active' ? 'success' : userClub.status === 'pending' ? 'warning' : 'neutral'" class="capitalize">{{ userClub.status }}</Badge></p>
                         </div>
 
                         <div class="pt-4 border-t border-slate-900 flex items-center gap-2">
@@ -143,7 +143,7 @@ const filterClubs = () => {
                     </span>
                 </h1>
 
-                <p class="text-slate-400 text-lg sm:text-xl leading-relaxed">
+                <p class="text-slate-500 dark:text-slate-400 text-lg sm:text-xl leading-relaxed">
                     Rowing clubs need boat allocations and erg splits. Rugby clubs need pitch bookings and 15-player lineups.
                     ClubManager dynamically activates domain-specific feature modules per organization.
                 </p>
@@ -191,26 +191,26 @@ const filterClubs = () => {
                         <h3 class="text-xl font-semibold text-slate-100 group-hover:text-blue-300 transition-colors">
                             {{ club.name }}
                         </h3>
-                        <p v-if="club.tagline" class="mt-1 text-xs italic text-slate-400">
+                        <p v-if="club.tagline" class="mt-1 text-xs italic text-slate-500 dark:text-slate-400">
                             "{{ club.tagline }}"
                         </p>
 
                         <!-- Stats row -->
                         <div class="mt-4 py-3 px-4 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between text-xs text-slate-300">
                             <div>
-                                <span class="text-slate-400">Active members:</span>
+                                <span class="text-slate-500 dark:text-slate-400">Active members:</span>
                                 <span class="font-semibold text-white ml-1">{{ club.members_count }}</span>
                             </div>
                             <div class="h-3 w-px bg-slate-800"></div>
                             <div>
-                                <span class="text-slate-400">Membership tiers:</span>
+                                <span class="text-slate-500 dark:text-slate-400">Membership tiers:</span>
                                 <span class="font-semibold text-white ml-1">{{ club.plans_count }}</span>
                             </div>
                         </div>
 
                         <!-- Enabled feature modules -->
                         <div class="mt-5 space-y-2">
-                            <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                 Enabled feature modules
                             </div>
                             <div class="flex flex-wrap gap-1.5">

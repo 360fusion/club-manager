@@ -86,7 +86,7 @@ const toggleCheckIn = (attendeeId, isCheckedIn) => {
                   <th scope="col" class="p-3 font-medium">Booking</th>
                   <th scope="col" class="p-3 font-medium">Dining</th>
                   <th scope="col" class="p-3 font-medium">Checked in</th>
-                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Action</span></th>
+                  <th scope="col" class="relative p-3 text-right font-medium"><span class="sr-only">Action</span></th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -103,7 +103,7 @@ const toggleCheckIn = (attendeeId, isCheckedIn) => {
                   </td>
                   <td class="p-3 text-slate-600 dark:text-slate-300">
                     <template v-if="a.attending_dining">{{ [a.meal?.starter, a.meal?.main, a.meal?.dessert].filter(Boolean).join(' · ') || 'Dining' }}</template>
-                    <span v-else class="text-slate-400">None</span>
+                    <span v-else class="text-slate-500 dark:text-slate-400">None</span>
                   </td>
                   <td class="p-3">
                     <span v-if="a.checked_in_at" class="font-medium text-emerald-700 dark:text-emerald-300">Yes, {{ a.checked_in_at.slice(0, 5) }}</span>

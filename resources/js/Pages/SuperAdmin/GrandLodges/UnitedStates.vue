@@ -152,7 +152,7 @@ function dbEntry(code) {
             <Card padding="sm" class="space-y-4">
                 <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                     <div class="relative flex-1 max-w-md">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-500">
                             <UiIcon name="search" />
                         </div>
                         <input
@@ -167,7 +167,7 @@ function dbEntry(code) {
                             @click="searchQuery = ''"
                             type="button"
                             aria-label="Clear search"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white"
                         >
                             <UiIcon name="x" />
                         </button>
@@ -277,13 +277,13 @@ function dbEntry(code) {
                                         <span>Website</span>
                                         <UiIcon name="external-link" />
                                     </a>
-                                    <span v-else class="text-slate-400 text-[11px] dark:text-slate-500">None known</span>
+                                    <span v-else class="text-slate-500 text-[11px] dark:text-slate-500">None known</span>
                                 </td>
                             </tr>
 
                             <tr v-if="filteredLodges.length === 0">
                                 <td colspan="9" class="py-12 px-4 text-center text-slate-500 dark:text-slate-400">
-                                    <span class="mb-2 flex justify-center text-slate-400 dark:text-slate-500"><UiIcon name="search" :size="20" /></span>
+                                    <span class="mb-2 flex justify-center text-slate-500 dark:text-slate-500"><UiIcon name="search" :size="20" /></span>
                                     <p class="font-medium text-sm text-slate-700 dark:text-slate-300">No Grand Lodges found matching your search</p>
                                 </td>
                             </tr>

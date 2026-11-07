@@ -34,7 +34,7 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
     <MembersLayout title="Notifications" active-tab="">
         <div class="space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Notifications</h1>
+                <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Notifications</h2>
                 <Button v-if="unreadCount" size="sm" variant="secondary" @click="markAllRead">Mark all {{ unreadCount }} as read</Button>
             </div>
 

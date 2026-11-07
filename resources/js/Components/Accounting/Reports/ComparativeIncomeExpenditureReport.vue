@@ -24,10 +24,10 @@ defineProps({
           <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
               <th scope="col" class="py-3 px-4 font-medium">Statement category</th>
-              <th scope="col" class="py-3 px-4 font-medium text-right">Income<br><span class="text-[11px] font-normal text-slate-400">{{ reports.comparative_income_expenditure?.prior_year_label }}</span></th>
-              <th scope="col" class="py-3 px-4 font-medium text-right">Expenditure<br><span class="text-[11px] font-normal text-slate-400">{{ reports.comparative_income_expenditure?.prior_year_label }}</span></th>
-              <th scope="col" class="py-3 px-4 font-medium text-right border-l border-slate-200 dark:border-slate-800">Income<br><span class="text-[11px] font-normal text-slate-400">{{ reports.comparative_income_expenditure?.current_year_label }}</span></th>
-              <th scope="col" class="py-3 px-4 font-medium text-right">Expenditure<br><span class="text-[11px] font-normal text-slate-400">{{ reports.comparative_income_expenditure?.current_year_label }}</span></th>
+              <th scope="col" class="py-3 px-4 font-medium text-right">Income<br><span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ reports.comparative_income_expenditure?.prior_year_label }}</span></th>
+              <th scope="col" class="py-3 px-4 font-medium text-right">Expenditure<br><span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ reports.comparative_income_expenditure?.prior_year_label }}</span></th>
+              <th scope="col" class="py-3 px-4 font-medium text-right border-l border-slate-200 dark:border-slate-800">Income<br><span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ reports.comparative_income_expenditure?.current_year_label }}</span></th>
+              <th scope="col" class="py-3 px-4 font-medium text-right">Expenditure<br><span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ reports.comparative_income_expenditure?.current_year_label }}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
@@ -51,9 +51,9 @@ defineProps({
             <!-- BALANCE CARRIED FORWARD (CASH AT BANK) -->
             <tr class="bg-slate-50 dark:bg-slate-800/50 font-medium text-slate-900 dark:text-white">
               <td class="py-3 px-4 italic">Balance carried forward – i.e. cash at bank 31/03</td>
-              <td class="py-3 px-4 text-right tabular-nums text-slate-400">—</td>
+              <td class="py-3 px-4 text-right tabular-nums text-slate-500 dark:text-slate-400">—</td>
               <td class="py-3 px-4 text-right tabular-nums font-semibold">{{ formatMoney(reports.comparative_income_expenditure?.prior_balance_carried_forward) }}</td>
-              <td class="py-3 px-4 text-right tabular-nums text-slate-400 border-l border-slate-200 dark:border-slate-700">—</td>
+              <td class="py-3 px-4 text-right tabular-nums text-slate-500 dark:text-slate-400 border-l border-slate-200 dark:border-slate-700">—</td>
               <td class="py-3 px-4 text-right tabular-nums font-semibold">{{ formatMoney(reports.comparative_income_expenditure?.current_balance_carried_forward) }}</td>
             </tr>
 

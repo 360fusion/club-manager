@@ -62,17 +62,17 @@ const menuItem = 'w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sla
           class="absolute left-0 top-full mt-2 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 z-50"
         >
           <button type="button" role="menuitem" @click="showAccountingDropdown = false; navigateTo('accounting')" :class="menuItem">
-            <UiIcon name="bank" class="text-slate-400" />
+            <UiIcon name="bank" class="text-slate-500 dark:text-slate-400" />
             Bank and payment accounts
           </button>
 
           <button type="button" role="menuitem" @click="showAccountingDropdown = false; navigateTo('chart-of-accounts')" :class="menuItem">
-            <UiIcon name="clipboard" class="text-slate-400" />
+            <UiIcon name="clipboard" class="text-slate-500 dark:text-slate-400" />
             Chart of accounts
           </button>
 
           <button type="button" role="menuitem" @click="showAccountingDropdown = false; navigateTo('accounting')" :class="[menuItem, 'border-t border-slate-200 dark:border-slate-800 mt-1 pt-2']">
-            <UiIcon name="document" class="text-slate-400" />
+            <UiIcon name="document" class="text-slate-500 dark:text-slate-400" />
             General ledger and journals
           </button>
 
@@ -83,7 +83,7 @@ const menuItem = 'w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sla
             @click="showAccountingDropdown = false; openOpeningBalanceModal()"
             :class="menuItem"
           >
-            <UiIcon name="cash" class="text-slate-400" />
+            <UiIcon name="cash" class="text-slate-500 dark:text-slate-400" />
             Set opening balances
           </button>
         </div>
@@ -128,7 +128,7 @@ const menuItem = 'w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sla
             @click="showAddMenu = false"
             :class="menuItem"
           >
-            <UiIcon name="receipt" class="text-slate-400" />
+            <UiIcon name="receipt" class="text-slate-500 dark:text-slate-400" />
             Create invoice
           </Link>
           <Link
@@ -137,7 +137,7 @@ const menuItem = 'w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sla
             @click="showAddMenu = false"
             :class="menuItem"
           >
-            <UiIcon name="document" class="text-slate-400" />
+            <UiIcon name="document" class="text-slate-500 dark:text-slate-400" />
             Add bill
           </Link>
           <Link
@@ -146,7 +146,7 @@ const menuItem = 'w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sla
             @click="showAddMenu = false"
             :class="menuItem"
           >
-            <UiIcon name="pencil" class="text-slate-400" />
+            <UiIcon name="pencil" class="text-slate-500 dark:text-slate-400" />
             Post journal
           </Link>
         </div>

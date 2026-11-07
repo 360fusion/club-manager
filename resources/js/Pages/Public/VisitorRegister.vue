@@ -39,7 +39,7 @@ const submit = () => {
       <h1 class="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
         Visiting brethren sign-up
       </h1>
-      <p class="mt-2 text-sm text-slate-400">
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
         Register as a visitor for <span class="text-blue-400 font-medium">{{ club.name }}</span> to receive meeting summonses and RSVP invites.
       </p>
     </div>

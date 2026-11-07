@@ -60,7 +60,7 @@ const submitDecline = () => {
 
             <template v-else-if="status === 'signed'">
                 <div class="text-center space-y-3">
-                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="check" :size="20" /></div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="check" :size="20" /></div>
                     <h1 class="text-xl font-semibold text-slate-900 dark:text-white">Signed, thank you</h1>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">You signed <strong>{{ documentLabel }}</strong> on {{ signedAt }}.</p>
                 </div>

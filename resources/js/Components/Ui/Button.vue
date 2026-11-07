@@ -19,10 +19,11 @@ const VARIANTS = {
     danger: 'bg-rose-600 text-white hover:bg-rose-500 border border-transparent',
 };
 
+// On phones every button is at least 44px tall, the size a thumb can hit; from sm up they keep their compact height.
 const SIZES = {
-    sm: 'px-3 py-1.5 text-xs gap-1.5',
-    md: 'px-4 py-2 text-sm gap-2',
-    lg: 'px-5 py-2.5 text-sm gap-2',
+    sm: 'px-3 py-1.5 text-xs gap-1.5 min-h-11 sm:min-h-0',
+    md: 'px-4 py-2 text-sm gap-2 min-h-11 sm:min-h-0',
+    lg: 'px-5 py-2.5 text-sm gap-2 min-h-11 sm:min-h-0',
 };
 
 const classes = computed(() => [
