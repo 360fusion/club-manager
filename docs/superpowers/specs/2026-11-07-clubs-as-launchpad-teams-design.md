@@ -49,9 +49,10 @@ separate project.
 2. **The team table is a setting:** `launchpad.workspaces.table` (default `workspaces`), read by `Workspace::getTable()`. Raw
    `DB::table('workspaces')` in Launchpad goes through the model's table. Launchpad's own tables keep the column name `workspace_id` (then
    pointing at `clubs.id`).
-3. **Feature flags do not take over the app's scope.** `Flags::register()` sets Pennant's default scope only if the app has not set one
-   (`launchpad.features.set_default_scope`, default `true`), and stores a team's scope by the morph alias of the team model, so an app that maps
-   `Relation::morphMap(['club' => Club::class])` and passes its own model gets the same rows whether it asks with `Club` or `Workspace`.
+3. **Feature flags do not take over the app's scope.** `Flags::register()` sets Pennant's default scope only if the app has not opted out
+   (`launchpad.features.set_default_scope`, default `true`). The app asks for Launchpad's flags with the team (`Feature::for($club->asTeam())`):
+   Launchpad's flags are defined for its `Workspace`, and Pennant passes the scope straight to them, so asking with a `Club` is not possible
+   (storing by morph alias, considered earlier, would not change that and is dropped).
 4. Already done: `Launchpad::ignoreMigrations()` and the `launchpad-migrations` publish tag (6b35a21).
 
 Nothing about owners, members or roles changes in Launchpad: without its team pages, nothing in the used back end needs them. (`Workspace`'s
@@ -65,7 +66,6 @@ Nothing about owners, members or roles changes in Launchpad: without its team pa
 - `config/launchpad.php`: `workspaces.table` = `clubs`, `workspaces.pages` = `false`, `features.set_default_scope` = `false`; modules on:
   `workspaces`, `webhooks`, `files`; every other module off.
 - No Launchpad traits on `User` (the `memberships()` name clashes, and they are not needed).
-- `Relation::morphMap(['club' => Club::class])` if not already, so flags and morph columns agree.
 
 ### Migrations (published from Launchpad, adapted; columns and tables are only added)
 
