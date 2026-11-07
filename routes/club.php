@@ -95,6 +95,7 @@ use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\VisitorAccessAdminController;
+use App\Http\Controllers\WebhookAdminController;
 use Illuminate\Support\Facades\Route;
 
 // Signed-in routes: the member area (/members/...) and club administration (/{clubSlug}/admin/...).
@@ -272,6 +273,13 @@ Route::middleware(['auth'])->group(function () {
 
     // What happened in the club (who joined, left, or changed role or status), from its Launchpad team activity
     Route::get('/{clubSlug}/admin/activity', [ActivityAdminController::class, 'index'])->name('admin.activity.index');
+
+    // Where the club's events are sent (guarded by manage_webhooks through the route map)
+    Route::get('/{clubSlug}/admin/webhooks', [WebhookAdminController::class, 'index'])->name('admin.webhooks.index');
+    Route::post('/{clubSlug}/admin/webhooks', [WebhookAdminController::class, 'store'])->name('admin.webhooks.store');
+    Route::post('/{clubSlug}/admin/webhooks/{id}/toggle', [WebhookAdminController::class, 'toggle'])->name('admin.webhooks.toggle');
+    Route::post('/{clubSlug}/admin/webhooks/{id}/test', [WebhookAdminController::class, 'test'])->name('admin.webhooks.test');
+    Route::delete('/{clubSlug}/admin/webhooks/{id}', [WebhookAdminController::class, 'destroy'])->name('admin.webhooks.destroy');
 
     // Admin Updates & Weekly Digest Routes
     Route::get('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');

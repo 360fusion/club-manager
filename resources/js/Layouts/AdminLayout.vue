@@ -59,6 +59,7 @@ const currentActiveTab = computed(() => {
     if (path.includes('/admin/media')) return 'media';
     if (path.includes('/admin/charity')) return 'charity';
     if (path.includes('/admin/activity')) return 'activity';
+    if (path.includes('/admin/webhooks')) return 'webhooks';
     if (path.includes('/admin/settings') || path.includes('/admin/profile')) return 'settings';
     if (path.includes('/admin/analytics') || path.endsWith('/admin') || path.endsWith('/admin/')) return 'dashboard';
   }
@@ -322,6 +323,20 @@ const currentActiveTab = computed(() => {
           >
             <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <span>Activity</span>
+          </Link>
+
+          <!-- Webhooks: where the club's events are sent -->
+          <Link
+            :href="route('admin.webhooks.index', { clubSlug })"
+            :class="[
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
+              currentActiveTab === 'webhooks'
+                ? 'bg-slate-800 text-white font-bold shadow-sm'
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
+            ]"
+          >
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+            <span>Webhooks</span>
           </Link>
 
           <!-- 11. Club Settings -->

@@ -65,6 +65,11 @@ return [
             'description' => 'Build CMS pages, customize navigation, and update site content',
             'roles' => ['owner', 'admin'],
         ],
+        'manage_webhooks' => [
+            'label' => 'Webhooks',
+            'description' => 'Send the club\'s events (members, meetings, bookings, payments) to other systems',
+            'roles' => ['owner', 'admin'],
+        ],
         'view_activity' => [
             'label' => 'Activity',
             'description' => 'See who joined, left, or had their role or status changed, and when',
@@ -115,6 +120,7 @@ return [
         'media-manager' => 'edit_website',
 
         'activity' => 'view_activity',
+        'webhooks' => 'manage_webhooks',
 
         'settings' => 'manage_settings',
     ],
