@@ -65,6 +65,11 @@ return [
             'description' => 'Build CMS pages, customize navigation, and update site content',
             'roles' => ['owner', 'admin'],
         ],
+        'view_activity' => [
+            'label' => 'Activity',
+            'description' => 'See who joined, left, or had their role or status changed, and when',
+            'roles' => ['owner', 'admin'],
+        ],
         'manage_settings' => [
             'label' => 'Club Settings',
             'description' => 'Configure organization profile, branding, custom domain, and permission matrix',
@@ -108,6 +113,8 @@ return [
         'pages' => 'edit_website',
         'media' => 'edit_website',
         'media-manager' => 'edit_website',
+
+        'activity' => 'view_activity',
 
         'settings' => 'manage_settings',
     ],

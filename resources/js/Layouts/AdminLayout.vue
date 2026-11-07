@@ -58,6 +58,7 @@ const currentActiveTab = computed(() => {
     if (path.includes('/admin/pages')) return 'pages';
     if (path.includes('/admin/media')) return 'media';
     if (path.includes('/admin/charity')) return 'charity';
+    if (path.includes('/admin/activity')) return 'activity';
     if (path.includes('/admin/settings') || path.includes('/admin/profile')) return 'settings';
     if (path.includes('/admin/analytics') || path.endsWith('/admin') || path.endsWith('/admin/')) return 'dashboard';
   }
@@ -307,6 +308,20 @@ const currentActiveTab = computed(() => {
           >
             <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
             <span>Charity</span>
+          </Link>
+
+          <!-- Activity: who joined, left or changed role -->
+          <Link
+            :href="route('admin.activity.index', { clubSlug })"
+            :class="[
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
+              currentActiveTab === 'activity'
+                ? 'bg-slate-800 text-white font-bold shadow-sm'
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
+            ]"
+          >
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Activity</span>
           </Link>
 
           <!-- 11. Club Settings -->

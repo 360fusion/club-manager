@@ -30,6 +30,7 @@ use App\Http\Controllers\AccountingInvoiceController;
 use App\Http\Controllers\AccountingJournalController;
 use App\Http\Controllers\AccountingSettingsController;
 use App\Http\Controllers\AccountingYearEndController;
+use App\Http\Controllers\ActivityAdminController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AttendanceController;
@@ -268,6 +269,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/visitors/{id}/decline', [VisitorAccessAdminController::class, 'decline'])->name('admin.visitors.decline');
     Route::post('/{clubSlug}/admin/visitors/{id}/revoke', [VisitorAccessAdminController::class, 'revoke'])->name('admin.visitors.revoke');
     Route::post('/{clubSlug}/admin/visitors/visits/{id}/answer', [VisitorAccessAdminController::class, 'answerVisit'])->name('admin.visitors.visits.answer');
+
+    // What happened in the club (who joined, left, or changed role or status), from its Launchpad team activity
+    Route::get('/{clubSlug}/admin/activity', [ActivityAdminController::class, 'index'])->name('admin.activity.index');
 
     // Admin Updates & Weekly Digest Routes
     Route::get('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');
