@@ -28,7 +28,7 @@ class ClubMeetingEventsTest extends TestCase
 
     public function test_a_meeting_is_recorded_when_made_changed_and_cancelled(): void
     {
-        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Installation', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit']);
+        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Installation', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit', 'status' => 'published']);
         $this->assertSame(['meeting.created'], $this->lines());
         $this->assertStringContainsString('Installation', WorkspaceEvent::withoutGlobalScopes()->sole()->summary);
 
@@ -40,10 +40,21 @@ class ClubMeetingEventsTest extends TestCase
         $this->assertSame(['meeting.created', 'meeting.updated', 'meeting.cancelled'], $this->lines());
     }
 
+    /** A draft is not announced: members cannot see it yet */
+    public function test_a_draft_meeting_is_announced_when_published(): void
+    {
+        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Draft', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit', 'status' => 'draft']);
+        $meeting->update(['venue' => 'Town Hall']);
+        $this->assertSame([], $this->lines());
+
+        $meeting->update(['status' => 'published']);
+        $this->assertSame(['meeting.created'], $this->lines());
+    }
+
     /** A summons makes a pending row for each member: that is not a reply */
     public function test_replies_are_recorded_and_summons_rows_and_payment_changes_are_not(): void
     {
-        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Regular', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit']);
+        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Regular', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit', 'status' => 'published']);
         $rsvp = MeetingRsvp::create(['meeting_id' => $meeting->id, 'user_id' => User::factory()->create(['name' => 'Ray Reply'])->id, 'token_hash' => 'a', 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'pending']);
 
         $rsvp->update(['attendance_status' => 'apologies']);
@@ -56,7 +67,7 @@ class ClubMeetingEventsTest extends TestCase
 
     public function test_a_change_with_no_one_signed_in_is_by_the_system(): void
     {
-        Meeting::create(['club_id' => $this->club->id, 'title' => 'Regular', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit']);
+        Meeting::create(['club_id' => $this->club->id, 'title' => 'Regular', 'meeting_date' => '2026-12-12', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit', 'status' => 'published']);
 
         $this->assertSame('The system', WorkspaceEvent::withoutGlobalScopes()->sole()->actor_name);
     }

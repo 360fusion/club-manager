@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -13,6 +13,9 @@ const props = defineProps({
     // The new endpoint's signing secret, only on the page load right after adding it.
     newSecret: { type: String, default: null },
 });
+
+// What the last action said: AdminLayout shows neither (toggle and test report problems on `url`)
+const page = usePage();
 
 const form = useForm({ url: '', description: '', events: [] });
 
@@ -46,6 +49,9 @@ const label = (key) => props.events.find((e) => e.key === key)?.label ?? key;
                 <h1 class="text-2xl font-black text-slate-900 dark:text-white">Webhooks</h1>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Send what happens in the club (members, meetings, bookings, payments) to another system, as a signed POST.</p>
             </div>
+
+            <p v-if="page.props.flash?.success" role="status" class="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{{ page.props.flash.success }}</p>
+            <p v-if="page.props.errors?.url && !form.errors.url" role="alert" class="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">{{ page.props.errors.url }}</p>
 
             <div v-if="newSecret" class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-700 dark:bg-amber-950">
                 <p class="font-bold text-amber-900 dark:text-amber-200">Copy the signing secret now. It will not be shown again.</p>

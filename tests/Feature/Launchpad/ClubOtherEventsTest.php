@@ -78,6 +78,19 @@ class ClubOtherEventsTest extends TestCase
         $this->assertSame(['invoice.created', 'invoice.paid'], $this->lines());
     }
 
+    /** Draft and pending-approval invoices are not raised yet */
+    public function test_a_draft_invoice_is_announced_when_issued(): void
+    {
+        $invoice = $this->invoice('draft');
+        $invoice->update(['notes' => 'Check the amount']);
+        $invoice->update(['status' => 'pending_approval']);
+        $this->assertSame([], $this->lines());
+
+        $invoice->update(['status' => 'unpaid']);
+        $invoice->update(['status' => 'paid']);
+        $this->assertSame(['invoice.created', 'invoice.paid'], $this->lines());
+    }
+
     public function test_an_invoice_raised_paid_is_recorded_as_paid_once(): void
     {
         $this->invoice('paid');
@@ -117,6 +130,15 @@ class ClubOtherEventsTest extends TestCase
         $draft->update(['status' => 'published']);
         $this->newPost('published', 'Straight out')->update(['excerpt' => 'Edited']);
         $this->assertSame(['post.published', 'post.published'], $this->lines());
+    }
+
+    /** Members cannot see a post before its published_at, so it is not announced then */
+    public function test_a_scheduled_post_is_not_announced_at_save(): void
+    {
+        $this->newPost('published', 'Later')->update(['published_at' => now()->addWeek()]);
+        Post::create(['club_id' => $this->club->id, 'author_id' => User::factory()->create()->id, 'title' => 'Next week', 'slug' => 'next-week', 'content' => '<p>Body</p>', 'status' => 'published', 'published_at' => now()->addWeek()]);
+
+        $this->assertSame(['post.published'], $this->lines());
     }
 
     public function test_a_completed_signature_is_recorded(): void

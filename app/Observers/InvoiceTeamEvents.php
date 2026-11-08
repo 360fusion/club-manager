@@ -5,18 +5,28 @@ namespace App\Observers;
 use App\Models\Invoice;
 use App\Support\ClubTeamEvents;
 
-/** An invoice raised, and an invoice paid (also when it is raised already paid) */
+/** An invoice raised (issued: unpaid or paid, not a draft or one awaiting approval), and an invoice paid (also when raised already paid) */
 class InvoiceTeamEvents
 {
+    private const ISSUED = ['unpaid', 'paid'];
+
     public function created(Invoice $invoice): void
     {
-        $this->record($invoice, 'invoice.created', 'raised the invoice');
+        in_array($invoice->status, self::ISSUED, true) && $this->record($invoice, 'invoice.created', 'raised the invoice');
         $invoice->status === 'paid' && $this->record($invoice, 'invoice.paid', 'recorded as paid the invoice');
     }
 
     public function updated(Invoice $invoice): void
     {
-        $invoice->wasChanged('status') && $invoice->status === 'paid' && $this->record($invoice, 'invoice.paid', 'recorded as paid the invoice');
+        if (! $invoice->wasChanged('status')) {
+            return;
+        }
+
+        if (in_array($invoice->status, self::ISSUED, true) && ! in_array($invoice->getOriginal('status'), self::ISSUED, true)) {
+            $this->record($invoice, 'invoice.created', 'raised the invoice');
+        }
+
+        $invoice->status === 'paid' && $this->record($invoice, 'invoice.paid', 'recorded as paid the invoice');
     }
 
     private function record(Invoice $invoice, string $event, string $verb): void

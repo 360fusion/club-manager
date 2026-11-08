@@ -6,19 +6,24 @@ use App\Models\Meeting;
 use App\Support\ClubTeamEvents;
 use Illuminate\Support\Carbon;
 
-/** A meeting scheduled, changed (title, date, time or venue) or cancelled: in the club's activity log and to its webhooks */
+/**
+ * A meeting scheduled (made, or moved out of draft), changed (title, date, time or venue) or cancelled: in the club's activity log and to
+ * its webhooks. A draft is not announced: members cannot see it yet.
+ */
 class MeetingTeamEvents
 {
     public function created(Meeting $meeting): void
     {
-        $this->record($meeting, 'meeting.created', 'scheduled');
+        in_array($meeting->status, [null, 'draft'], true) || $this->record($meeting, 'meeting.created', 'scheduled');
     }
 
     public function updated(Meeting $meeting): void
     {
         if ($meeting->wasChanged('status') && $meeting->status === 'cancelled') {
             $this->record($meeting, 'meeting.cancelled', 'cancelled');
-        } elseif ($meeting->wasChanged(['title', 'meeting_date', 'starts_at', 'venue'])) {
+        } elseif ($meeting->wasChanged('status') && $meeting->getOriginal('status') === 'draft') {
+            $this->record($meeting, 'meeting.created', 'scheduled');
+        } elseif ($meeting->status !== 'draft' && $meeting->wasChanged(['title', 'meeting_date', 'starts_at', 'venue'])) {
             $this->record($meeting, 'meeting.updated', 'changed the date, time or venue of');
         }
     }

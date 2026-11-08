@@ -5,17 +5,26 @@ namespace App\Observers;
 use App\Models\Post;
 use App\Support\ClubTeamEvents;
 
-/** A post published: saved as published, or moved to published */
+/**
+ * A post published: saved as published, or moved to published.
+ * shortcut: a post scheduled for later (published_at in the future) is never announced; add a scheduled check if receivers need it.
+ */
 class PostTeamEvents
 {
     public function created(Post $post): void
     {
-        $post->status === 'published' && $this->record($post);
+        $this->live($post) && $this->record($post);
     }
 
     public function updated(Post $post): void
     {
-        $post->wasChanged('status') && $post->status === 'published' && $this->record($post);
+        $post->wasChanged('status') && $this->live($post) && $this->record($post);
+    }
+
+    /** Members see it now (as Post::scopePublished): later ones are hidden until then */
+    private function live(Post $post): bool
+    {
+        return $post->status === 'published' && ($post->published_at === null || $post->published_at->lte(now()));
     }
 
     private function record(Post $post): void
