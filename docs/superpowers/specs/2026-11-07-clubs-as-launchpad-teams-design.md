@@ -109,7 +109,8 @@ club-manager, so club-manager's own flags keep resolving as now.
 1. Launchpad changes 1-3, each with tests, released.
 2. club-manager on `spike/launchpad`: config, migrations, the bridge, team activity end to end (the members events first). Full suite and the
    PostgreSQL run green; club-manager's existing tests unchanged.
-3. Webhooks (pages and the events above), then files.
+3. Webhooks (pages and the events above). Files: dropped (2026-11-08). club-manager's File manager already does more (folders, versions,
+   crop, replace), so Launchpad's files module is off and its `workspace_files` table is not added.
 4. Feature flags, if confirmed.
 5. Deploy: migrations only add; turning the modules off is the rollback.
 

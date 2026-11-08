@@ -108,8 +108,8 @@ return [
         /* Customers' API tokens (the API page and /api/v1) and outbound webhooks (the Webhooks page) */
         'api' => false,
         'webhooks' => true,
-        /* The Files page: uploads that belong to a workspace */
-        'files' => true,
+        /* The Files page: uploads that belong to a workspace. Off: clubs keep their files in club-manager's own File manager (folders, versions) */
+        'files' => false,
         /* A team signs its people in with its company's identity provider (OpenID Connect), set up by the team's owner */
         'sso' => false,
         /* A team's directory adds and removes its people (SCIM 2.0), once its owner makes a token on the single sign-on page */
