@@ -111,7 +111,9 @@ club-manager, so club-manager's own flags keep resolving as now.
    PostgreSQL run green; club-manager's existing tests unchanged.
 3. Webhooks (pages and the events above). Files: dropped (2026-11-08). club-manager's File manager already does more (folders, versions,
    crop, replace), so Launchpad's files module is off and its `workspace_files` table is not added.
-4. Feature flags, if confirmed.
+4. Feature flags: not now (2026-11-08). Clubs' modules are already the per-club switch, and club-manager's Pennant flags read them.
+   Launchpad's flags would add staged releases, but need its settings table and look up plans through Launchpad's billing, not
+   club-manager's subscriptions. `launchpad.features` stays empty, so Launchpad leaves Pennant alone. Revisit when a staged release is needed.
 5. Deploy: migrations only add; turning the modules off is the rollback.
 
 ## Tests
