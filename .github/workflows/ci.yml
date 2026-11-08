@@ -30,6 +30,9 @@ jobs:
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+        env:
+          # Launchpad is a private repository: a token that can read 360fusion/launchpad
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.LAUNCHPAD_TOKEN }}"}}'
 
       - name: Install and build frontend
         run: |
@@ -113,6 +116,9 @@ jobs:
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+        env:
+          # Launchpad is a private repository: a token that can read 360fusion/launchpad
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.LAUNCHPAD_TOKEN }}"}}'
 
       - name: Build the frontend (some tests render pages)
         run: |

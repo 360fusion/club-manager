@@ -10,7 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "360fusion/launchpad": "*@dev",
+        "360fusion/launchpad": "^0.7",
         "barryvdh/laravel-dompdf": "^3.1",
         "gocardless/gocardless-pro": "^8.3",
         "inertiajs/inertia-laravel": "^3.3",
@@ -117,10 +117,7 @@
     "prefer-stable": true,
     "repositories": [{
         "name": "launchpad",
-        "type": "path",
-        "url": "/Users/ben/Herd/launchpad",
-        "options": {
-            "symlink": false
-        }
+        "type": "vcs",
+        "url": "https://github.com/360fusion/launchpad.git"
     }]
 }

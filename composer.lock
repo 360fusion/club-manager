@@ -4,15 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "681a0a6366b586c4a464002617354ab0",
+    "content-hash": "79b27a9efcc32e399b9fac4676be38fe",
     "packages": [
         {
             "name": "360fusion/launchpad",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "/Users/ben/Herd/launchpad",
+            "version": "v0.7.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:360fusion/launchpad.git",
                 "reference": "1bce89ef11ab8f66e49539e3677dcc39b936a381"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/360fusion/launchpad/zipball/1bce89ef11ab8f66e49539e3677dcc39b936a381",
+                "reference": "1bce89ef11ab8f66e49539e3677dcc39b936a381",
+                "shasum": ""
             },
             "require": {
                 "bacon/bacon-qr-code": "^3.1",
@@ -74,10 +80,11 @@
                 "proprietary"
             ],
             "description": "Accounts, workspaces, Stripe billing, admin and a default website for new Laravel builds.",
-            "transport-options": {
-                "symlink": false,
-                "relative": false
-            }
+            "support": {
+                "source": "https://github.com/360fusion/launchpad/tree/v0.7.0",
+                "issues": "https://github.com/360fusion/launchpad/issues"
+            },
+            "time": "2026-11-07T16:45:23+00:00"
         },
         {
             "name": "anourvalar/eloquent-serialize",
@@ -15311,9 +15318,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "360fusion/launchpad": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
