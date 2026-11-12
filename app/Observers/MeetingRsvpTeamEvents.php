@@ -42,9 +42,7 @@ class MeetingRsvpTeamEvents
             return;
         }
 
-        $name = $rsvp->user?->name ?? 'A member';
-
-        ClubTeamEvents::record((int) $meeting->club_id, 'meeting.rsvp', "recorded {$name}'s reply to the meeting {$meeting->title}: ".(self::ANSWERS[$answer] ?? $answer), [
+        ClubTeamEvents::record((int) $meeting->club_id, 'meeting.rsvp', "recorded {$rsvp->user->name}'s reply to the meeting {$meeting->title}: ".(self::ANSWERS[$answer] ?? $answer), [
             'meeting_id' => $meeting->id, 'user_id' => $rsvp->user_id, 'attendance_status' => $answer,
         ]);
     }

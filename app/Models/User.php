@@ -50,7 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * @return BelongsToMany<Club, $this>
+     * @return BelongsToMany<Club, $this, ClubUser>
      */
     public function clubs(): BelongsToMany
     {

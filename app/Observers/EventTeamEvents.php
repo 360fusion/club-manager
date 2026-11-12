@@ -21,7 +21,7 @@ class EventTeamEvents
     private function record(Event $event): void
     {
         ClubTeamEvents::record((int) $event->club_id, 'event.published', "published the event {$event->title}", [
-            'event_id' => $event->id, 'title' => $event->title, 'starts_at' => $event->starts_at?->toIso8601String(),
+            'event_id' => $event->id, 'title' => $event->title, 'starts_at' => $event->starts_at->toIso8601String(),
         ]);
     }
 }

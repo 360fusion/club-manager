@@ -31,6 +31,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Paddle\Cashier;
 use Laravel\Pennant\Feature;
+use Launchpad\Launchpad;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,7 +42,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // club-manager has its own users columns and tables; it takes only the Launchpad migrations it needs (database/migrations)
-        \Launchpad\Launchpad::ignoreMigrations();
+        Launchpad::ignoreMigrations();
 
         // Both Cashier packages register a `stripe/webhook` route, and the Paddle one answers it with a controller
         // meant for a different provider. Lodges take card payments on their own Stripe account through

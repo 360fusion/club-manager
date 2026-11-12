@@ -21,13 +21,15 @@ class WebhookAdminController extends Controller
     {
         $club = $this->findClub($clubSlug);
         $endpoints = WebhookEndpoint::where('workspace_id', $club->id)->orderBy('id')->get();
-        $deliveries = WebhookDelivery::whereIn('endpoint_id', $endpoints->pluck('id'))->with('endpoint')->orderByDesc('id')->limit(20)->get();
+        $deliveries = WebhookDelivery::whereIn('endpoint_id', $endpoints->pluck('id'))->orderByDesc('id')->limit(20)->get();
+
+        $urls = $endpoints->pluck('url', 'id');
 
         return Inertia::render('Admin/Webhooks/Index', [
             'club' => $club->only(['id', 'name', 'slug']),
             'endpoints' => $endpoints->map(fn (WebhookEndpoint $e) => ['id' => $e->id, 'url' => $e->url, 'description' => $e->description, 'events' => $e->events, 'active' => $e->active])->values(),
             'deliveries' => $deliveries->map(fn (WebhookDelivery $d) => [
-                'id' => $d->id, 'url' => $d->endpoint->url, 'event' => $d->event, 'status' => $d->status, 'attempts' => $d->attempts,
+                'id' => $d->id, 'url' => $urls[$d->endpoint_id] ?? null, 'event' => $d->event, 'status' => $d->status, 'attempts' => $d->attempts,
                 'response_code' => $d->response_code, 'last_error' => $d->last_error, 'created_at' => $d->created_at?->toIso8601String(),
             ])->values(),
             'events' => collect((array) config('launchpad.webhooks.events'))->map(fn ($label, $key) => ['key' => $key, 'label' => $label])->values(),

@@ -213,7 +213,7 @@ class Club extends Model implements HasMedia
     }
 
     /**
-     * @return BelongsToMany<User, $this>
+     * @return BelongsToMany<User, $this, ClubUser>
      */
     public function users(): BelongsToMany
     {
