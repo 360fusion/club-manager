@@ -78,7 +78,7 @@ const submitRecurringBill = () => {
               <th scope="col" class="px-3 py-2.5 font-medium">Frequency</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Next run</th>
               <th scope="col" class="px-3 py-2.5 text-center font-medium">Status</th>
-              <th scope="col" class="px-3 py-2.5"><span class="sr-only">Actions</span></th>
+              <th scope="col" class="relative px-3 py-2.5"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white text-slate-800 dark:divide-slate-800 dark:bg-slate-900 dark:text-slate-100">

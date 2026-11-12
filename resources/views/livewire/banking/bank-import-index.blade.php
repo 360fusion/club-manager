@@ -3,7 +3,7 @@
     <x-card>
         <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Bank statement import</h1>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Bank statement import</h2>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Import UK bank statement CSV and OFX files; duplicate lines are detected and skipped.</p>
             </div>
 

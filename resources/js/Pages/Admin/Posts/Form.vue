@@ -540,7 +540,7 @@ const submitWithAction = (actionType) => {
                   >
                     <div class="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
                       <span>Insert a block here</span>
-                      <button type="button" aria-label="Close" class="rounded-lg p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" @click="activeInsertIndex = null">
+                      <button type="button" aria-label="Close" class="rounded-lg p-0.5 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" @click="activeInsertIndex = null">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
                       </button>
                     </div>
@@ -692,7 +692,7 @@ const submitWithAction = (actionType) => {
                   >
                     <div class="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
                       <span>Insert a block here</span>
-                      <button type="button" aria-label="Close" class="rounded-lg p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" @click="activeInsertIndex = null">
+                      <button type="button" aria-label="Close" class="rounded-lg p-0.5 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" @click="activeInsertIndex = null">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
                       </button>
                     </div>
@@ -791,7 +791,7 @@ const submitWithAction = (actionType) => {
               @click="showPublishSettings = !showPublishSettings"
             >
               <span class="text-base font-semibold text-slate-900 dark:text-white">Publish settings</span>
-              <svg :class="['h-5 w-5 text-slate-400 transition-transform', showPublishSettings ? 'rotate-180' : '']" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" /></svg>
+              <svg :class="['h-5 w-5 text-slate-500 dark:text-slate-400 transition-transform', showPublishSettings ? 'rotate-180' : '']" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" /></svg>
             </button>
           </template>
 
@@ -850,9 +850,9 @@ const submitWithAction = (actionType) => {
             <span>{{ form.published_at ? 'Scheduled: ' + formatLocal(form.published_at) : 'Publishing immediately' }}</span>
           </div>
 
-          <h1 class="text-2xl font-bold leading-tight text-slate-900 dark:text-white md:text-3xl">
+          <h2 class="text-2xl font-bold leading-tight text-slate-900 dark:text-white md:text-3xl">
             {{ form.title || 'Untitled news article' }}
-          </h1>
+          </h2>
 
           <p v-if="form.excerpt" class="rounded-r-xl border-l-4 border-blue-500 bg-slate-50 py-1 pl-3 text-sm font-medium italic text-slate-600 dark:bg-slate-800/50 dark:text-slate-300">
             {{ form.excerpt }}
@@ -868,7 +868,7 @@ const submitWithAction = (actionType) => {
             <div
               v-if="block.type === 'text'"
               class="prose prose-slate max-w-none space-y-3 text-sm leading-relaxed text-slate-800 dark:text-slate-100"
-              v-html="block.content || '<p class=\'text-slate-400 italic\'>[Empty text block]</p>'"
+              v-html="block.content || '<p class=\'text-slate-500 dark:text-slate-400 italic\'>[Empty text block]</p>'"
             ></div>
 
             <div

@@ -996,7 +996,7 @@ const confirmDeleteActivePage = () => {
 
                         <!-- Navigation Pages Group -->
                         <div>
-                            <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                            <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-between">
                                 <span>Navigation pages</span>
                                 <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium normal-case tracking-normal text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ pages.length }} pages</span>
                             </div>
@@ -1033,7 +1033,7 @@ const confirmDeleteActivePage = () => {
 
                         <!-- Management & Tools Group -->
                         <div class="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-1">
-                            <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Management</div>
+                            <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Management</div>
                             <div class="space-y-1 text-sm font-medium">
                                 <a
                                     :href="selectionUrl('settings')"

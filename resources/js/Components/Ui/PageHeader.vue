@@ -1,6 +1,7 @@
 <script setup>
 // The top of a page: breadcrumbs ([{ label, href }], the last one is this page), the title, one line on what the page is
 // for, and room for a status badge beside the title and actions on the right.
+import { inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 
 defineProps({
@@ -8,6 +9,9 @@ defineProps({
     description: { type: String, default: '' },
     breadcrumbs: { type: Array, default: () => [] },
 });
+
+// The members and club admin layouts already give the page its <h1>, so the title here is the next level down.
+const heading = inject('layoutHasHeading', false) ? 'h2' : 'h1';
 </script>
 
 <template>
@@ -21,7 +25,7 @@ defineProps({
                 </template>
             </nav>
             <div class="flex flex-wrap items-center gap-3">
-                <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ title }}</h1>
+                <component :is="heading" class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ title }}</component>
                 <slot name="badge" />
             </div>
             <p v-if="description" class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ description }}</p>

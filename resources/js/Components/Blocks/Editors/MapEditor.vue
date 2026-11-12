@@ -112,11 +112,11 @@ onBeforeUnmount(() => clearTimeout(suggestTimer));
     <div class="space-y-3 text-xs">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-                <label :for="`block-${index}-map-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-map-heading`" :class="LABEL">Heading <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-map-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Find us" :class="INPUT" />
             </div>
             <div>
-                <label :for="`block-${index}-map-name`" :class="LABEL">Place name <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-map-name`" :class="LABEL">Place name <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-map-name`" v-model="block.location_name" type="text" maxlength="200" placeholder="e.g. Freemasons' Hall" :class="INPUT" />
             </div>
         </div>
@@ -139,7 +139,7 @@ onBeforeUnmount(() => clearTimeout(suggestTimer));
                 <Button variant="secondary" size="sm" :disabled="finding" @click="find()"><UiIcon v-if="!finding" name="search" :size="14" />{{ finding ? 'Searching…' : 'Search the map' }}</Button>
                 <Button v-for="option in clubAddresses" :key="option.label" variant="ghost" size="sm" @click="block.address = option.address; find(option.address)">Use {{ option.label }}</Button>
             </div>
-            <p v-if="message" :class="['text-[11px] font-medium mt-1', messageIsError ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400']" role="status">{{ message }}</p>
+            <p v-if="message" :class="['text-[11px] font-medium mt-1', messageIsError ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400']" role="status">{{ message }}</p>
             <div v-if="candidates.length" class="mt-2 space-y-1">
                 <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Other matches</p>
                 <button v-for="candidate in candidates.slice(1)" :key="candidate.lat + ',' + candidate.lng" type="button" class="block w-full text-left px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" @click="chooseCandidate(candidate)">{{ candidate.name }}</button>
@@ -175,17 +175,17 @@ onBeforeUnmount(() => clearTimeout(suggestTimer));
                 </select>
             </div>
             <div class="col-span-2 sm:col-span-4">
-                <label :for="`block-${index}-map-zoom`" :class="LABEL">Zoom level: <span class="font-mono">{{ block.zoom }}</span> <span class="font-normal text-slate-400">({{ zoomHint }})</span></label>
+                <label :for="`block-${index}-map-zoom`" :class="LABEL">Zoom level: <span class="font-mono">{{ block.zoom }}</span> <span class="font-normal text-slate-500 dark:text-slate-400">({{ zoomHint }})</span></label>
                 <input :id="`block-${index}-map-zoom`" v-model.number="block.zoom" type="range" min="3" :max="mapStyle(block.map_style).maxZoom" step="1" class="w-full accent-blue-600" />
-                <div class="flex justify-between text-[10px] text-slate-400"><span>Wide (country)</span><span>Town</span><span>Close (street)</span></div>
+                <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400"><span>Wide (country)</span><span>Town</span><span>Close (street)</span></div>
             </div>
             <label :class="[CHECK_LABEL, 'col-span-2 sm:col-span-4']"><input v-model="block.allow_style_switch" type="checkbox" :class="CHECK" /> Let visitors switch between the street map and satellite</label>
             <p v-if="hasCoordinates(block)" class="col-span-2 sm:col-span-4 flex flex-wrap items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400"><UiIcon name="check" :size="14" />Location set. <a :href="osmLargerUrl(block)" target="_blank" rel="noopener" class="underline">Check it on OpenStreetMap</a></p>
-            <p v-else class="col-span-2 sm:col-span-4 text-[11px] text-slate-400">No location yet, so nothing will show on the live site.</p>
+            <p v-else class="col-span-2 sm:col-span-4 text-[11px] text-slate-500 dark:text-slate-400">No location yet, so nothing will show on the live site.</p>
         </div>
 
         <div>
-            <label :for="`block-${index}-map-notes`" :class="LABEL">Notes <span class="font-normal text-slate-400">(optional: parking, access, plain text)</span></label>
+            <label :for="`block-${index}-map-notes`" :class="LABEL">Notes <span class="font-normal text-slate-500 dark:text-slate-400">(optional: parking, access, plain text)</span></label>
             <textarea :id="`block-${index}-map-notes`" v-model="block.notes" rows="2" maxlength="1000" :class="INPUT"></textarea>
         </div>
 

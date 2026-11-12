@@ -18,7 +18,7 @@
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ $candidate->full_name }}</h1>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $candidate->full_name }}</h2>
                     <x-badge :variant="$stageBadge[$candidate->stage->value] ?? 'neutral'">{{ $candidate->stage->label() }}</x-badge>
                     @if($candidate->isOnHold())<x-badge variant="warning">On hold</x-badge>@endif
                 </div>
@@ -163,7 +163,7 @@
                         <div class="flex items-center justify-between gap-2">
                             <span class="font-semibold text-slate-900 dark:text-white">{{ $event->summary }}</span>
                             @if(in_array($event->type, \App\Domains\ClubAccounting\Models\CandidateEvent::NOTE_TYPES, true))
-                                <button type="button" wire:click="deleteNote({{ $event->id }})" wire:confirm="Remove this note?" class="rounded p-0.5 text-slate-400 hover:text-rose-600 cursor-pointer" aria-label="Remove note">
+                                <button type="button" wire:click="deleteNote({{ $event->id }})" wire:confirm="Remove this note?" class="rounded p-0.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 cursor-pointer" aria-label="Remove note">
                                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
                                 </button>
                             @endif

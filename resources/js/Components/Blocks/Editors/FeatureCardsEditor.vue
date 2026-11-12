@@ -37,16 +37,16 @@ const move = (i, by) => {
     <div class="space-y-3 text-xs">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-                <label :for="`block-${index}-fc-eyebrow`" :class="LABEL">Small label <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-fc-eyebrow`" :class="LABEL">Small label <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-fc-eyebrow`" v-model="block.eyebrow" type="text" maxlength="80" placeholder="e.g. Our foundation" :class="INPUT" />
             </div>
             <div class="sm:col-span-2">
-                <label :for="`block-${index}-fc-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-fc-heading`" :class="LABEL">Heading <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-fc-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. What our lodge offers" :class="INPUT" />
             </div>
         </div>
         <div>
-            <label :for="`block-${index}-fc-intro`" :class="LABEL">Introduction <span class="font-normal text-slate-400">(optional)</span></label>
+            <label :for="`block-${index}-fc-intro`" :class="LABEL">Introduction <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
             <input :id="`block-${index}-fc-intro`" v-model="block.intro" type="text" maxlength="500" :class="INPUT" />
         </div>
 

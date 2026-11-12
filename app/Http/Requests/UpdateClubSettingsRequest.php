@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ClubRole;
 use App\Support\ClubDomain;
 use App\Support\Currencies;
 use App\Support\VisitorSummons;
@@ -81,7 +82,8 @@ class UpdateClubSettingsRequest extends ClubRequest
             'enabled_modules.*' => 'string|max:100',
             'permission_matrix' => 'nullable|array|max:100',
             'permission_matrix.*.roles' => 'nullable|array|max:10',
-            'permission_matrix.*.roles.*' => ['string', Rule::in(['owner', 'admin', 'coach', 'treasurer', 'member', 'examiner'])],
+            // Any role the defaults can hold (config/club_permissions.php gives meetings to 'secretary' too), or no new lodge could save.
+            'permission_matrix.*.roles.*' => ['string', Rule::in(array_column(array_filter(ClubRole::cases(), fn (ClubRole $r) => $r !== ClubRole::Visitor), 'value'))],
 
             // Subscriptions & Dues
             'dues_grace_period_days' => 'nullable|integer|min:0|max:180',

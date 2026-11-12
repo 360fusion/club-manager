@@ -237,7 +237,7 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
             placeholder="Search by payee, amount, reference, description, cheque number or analysis code"
             class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          <UiIcon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <UiIcon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
         </div>
 
         <button

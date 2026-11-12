@@ -199,19 +199,19 @@ const submitProfile = () => {
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Initiated</span>
+            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Initiated</span>
             <span class="font-semibold text-slate-900 dark:text-white block text-sm">{{ memberProfile.date_of_initiation || '—' }}</span>
           </div>
           <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Passed</span>
+            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Passed</span>
             <span class="font-semibold text-slate-900 dark:text-white block text-sm">{{ memberProfile.date_of_passing || '—' }}</span>
           </div>
           <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Raised</span>
+            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Raised</span>
             <span class="font-semibold text-slate-900 dark:text-white block text-sm">{{ memberProfile.date_of_raising || '—' }}</span>
           </div>
           <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Joined lodge</span>
+            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Joined lodge</span>
             <span class="font-semibold text-slate-900 dark:text-white block text-sm">{{ memberProfile.date_of_joining || '—' }}</span>
           </div>
         </div>

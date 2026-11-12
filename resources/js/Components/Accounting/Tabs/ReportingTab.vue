@@ -198,7 +198,7 @@ defineProps({
         <!-- 1. Account Summary -->
         <button type="button" @click="navigateTo('reporting', 'account_summary')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="clipboard" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="clipboard" :size="20" /></span>
             <Badge>General ledger</Badge>
           </div>
           <div>
@@ -214,7 +214,7 @@ defineProps({
         <!-- 2. Aged Payables Summary -->
         <button type="button" @click="navigateTo('reporting', 'aged_payables')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="clock" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="clock" :size="20" /></span>
             <Badge>Payables</Badge>
           </div>
           <div>
@@ -230,7 +230,7 @@ defineProps({
         <!-- Independent Examiner's Report -->
         <button v-if="charityCommission.registered" type="button" @click="navigateTo('reporting', 'independent_examiner')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="pencil" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="pencil" :size="20" /></span>
             <Badge>Charity</Badge>
           </div>
           <div>
@@ -245,7 +245,7 @@ defineProps({
         <!-- Due to Province -->
         <button type="button" @click="navigateTo('reporting', 'provincial_due')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="building" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="building" :size="20" /></span>
             <Badge>Province</Badge>
           </div>
           <div>
@@ -261,7 +261,7 @@ defineProps({
         <!-- 3. Aged Receivables Summary -->
         <button type="button" @click="navigateTo('reporting', 'aged_receivables')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="cash" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="cash" :size="20" /></span>
             <Badge>Receivables</Badge>
           </div>
           <div>
@@ -277,7 +277,7 @@ defineProps({
         <!-- 4. Balance Sheet -->
         <button type="button" @click="navigateTo('reporting', 'balance_sheet')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="chart" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="chart" :size="20" /></span>
             <Badge>Statement</Badge>
           </div>
           <div>
@@ -293,7 +293,7 @@ defineProps({
         <!-- 5. Cash Summary -->
         <button type="button" @click="navigateTo('reporting', 'cash_summary')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="bank" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="bank" :size="20" /></span>
             <Badge>Cash flow</Badge>
           </div>
           <div>
@@ -309,7 +309,7 @@ defineProps({
         <!-- 6. Executive Summary -->
         <button type="button" @click="navigateTo('reporting', 'executive_summary')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="sparkles" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="sparkles" :size="20" /></span>
             <Badge>KPI ratios</Badge>
           </div>
           <div>
@@ -325,7 +325,7 @@ defineProps({
         <!-- 7. Profit and Loss -->
         <button type="button" @click="navigateTo('reporting', 'profit_and_loss')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="receipt" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="receipt" :size="20" /></span>
             <Badge>P&amp;L</Badge>
           </div>
           <div>
@@ -341,7 +341,7 @@ defineProps({
         <!-- 8. Comparative Annual Income & Expenditure Statement -->
         <button type="button" @click="navigateTo('reporting', 'comparative_income_expenditure')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="document" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="document" :size="20" /></span>
             <Badge>Annual statement</Badge>
           </div>
           <div>
@@ -357,7 +357,7 @@ defineProps({
         <!-- 9. Bank Reconciliation Summary -->
         <button type="button" @click="navigateTo('reporting', 'reconciliation_summary')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="check" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="check" :size="20" /></span>
             <Badge>Bank audit</Badge>
           </div>
           <div>
@@ -373,7 +373,7 @@ defineProps({
         <!-- 10. VAT Return -->
         <button v-if="vatSettings.enabled" type="button" @click="navigateTo('reporting', 'vat_return')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="tag" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="tag" :size="20" /></span>
             <Badge>Tax</Badge>
           </div>
           <div>
@@ -389,7 +389,7 @@ defineProps({
         <!-- 11. Fixed Asset Register -->
         <button type="button" @click="navigateTo('reporting', 'fixed_assets')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="archive" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="archive" :size="20" /></span>
             <Badge>Assets</Badge>
           </div>
           <div>
@@ -405,7 +405,7 @@ defineProps({
         <!-- 12. Budget vs Actual -->
         <button type="button" @click="navigateTo('reporting', 'budget_vs_actual')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="calendar" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="calendar" :size="20" /></span>
             <Badge>Planning</Badge>
           </div>
           <div>
@@ -421,7 +421,7 @@ defineProps({
         <!-- 13. Annual Treasurer's Report -->
         <button type="button" @click="navigateTo('reporting', 'treasurer_report')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="award" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="award" :size="20" /></span>
             <Badge>Annual report</Badge>
           </div>
           <div>
@@ -437,7 +437,7 @@ defineProps({
         <!-- 14. Recurring Vendor Bills -->
         <button type="button" @click="navigateTo('reporting', 'recurring_bills')" :class="reportCardClass">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="refresh" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400 transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400"><UiIcon name="refresh" :size="20" /></span>
             <Badge>Automation</Badge>
           </div>
           <div>

@@ -1057,7 +1057,7 @@ const isImage = (mimeOrUrl) => {
                   @click.stop="deleteFolder(sub)"
                   title="Delete folder"
                   :aria-label="`Delete the ${sub.name} folder`"
-                  class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400"
+                  class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400"
                 >
                   <UiIcon name="x" />
                 </button>
@@ -1071,7 +1071,7 @@ const isImage = (mimeOrUrl) => {
 
               <!-- Search Input Bar -->
               <div class="relative flex-1">
-                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"><UiIcon name="search" /></span>
                 <input
                   v-model="searchQuery"
                   type="text"
@@ -1084,7 +1084,7 @@ const isImage = (mimeOrUrl) => {
                   type="button"
                   @click="searchQuery = ''"
                   aria-label="Clear search"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 >
                   <UiIcon name="x" />
                 </button>
@@ -1214,7 +1214,7 @@ const isImage = (mimeOrUrl) => {
             </div>
 
             <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 space-y-3">
-              <span class="flex justify-center text-slate-400"><UiIcon name="folder" :size="20" /></span>
+              <span class="flex justify-center text-slate-500 dark:text-slate-400"><UiIcon name="folder" :size="20" /></span>
               <div>
                 <span class="text-sm font-medium text-slate-900 dark:text-white block">No files in this folder</span>
                 <span class="text-xs text-slate-500 dark:text-slate-400">Drag and drop files here, or choose them below.</span>
@@ -1248,7 +1248,7 @@ const isImage = (mimeOrUrl) => {
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                   <div v-else class="flex flex-col items-center justify-center space-y-1">
-                    <span class="text-slate-400"><UiIcon :name="getFileIcon(item.mime_type || item.file_name)" :size="20" /></span>
+                    <span class="text-slate-500 dark:text-slate-400"><UiIcon :name="getFileIcon(item.mime_type || item.file_name)" :size="20" /></span>
                     <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
                   </div>
 
@@ -1314,7 +1314,7 @@ const isImage = (mimeOrUrl) => {
                     <button
                       type="button"
                       @click="forceDeleteItem(item)"
-                      class="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                      class="rounded-xl p-1.5 text-slate-500 dark:text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
                       title="Delete permanently"
                       aria-label="Delete permanently"
                     >
@@ -1325,7 +1325,7 @@ const isImage = (mimeOrUrl) => {
                     <button
                       type="button"
                       @click="deleteItem(item)"
-                      class="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                      class="rounded-xl p-1.5 text-slate-500 dark:text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
                       title="Move to trash"
                       aria-label="Move to trash"
                     >

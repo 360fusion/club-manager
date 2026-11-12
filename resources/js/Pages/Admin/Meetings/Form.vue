@@ -18,6 +18,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  lodgeOfficers: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const sectionHashMap = {
@@ -117,24 +121,14 @@ const getInitialRoster = () => {
   if (Array.isArray(props.meeting?.officers_roster) && props.meeting.officers_roster.length > 0) {
     return props.meeting.officers_roster.map(o => ({ role: o.role || '', name: o.name || '' }));
   }
+  // The lodge's own officers first; never sample names, which would be printed on the summons as if real.
+  if (Array.isArray(props.lodgeOfficers) && props.lodgeOfficers.length > 0) {
+    return props.lodgeOfficers.map(o => ({ role: o.role, name: o.name }));
+  }
   if (Array.isArray(props.club?.settings?.officers_roster) && props.club.settings.officers_roster.length > 0) {
     return props.club.settings.officers_roster.map(o => ({ role: o.role || '', name: o.name || '' }));
   }
-  return [
-    { role: 'Worshipful Master', name: 'W. Bro. K. D. Lord' },
-    { role: 'Senior Warden', name: 'Bro. A. Smith' },
-    { role: 'Junior Warden', name: 'Bro. M. Johnson' },
-    { role: 'Chaplain', name: 'W. Bro. P. Davies' },
-    { role: 'Treasurer', name: 'W. Bro. M. Brown' },
-    { role: 'Secretary', name: 'W. Bro. R. Wilson' },
-    { role: 'Director of Ceremonies', name: 'W. Bro. T. Anderson' },
-    { role: 'Almoner', name: 'W. Bro. G. Martin' },
-    { role: 'Charity Steward', name: 'W. Bro. E. Clark' },
-    { role: 'Senior Deacon', name: 'Bro. C. White' },
-    { role: 'Junior Deacon', name: 'Bro. D. Harris' },
-    { role: 'Inner Guard', name: 'Bro. M. Allen' },
-    { role: 'Tyler', name: 'Bro. D. King' },
-  ];
+  return [];
 };
 
 const form = useForm({
@@ -327,7 +321,7 @@ const cell = 'rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text
                   <div class="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
                     <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
                       <img v-if="logoPreview" :src="logoPreview" class="h-full w-full object-contain p-1" alt="Logo preview" />
-                      <span v-else class="text-xs text-slate-400">No logo</span>
+                      <span v-else class="text-xs text-slate-500 dark:text-slate-400">No logo</span>
                     </div>
                     <div class="flex-1 space-y-1.5">
                       <input
@@ -475,7 +469,7 @@ const cell = 'rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                       <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td class="px-3 py-2.5 text-center font-medium text-slate-400">{{ idx + 1 }}</td>
+                        <td class="px-3 py-2.5 text-center font-medium text-slate-500 dark:text-slate-400">{{ idx + 1 }}</td>
 
                         <td class="px-4 py-2.5">
                           <input v-if="isEditingRoster" v-model="item.role" type="text" :aria-label="`Officer ${idx + 1} role`" placeholder="e.g. Worshipful Master" :class="[cell, 'w-full']" />

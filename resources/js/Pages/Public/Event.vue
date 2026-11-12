@@ -108,7 +108,7 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
           <div v-if="event.location" class="flex items-start gap-2"><UiIcon name="building" class="mt-0.5 opacity-70" /><span>{{ event.location }}</span></div>
           <div v-if="event.requires_payment && (Number(event.price) > 0 || tiers.length)" class="flex items-start gap-2"><UiIcon name="tag" class="mt-0.5 opacity-70" /><span>
             <template v-if="event.advertised && event.advertised.mode === 'all_in' && !tiers.length">
-              {{ formatMoney(event.advertised.headline) }}<span v-if="event.advertised.has_saving" class="text-emerald-600 dark:text-emerald-400"> (or {{ formatMoney(event.advertised.lowest) }} if you pay online)</span>
+              {{ formatMoney(event.advertised.headline) }}<span v-if="event.advertised.has_saving" class="text-emerald-700 dark:text-emerald-400"> (or {{ formatMoney(event.advertised.lowest) }} if you pay online)</span>
             </template>
             <template v-else-if="tiers.length">{{ tiers.map((t) => `${t.name} ${$cs}${t.price}`).join(' · ') }}</template>
             <template v-else>{{ $cs }}{{ event.price }}</template>

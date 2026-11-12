@@ -118,7 +118,7 @@ function send(claim) {
                                 <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Who is asking</h3>
                                 <p class="font-semibold text-slate-900 dark:text-white">{{ claim.claimant.name }} <span class="font-normal text-slate-500 dark:text-slate-400">({{ claim.claimant_role }})</span></p>
                                 <p><a :href="`mailto:${claim.claimant.email}`" class="text-blue-600 hover:underline dark:text-blue-400">{{ claim.claimant.email }}</a>
-                                    <span :class="claim.claimant.email_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"> · {{ claim.claimant.email_verified ? 'verified' : 'not verified' }}</span></p>
+                                    <span :class="claim.claimant.email_verified ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"> · {{ claim.claimant.email_verified ? 'verified' : 'not verified' }}</span></p>
                                 <p v-if="claim.phone">Phone: {{ claim.phone }}</p>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Account since {{ claim.claimant.joined }}<span v-if="claim.claimant.other_claims"> · {{ claim.claimant.other_claims }} other claim(s)</span></p>
                                 <p v-if="claim.claimant.clubs.length" class="text-xs text-slate-500 dark:text-slate-400">Member of: {{ claim.claimant.clubs.join(', ') }}</p>

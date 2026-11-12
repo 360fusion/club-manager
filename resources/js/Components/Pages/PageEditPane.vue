@@ -187,7 +187,7 @@ const NEWS_IMAGE_POSITIONS = [
                 <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
                     <!-- Saving: the first puts your edits on the live page, the second keeps them aside -->
                     <div role="group" aria-label="Save">
-                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Save</p>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Save</p>
                         <div class="flex items-center gap-1.5">
                             <div class="relative group">
                                 <Button size="sm" :loading="form.processing" aria-describedby="tip-save" @click="submitForm">
@@ -215,7 +215,7 @@ const NEWS_IMAGE_POSITIONS = [
 
                     <!-- Previewing: the first is what visitors see now, the second is a secret link that includes drafts -->
                     <div v-if="form.id" role="group" aria-label="Preview">
-                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Preview</p>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Preview</p>
                         <div class="flex items-center gap-1.5">
                             <div class="relative group">
                                 <a v-if="form.slug && activePage?.lifecycle_status === 'live'" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" rel="noopener" aria-describedby="tip-live" :class="linkButton">
@@ -326,7 +326,7 @@ const NEWS_IMAGE_POSITIONS = [
 
                 <!-- How it may look in a search engine -->
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4 text-left" aria-label="Search result preview">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Search result preview</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Search result preview</p>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ searchPreview.url }}</p>
                     <p class="text-base font-semibold text-blue-700 dark:text-blue-400 truncate">{{ searchPreview.title }}</p>
                     <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">{{ searchPreview.description }}</p>
@@ -413,7 +413,7 @@ const NEWS_IMAGE_POSITIONS = [
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
                                 <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
-                                    <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                         {{ col.title }}
                                     </div>
                                     <div class="space-y-1">
@@ -988,7 +988,7 @@ const NEWS_IMAGE_POSITIONS = [
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
                                 <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
-                                    <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                         {{ col.title }}
                                     </div>
                                     <div class="space-y-1">

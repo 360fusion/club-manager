@@ -66,7 +66,7 @@ class MemberHomeController extends Controller
             'type_name' => $club->clubType?->name,
             'role' => $role,
             'member_number' => $club->pivot->member_number ?? '',
-            'is_staff' => $role !== 'member',
+            'is_staff' => ! in_array($role, ['member', 'visitor'], true),
         ];
     }
 

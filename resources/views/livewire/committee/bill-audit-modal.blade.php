@@ -18,7 +18,7 @@
                             @if($bill->media)
                                 <a href="{{ $bill->media->getUrl() }}" target="_blank" class="font-medium text-blue-600 underline dark:text-blue-400">{{ $bill->media->file_name }}</a>
                             @else
-                                <span class="italic text-slate-400">No receipt attached</span>
+                                <span class="italic text-slate-500 dark:text-slate-400">No receipt attached</span>
                             @endif
                         </div>
                     </div>

@@ -69,9 +69,9 @@ const noticeVariant = (style) => ({ warning: 'warning', success: 'success' }[sty
                 <span>By {{ post.author_name }}</span>
               </div>
 
-              <h1 class="text-2xl font-bold leading-tight text-slate-900 dark:text-white md:text-3xl">
+              <h2 class="text-2xl font-bold leading-tight text-slate-900 dark:text-white md:text-3xl">
                 {{ post.title }}
-              </h1>
+              </h2>
 
               <p v-if="post.excerpt" class="rounded-r-xl border-l-4 border-blue-500 bg-slate-50 py-1 pl-3 text-sm font-medium italic text-slate-600 dark:bg-slate-800/50 dark:text-slate-300">
                 {{ post.excerpt }}

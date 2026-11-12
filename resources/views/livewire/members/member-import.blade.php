@@ -64,7 +64,7 @@
                     :class="over ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/30' : 'border-slate-300 dark:border-slate-700'"
                     class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors"
                 >
-                    <svg class="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.63a3.38 3.38 0 0 0-3.38-3.37h-1.5A1.13 1.13 0 0 1 13.5 7.13v-1.5A3.38 3.38 0 0 0 10.13 2.25H8.25m2.25 0H5.63c-.62 0-1.13.5-1.13 1.13v17.25c0 .62.5 1.12 1.13 1.12h12.75c.62 0 1.12-.5 1.12-1.12V11.25a9 9 0 0 0-9-9Z" /></svg>
+                    <svg class="h-8 w-8 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.63a3.38 3.38 0 0 0-3.38-3.37h-1.5A1.13 1.13 0 0 1 13.5 7.13v-1.5A3.38 3.38 0 0 0 10.13 2.25H8.25m2.25 0H5.63c-.62 0-1.13.5-1.13 1.13v17.25c0 .62.5 1.12 1.13 1.12h12.75c.62 0 1.12-.5 1.12-1.12V11.25a9 9 0 0 0-9-9Z" /></svg>
                     <span class="text-sm font-semibold text-slate-900 dark:text-white">Drop a CSV file here, or click to choose one</span>
                     <span class="text-xs text-slate-500 dark:text-slate-400">The file is kept privately and deleted once the import is finished.</span>
                     <input x-ref="picker" type="file" wire:model="file" accept=".csv,.txt,text/csv" class="sr-only" />
@@ -147,11 +147,11 @@
                                     @forelse(($import->option('samples', [])[$index] ?? []) as $sample)
                                         <span class="mr-1.5 inline-block max-w-[12rem] truncate rounded bg-slate-100 px-1.5 py-0.5 align-bottom dark:bg-slate-800">{{ $sample }}</span>
                                     @empty
-                                        <span class="text-slate-400">No values</span>
+                                        <span class="text-slate-500 dark:text-slate-400">No values</span>
                                     @endforelse
                                 </td>
                                 <td class="px-4 py-3">
-                                    <select wire:model.live="mapping.{{ $index }}" aria-label="What is {{ $header }}?" class="{{ $fieldClass }} w-full max-w-xs {{ $chosen === '' ? 'text-slate-400 dark:text-slate-500' : '' }}">
+                                    <select wire:model.live="mapping.{{ $index }}" aria-label="What is {{ $header }}?" class="{{ $fieldClass }} w-full max-w-xs {{ $chosen === '' ? 'text-slate-500 dark:text-slate-500' : '' }}">
                                         <option value="">Do not import</option>
                                         @foreach($targets as $key => $label)
                                             <option value="{{ $key }}" @selected($chosen === $key)>{{ $label }}</option>
@@ -179,7 +179,7 @@
                     @foreach($savedMappings as $saved)
                         <span wire:key="saved-{{ $saved->id }}" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
                             {{ $saved->name }}
-                            <button type="button" wire:click="deleteSavedMapping({{ $saved->id }})" wire:confirm="Remove the saved matching '{{ $saved->name }}'?" aria-label="Remove {{ $saved->name }}" class="cursor-pointer text-slate-400 hover:text-rose-600">
+                            <button type="button" wire:click="deleteSavedMapping({{ $saved->id }})" wire:confirm="Remove the saved matching '{{ $saved->name }}'?" aria-label="Remove {{ $saved->name }}" class="cursor-pointer text-slate-500 dark:text-slate-400 hover:text-rose-600">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
                             </button>
                         </span>
@@ -258,7 +258,7 @@
                                 };
                             @endphp
                             <tr wire:key="row-{{ $row->id }}" class="align-top hover:bg-slate-50/70 dark:hover:bg-slate-800/70">
-                                <td class="py-4 pl-6 pr-2 font-medium text-slate-400">{{ $row->row_number }}</td>
+                                <td class="py-4 pl-6 pr-2 font-medium text-slate-500 dark:text-slate-400">{{ $row->row_number }}</td>
                                 <td class="px-4 py-4">
                                     <span class="block font-semibold text-slate-900 dark:text-white">{{ trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')) ?: 'No name' }}</span>
                                     <span class="block text-xs text-slate-500 dark:text-slate-400">{{ $data['email'] ?? 'No email' }}</span>
@@ -283,7 +283,7 @@
                                 </td>
                                 <td class="px-4 py-4">
                                     @if($allowed === [])
-                                        <span class="text-slate-400">Not imported</span>
+                                        <span class="text-slate-500 dark:text-slate-400">Not imported</span>
                                     @else
                                         <select wire:change="setRowAction({{ $row->id }}, $event.target.value)" aria-label="What to do with row {{ $row->row_number }}" class="{{ $fieldClass }}">
                                             @foreach($allowed as $option)
@@ -300,7 +300,7 @@
                                     <td colspan="3" class="px-4 py-4">
                                         <table class="w-full max-w-3xl text-xs">
                                             <thead>
-                                                <tr class="text-left font-medium text-slate-400">
+                                                <tr class="text-left font-medium text-slate-500 dark:text-slate-400">
                                                     <th class="py-1 pr-4">Field</th>
                                                     <th class="py-1 pr-4">On the roster now</th>
                                                     <th class="py-1">In your file</th>
@@ -416,7 +416,7 @@
                             <th class="px-4 py-3">File</th>
                             <th class="px-4 py-3">By</th>
                             <th class="px-4 py-3">Result</th>
-                            <th class="px-4 py-3 text-right"><span class="sr-only">Actions</span></th>
+                            <th class="relative px-4 py-3 text-right"><span class="sr-only">Actions</span></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">

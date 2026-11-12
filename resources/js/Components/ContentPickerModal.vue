@@ -66,7 +66,7 @@ const rowClass = (isSelected) => [
 ];
 
 const CHECKBOX = 'mt-0.5 h-4 w-4 rounded border-slate-300 accent-blue-600 cursor-pointer dark:border-slate-700';
-const EMPTY = 'text-center py-8 text-slate-400 text-xs';
+const EMPTY = 'text-center py-8 text-slate-500 dark:text-slate-400 text-xs';
 </script>
 
 <template>

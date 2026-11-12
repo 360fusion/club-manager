@@ -46,7 +46,7 @@ const openMeetingRsvpModal = (meeting) => {
 const totalScheduleCount = computed(() => props.meetings.length + props.events.length);
 
 const filterClass = (isActive) => [
-  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 font-medium transition-colors',
+  'inline-flex min-h-10 sm:min-h-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 font-medium transition-colors',
   isActive
     ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
     : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white',
@@ -72,7 +72,7 @@ const filterClass = (isActive) => [
           </div>
 
           <!-- Filter Tab Pill Buttons -->
-          <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl self-start md:self-auto text-xs">
+          <div class="flex max-w-full flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl self-start md:self-auto text-xs">
             <button type="button" :class="filterClass(activeFilter === 'all')" @click="activeFilter = 'all'">
               All ({{ totalScheduleCount }})
             </button>
@@ -89,7 +89,7 @@ const filterClass = (isActive) => [
       <!-- SECTION 1: Official Lodge Meetings & Summons -->
       <section v-if="(activeFilter === 'all' || activeFilter === 'meetings') && meetings.length > 0" class="space-y-4">
         <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <UiIcon name="document" class="text-slate-400" /> Meetings and summonses
+          <UiIcon name="document" class="text-slate-500 dark:text-slate-400" /> Meetings and summonses
           <Badge>{{ meetings.length }}</Badge>
         </h3>
 
@@ -125,10 +125,10 @@ const filterClass = (isActive) => [
 
                 <h4 class="text-lg font-semibold text-slate-900 dark:text-white">{{ meeting.title || 'Regular meeting' }}</h4>
                 <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600 dark:text-slate-300">
-                  <span class="inline-flex items-center gap-1.5"><UiIcon name="calendar" class="text-slate-400" /> {{ formatMeetingDate(meeting.raw_meeting_date || meeting.meeting_date) }}</span>
-                  <span class="inline-flex items-center gap-1.5"><UiIcon name="clock" class="text-slate-400" /> Starts {{ meeting.starts_at }} <span v-if="meeting.rehearsal_starts_at" class="text-slate-400">(rehearsal {{ meeting.rehearsal_starts_at }})</span></span>
-                  <span class="inline-flex items-center gap-1.5"><UiIcon name="building" class="text-slate-400" /> {{ meeting.venue }}</span>
-                  <span v-if="meeting.dress_code" class="inline-flex items-center gap-1.5"><UiIcon name="user" class="text-slate-400" /> Dress: {{ meeting.dress_code }}</span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="calendar" class="text-slate-500 dark:text-slate-400" /> {{ formatMeetingDate(meeting.raw_meeting_date || meeting.meeting_date) }}</span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="clock" class="text-slate-500 dark:text-slate-400" /> Starts {{ meeting.starts_at }} <span v-if="meeting.rehearsal_starts_at" class="text-slate-500 dark:text-slate-400">(rehearsal {{ meeting.rehearsal_starts_at }})</span></span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="building" class="text-slate-500 dark:text-slate-400" /> {{ meeting.venue }}</span>
+                  <span v-if="meeting.dress_code" class="inline-flex items-center gap-1.5"><UiIcon name="user" class="text-slate-500 dark:text-slate-400" /> Dress: {{ meeting.dress_code }}</span>
                 </div>
               </div>
 
@@ -158,7 +158,7 @@ const filterClass = (isActive) => [
       <!-- SECTION 2: Social Events, Regattas & Activities -->
       <section v-if="(activeFilter === 'all' || activeFilter === 'events') && events.length > 0" class="space-y-4">
         <h3 class="pt-2 text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-          <UiIcon name="sparkles" class="text-slate-400" /> Social events and activities
+          <UiIcon name="sparkles" class="text-slate-500 dark:text-slate-400" /> Social events and activities
           <Badge>{{ events.length }}</Badge>
         </h3>
 
@@ -186,7 +186,7 @@ const filterClass = (isActive) => [
                 </p>
                 <p v-if="event.requires_payment && event.advertised && Number(event.advertised.headline) > 0" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
                   {{ formatMoney(event.advertised.headline) }}
-                  <span v-if="event.advertised.has_saving" class="font-normal text-emerald-600 dark:text-emerald-400">or {{ formatMoney(event.advertised.lowest) }} if you pay online</span>
+                  <span v-if="event.advertised.has_saving" class="font-normal text-emerald-700 dark:text-emerald-400">or {{ formatMoney(event.advertised.lowest) }} if you pay online</span>
                   <span v-if="event.places_left !== null" class="ml-2 font-normal text-slate-500 dark:text-slate-400">· {{ event.places_left > 0 ? `${event.places_left} places left` : 'full' }}</span>
                 </p>
                 <p v-if="event.description" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{{ event.description }}</p>

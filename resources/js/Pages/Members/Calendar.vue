@@ -82,7 +82,7 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
     <MembersLayout title="Calendar" :club="urlScoped ? scopeClub : null" active-tab="calendar">
         <div class="space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Calendar</h1>
+                <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Calendar</h2>
                 <div class="flex items-center gap-2">
                     <Button size="sm" variant="secondary" :href="route(routeName, routeParams)">Today</Button>
                     <Link :href="route(routeName, routeParams)" :data="{ month: shiftMonth(-1), club: urlScoped ? undefined : scopeClub?.slug }" class="rounded-xl border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Previous month" preserve-scroll>‹</Link>
@@ -102,7 +102,7 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
                         v-for="day in days"
                         :key="day.key"
                         type="button"
-                        :class="['min-h-[4.5rem] space-y-1 border-b border-r border-slate-200 p-1.5 text-left align-top transition-colors last:border-r-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50 sm:min-h-[6rem]', day.inMonth ? '' : 'bg-slate-50/60 text-slate-400 dark:bg-slate-900/40', selected === day.key ? 'ring-2 ring-inset ring-blue-500' : '']"
+                        :class="['min-h-[4.5rem] space-y-1 border-b border-r border-slate-200 p-1.5 text-left align-top transition-colors last:border-r-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50 sm:min-h-[6rem]', day.inMonth ? '' : 'bg-slate-50/60 text-slate-500 dark:text-slate-400 dark:bg-slate-900/40', selected === day.key ? 'ring-2 ring-inset ring-blue-500' : '']"
                         :aria-label="`${day.key}, ${(byDay[day.key] ?? []).length} items`"
                         @click="selected = selected === day.key ? null : day.key"
                     >

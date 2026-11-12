@@ -67,7 +67,7 @@ defineProps({
                 class="max-h-[220px] w-auto object-contain rounded-xl shadow-sm"
               />
               <div v-else class="py-6 text-center space-y-1.5">
-                <span class="flex justify-center text-slate-400"><UiIcon :name="getFileIcon(previewItem.mime_type || previewItem.file_name)" :size="20" /></span>
+                <span class="flex justify-center text-slate-500 dark:text-slate-400"><UiIcon :name="getFileIcon(previewItem.mime_type || previewItem.file_name)" :size="20" /></span>
                 <span class="text-sm font-medium text-slate-900 dark:text-white block">{{ previewItem.file_name }}</span>
                 <span class="text-xs text-slate-500 dark:text-slate-400 block">{{ previewItem.human_size }}</span>
               </div>

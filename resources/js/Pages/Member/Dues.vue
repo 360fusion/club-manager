@@ -98,7 +98,7 @@ defineProps({
                 </tr>
 
                 <tr v-if="invoices.length === 0">
-                  <td colspan="6" class="py-10 text-center text-slate-400 text-xs">
+                  <td colspan="6" class="py-10 text-center text-slate-500 dark:text-slate-400 text-xs">
                     No billing receipts found for this club.
                   </td>
                 </tr>

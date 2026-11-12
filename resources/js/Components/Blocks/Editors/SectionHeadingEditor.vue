@@ -12,7 +12,7 @@ defineProps({
     <div class="space-y-3 text-xs">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-                <label :for="`block-${index}-sh-eyebrow`" :class="LABEL">Small label <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-sh-eyebrow`" :class="LABEL">Small label <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <input :id="`block-${index}-sh-eyebrow`" v-model="block.eyebrow" type="text" maxlength="80" placeholder="e.g. About us" :class="INPUT" />
             </div>
             <div class="sm:col-span-2">
@@ -21,7 +21,7 @@ defineProps({
             </div>
         </div>
         <div>
-            <label :for="`block-${index}-sh-intro`" :class="LABEL">Introduction <span class="font-normal text-slate-400">(optional)</span></label>
+            <label :for="`block-${index}-sh-intro`" :class="LABEL">Introduction <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
             <textarea :id="`block-${index}-sh-intro`" v-model="block.intro" rows="2" maxlength="500" :class="INPUT"></textarea>
         </div>
         <div :class="[CARD, 'grid grid-cols-1 items-end gap-3 sm:grid-cols-2']">

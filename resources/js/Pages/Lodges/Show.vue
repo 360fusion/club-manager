@@ -188,7 +188,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                         <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Worked out from the pattern above, so a date may move. Confirm with the lodge before you visit.</p>
                         <p class="mt-2 text-sm">
                             <a :href="webcalUrl" class="text-blue-600 hover:underline dark:text-blue-400">Subscribe in your calendar app</a>
-                            <span class="text-slate-400"> · </span>
+                            <span class="text-slate-500 dark:text-slate-400"> · </span>
                             <a :href="lodge.ics_url" class="text-blue-600 hover:underline dark:text-blue-400">Download .ics</a>
                         </p>
                     </div>

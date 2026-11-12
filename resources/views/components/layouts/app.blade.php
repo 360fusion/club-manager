@@ -31,6 +31,8 @@
         $pageTitle = $title ?? 'Lodge Committee';
     @endphp
 
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">Skip to main content</a>
+
     <div
         x-data="{ sidebarOpen: false, switcherOpen: false, userMenuOpen: false }"
         class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans flex flex-col md:flex-row"
@@ -43,8 +45,8 @@
                 </div>
                 <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
             </div>
-            <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white cursor-pointer">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen.toString()" @click="sidebarOpen = !sidebarOpen" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white cursor-pointer">
+                <svg aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
@@ -76,7 +78,7 @@
                                 </div>
                             </div>
                         </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition-all transform" :class="{ 'rotate-180': switcherOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-white transition-all transform" :class="{ 'rotate-180': switcherOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -92,7 +94,7 @@
                         class="absolute top-full left-4 right-4 mt-2 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 backdrop-blur-md"
                         style="display: none;"
                     >
-                        <div class="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                        <div class="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-800">
                             Switch Workspace ({{ count($userClubs) ?: 1 }})
                         </div>
 
@@ -108,7 +110,7 @@
                                         </div>
                                         <div class="truncate">
                                             <div class="truncate font-semibold">{{ $c->name }}</div>
-                                            <div class="text-[10px] text-slate-400 capitalize">{{ $c->pivot->role ?? 'member' }}</div>
+                                            <div class="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{{ $c->pivot->role ?? 'member' }}</div>
                                         </div>
                                     </div>
                                     @if($c->slug === $clubSlug)
@@ -127,7 +129,7 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <nav class="p-3 space-y-0.5 text-sm font-medium">
+                <nav aria-label="Club admin" class="p-3 space-y-0.5 text-sm font-medium">
                     <!-- 1. Dashboard -->
                     <a
                         href="{{ route('admin.analytics', ['slug' => $clubSlug]) }}"
@@ -278,7 +280,7 @@
         </aside>
 
         <!-- Main Right Content Area -->
-        <main class="flex-1 overflow-y-auto flex flex-col min-w-0">
+        <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto flex flex-col min-w-0 focus:outline-none">
             <!-- Top Title Bar -->
             <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 md:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                 <div>
@@ -290,7 +292,7 @@
                 <div class="flex items-center gap-3">
                     @if($currentClub)
                         <a href="{{ route('member.dashboard', $clubSlug) }}" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm">
-                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
                             <span>Switch to member portal</span>
@@ -324,7 +326,7 @@
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden sm:inline-block max-w-[120px] truncate">
                                 {{ $user?->name ?? 'Account' }}
                             </span>
-                            <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
@@ -350,7 +352,7 @@
 
                             <!-- Global Account Links -->
                             <div class="py-1 space-y-1">
-                                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     Global Account
                                 </div>
 
@@ -378,7 +380,7 @@
 
                             <!-- Active Club Links -->
                             <div class="py-1 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     Active Club Context
                                 </div>
 
@@ -398,7 +400,7 @@
                                 </a>
 
                                 <a href="{{ route('member.dashboard', $clubSlug) }}" class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition-all">
-                                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                     </svg>
                                     <span>Switch to member portal</span>

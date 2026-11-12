@@ -10,6 +10,7 @@ use App\Models\ClubType;
 use App\Models\User;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
+use App\Services\SummonsSender;
 use App\Support\ClubAccess;
 use App\Support\ClubDomain;
 use Illuminate\Http\RedirectResponse;
@@ -229,6 +230,7 @@ class ClubController extends Controller
 
         if ($approved && $member = User::find($userId)) {
             app(ClubNotifier::class)->toUser($member, ClubNotification::membershipApproved($club));
+            app(SummonsSender::class)->sendUpcomingTo($club, $member);
 
             // A record is only tied to the account once the person has proved the email is theirs.
             if ($member->hasVerifiedEmail()) {

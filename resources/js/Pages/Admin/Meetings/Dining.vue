@@ -110,7 +110,7 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
                 <th scope="col" class="px-4 py-3 font-medium">Dietary notes</th>
                 <th scope="col" class="px-4 py-3 text-right font-medium">Fee</th>
                 <th scope="col" class="px-4 py-3 font-medium">Payment</th>
-                <th scope="col" class="px-4 py-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                <th scope="col" class="relative px-4 py-3 text-right font-medium"><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -123,7 +123,7 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
                 </td>
                 <td class="max-w-xs px-4 py-4 text-slate-600 dark:text-slate-300">
                   <span v-if="diner.dietary">{{ diner.dietary }}</span>
-                  <span v-else class="text-slate-400">—</span>
+                  <span v-else class="text-slate-500 dark:text-slate-400">—</span>
                 </td>
                 <td class="px-4 py-4 text-right font-medium tabular-nums text-slate-900 dark:text-white">{{ formatMoney(diner.fee) }}</td>
                 <td class="px-4 py-4">
@@ -131,7 +131,7 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
                   <div v-if="diner.payment_method" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     {{ METHOD_LABELS[diner.payment_method] || diner.payment_method }}
                   </div>
-                  <div v-if="diner.paid_at" class="text-xs text-slate-400">
+                  <div v-if="diner.paid_at" class="text-xs text-slate-500 dark:text-slate-400">
                     {{ diner.paid_at }}<span v-if="diner.paid_by"> · {{ diner.paid_by }}</span>
                   </div>
                 </td>

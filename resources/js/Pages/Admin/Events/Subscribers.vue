@@ -244,7 +244,7 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
                   <th scope="col" class="p-3 font-medium">Meal</th>
                   <th scope="col" class="p-3 font-medium">Dietary needs</th>
                   <th scope="col" class="p-3 font-medium">Payment</th>
-                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                  <th scope="col" class="relative p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -265,7 +265,7 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
 
                   <td class="p-3">
                     <span v-if="sub.home_club_lodge">{{ sub.home_club_lodge }}</span>
-                    <span v-else class="text-slate-400">Not given</span>
+                    <span v-else class="text-slate-500 dark:text-slate-400">Not given</span>
                   </td>
 
                   <td class="p-3 text-xs text-slate-600 dark:text-slate-300">{{ sub.email }}</td>
@@ -281,13 +281,13 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
                       <div v-if="sub.menu_selections.main"><span class="text-slate-500 dark:text-slate-400">Main:</span> {{ sub.menu_selections.main }}</div>
                       <div v-if="sub.menu_selections.dessert"><span class="text-slate-500 dark:text-slate-400">Dessert:</span> {{ sub.menu_selections.dessert }}</div>
                     </div>
-                    <span v-else class="text-slate-400">No dining</span>
+                    <span v-else class="text-slate-500 dark:text-slate-400">No dining</span>
                     <button v-if="canEditMeal(sub)" type="button" class="mt-1 block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400" @click="openMeal(sub)">Edit meal</button>
                   </td>
 
                   <td class="p-3">
                     <Badge v-if="sub.dietary_requirements" variant="warning">{{ sub.dietary_requirements }}</Badge>
-                    <span v-else class="text-slate-400">None</span>
+                    <span v-else class="text-slate-500 dark:text-slate-400">None</span>
                   </td>
 
                   <!-- Payment: click for who marked it and when, and to change it -->

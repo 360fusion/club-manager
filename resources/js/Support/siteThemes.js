@@ -341,7 +341,7 @@ const MASONIC_CLASSES = {
     bodyText: 'text-slate-300',
     accentText: 'text-amber-400',
     accentBg: 'bg-amber-500',
-    footer: 'bg-blue-950 border-t border-amber-500/20 text-slate-400 font-sans',
+    footer: 'bg-blue-950 border-t border-amber-500/20 text-slate-500 dark:text-slate-400 font-sans',
 };
 
 const LODGE_SANS = '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';

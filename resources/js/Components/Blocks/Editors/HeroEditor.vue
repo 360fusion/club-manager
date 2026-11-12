@@ -35,7 +35,7 @@ defineEmits(['media']);
                 <LinkField v-model="block.cta_link" :pages="pages" :club="club" label="Hero button" />
             </div>
             <div>
-                <label :for="`block-${index}-hero-cta2-text`" :class="LABEL">Second button <span class="font-normal text-slate-400">(optional, outlined)</span></label>
+                <label :for="`block-${index}-hero-cta2-text`" :class="LABEL">Second button <span class="font-normal text-slate-500 dark:text-slate-400">(optional, outlined)</span></label>
                 <input :id="`block-${index}-hero-cta2-text`" v-model="block.cta2_text" maxlength="80" placeholder="e.g. Discover more" :class="INPUT" />
             </div>
             <div>
@@ -78,7 +78,7 @@ defineEmits(['media']);
 
         <div>
             <div class="mb-1 flex items-center justify-between">
-                <label :for="`block-${index}-hero-image`" :class="LABEL">Background photo <span class="font-normal text-slate-400">(optional)</span></label>
+                <label :for="`block-${index}-hero-image`" :class="LABEL">Background photo <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                 <div class="flex items-center gap-1.5">
                     <Button v-if="block.image_url" variant="ghost" size="sm" @click="block.image_url = ''"><UiIcon name="trash" :size="14" />Clear</Button>
                     <Button variant="secondary" size="sm" @click="$emit('media', 'hero_image')"><UiIcon name="folder" :size="14" />Media library</Button>

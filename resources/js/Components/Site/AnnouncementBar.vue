@@ -12,7 +12,7 @@ const props = defineProps({
 
 const STYLES = {
     info: 'bg-[var(--cm-accent-deep)] text-white',
-    success: 'bg-emerald-600 text-white',
+    success: 'bg-emerald-700 text-white',
     warning: 'bg-amber-400 text-amber-950',
     dark: 'bg-[var(--cm-night)] text-white',
 };

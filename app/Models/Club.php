@@ -219,7 +219,7 @@ class Club extends Model implements HasMedia
     {
         return $this->belongsToMany(User::class)
             ->using(ClubUser::class)
-            ->withPivot(['role', 'rank', 'committee_role', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes', 'invitation_token', 'invited_at', 'invitation_accepted_at', 'invitation_reminded_at', 'invited_by'])
+            ->withPivot(['role', 'rank', 'committee_role', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes', 'invitation_token', 'invited_at', 'invitation_accepted_at', 'invitation_reminded_at', 'invited_by', 'home_club_name', 'home_club_number'])
             ->withTimestamps();
     }
 

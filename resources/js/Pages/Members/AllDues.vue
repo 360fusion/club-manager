@@ -19,7 +19,7 @@ const statusVariant = (status) => ({ paid: 'success', waived: 'neutral', partial
 <template>
     <MembersLayout title="Dues" active-tab="dues">
         <div class="space-y-6">
-            <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Dues and payments</h1>
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Dues and payments</h2>
             <ClubChips :options="clubOptions" :current="scopeClub?.slug ?? null" route-name="members.dues" />
 
             <section aria-labelledby="subs-heading" class="space-y-2">

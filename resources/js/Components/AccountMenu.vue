@@ -17,7 +17,7 @@ const user = computed(() => page.props.auth?.user);
 const initials = computed(() => (user.value?.name || 'ME').split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase());
 
 // Clubs where the user is staff (any role above plain member), so admins can reach them from anywhere.
-const adminClubs = computed(() => (page.props.auth?.clubs ?? []).filter((club) => club.status === 'active' && club.role !== 'member'));
+const adminClubs = computed(() => (page.props.auth?.clubs ?? []).filter((club) => club.status === 'active' && !['member', 'visitor'].includes(club.role)));
 
 // A coach cannot open the dashboard, so send them to the area their role covers.
 const adminHref = (club) => (club.role === 'coach' ? route('admin.events.index', { clubSlug: club.slug }) : route('admin.analytics', { slug: club.slug }));

@@ -103,7 +103,7 @@ const disposeAsset = (assetId) => {
               <th scope="col" class="py-3 px-3 font-medium text-right">Acc. depreciation</th>
               <th scope="col" class="py-3 px-3 font-medium text-right">Net book value</th>
               <th scope="col" class="py-3 px-3 font-medium text-center">Status</th>
-              <th scope="col" class="py-3 px-3"><span class="sr-only">Actions</span></th>
+              <th scope="col" class="relative py-3 px-3"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">

@@ -252,12 +252,13 @@ const submitAddMember = () => {
 
       <!-- Pending approval requests -->
       <Alert v-if="pendingMembers.length > 0" variant="warning" :title="`Pending approval requests (${pendingMembers.length})`">
-        <p class="mb-3">Invite-only registrations waiting for an admin.</p>
+        <p class="mb-3">People who signed up to join or visit. They get nothing from the lodge until you approve them.</p>
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           <div v-for="pending in pendingMembers" :key="pending.id" class="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-800/40 dark:bg-slate-900">
             <div class="overflow-hidden">
               <div class="truncate text-sm font-medium text-slate-900 dark:text-white">{{ pending.name }}</div>
               <div class="truncate text-xs text-slate-500 dark:text-slate-400">{{ pending.email }}</div>
+              <div v-if="pending.role === 'visitor'" class="truncate text-xs font-medium text-blue-700 dark:text-blue-300">Visitor{{ pending.visiting_from ? ` from ${pending.visiting_from}` : '' }}</div>
               <div v-if="pending.matching_member" class="truncate text-xs font-medium text-emerald-700 dark:text-emerald-400">Matches member record: {{ pending.matching_member }}</div>
             </div>
             <div class="flex flex-shrink-0 items-center gap-1.5">
@@ -299,7 +300,7 @@ const submitAddMember = () => {
       <!-- Search and filters -->
       <Card padding="sm" class="flex flex-col items-center justify-between gap-3 sm:flex-row">
         <div class="relative w-full sm:w-80">
-          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
+          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"><UiIcon name="search" /></span>
           <input
             v-model="searchQuery"
             type="text"

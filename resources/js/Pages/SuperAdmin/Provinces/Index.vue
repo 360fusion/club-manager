@@ -148,7 +148,7 @@ function deleteProvince(prov) {
             <Card padding="sm" class="space-y-4">
                 <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                     <div class="relative flex-1 max-w-md">
-                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
+                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"><UiIcon name="search" /></span>
                         <input
                             v-model="searchQuery"
                             type="text"
@@ -161,7 +161,7 @@ function deleteProvince(prov) {
                             type="button"
                             aria-label="Clear search"
                             @click="searchQuery = ''"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                         >
                             <UiIcon name="x" />
                         </button>

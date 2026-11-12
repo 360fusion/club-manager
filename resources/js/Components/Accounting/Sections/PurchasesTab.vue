@@ -120,7 +120,7 @@ const filteredBills = computed(() => {
 
       <!-- Empty state -->
       <div v-if="!filteredBills.length" class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-800 dark:bg-slate-800/50">
-        <span class="mb-2 inline-flex text-slate-400 dark:text-slate-500"><UiIcon name="document" :size="20" /></span>
+        <span class="mb-2 inline-flex text-slate-500 dark:text-slate-500"><UiIcon name="document" :size="20" /></span>
         <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ (bills || []).length ? 'No results match your filters' : 'No vendor bills recorded' }}</span>
         <span class="text-xs text-slate-500 dark:text-slate-400">{{ (bills || []).length ? 'Try adjusting your search or year filter.' : 'Use "Record vendor bill" to log what the club owes a supplier.' }}</span>
       </div>
@@ -213,7 +213,7 @@ const filteredBills = computed(() => {
                   </Button>
                   <span v-else-if="b.status === 'paid'" class="text-xs text-slate-500 dark:text-slate-400">
                     Paid {{ b.paid_at }}
-                    <span v-if="!b.reconciled_at" class="block text-slate-400 dark:text-slate-500">Not yet reconciled</span>
+                    <span v-if="!b.reconciled_at" class="block text-slate-500 dark:text-slate-500">Not yet reconciled</span>
                   </span>
                   <span v-else class="text-xs text-slate-500 dark:text-slate-400">{{ STATUS[b.status]?.label ?? b.status }}</span>
                   <Button

@@ -77,9 +77,9 @@ watch(() => props.show, (open) => { if (open) load(); });
                 @close="emit('close')"
             >
                 <div class="space-y-2">
-                    <p v-if="loading" class="text-xs text-slate-400 p-2">Loading…</p>
+                    <p v-if="loading" class="text-xs text-slate-500 dark:text-slate-400 p-2">Loading…</p>
                     <Alert v-else-if="error" variant="danger">{{ error }}</Alert>
-                    <p v-else-if="!revisions.length" class="text-xs text-slate-400 italic p-2">No earlier versions yet. A version is kept each time you save.</p>
+                    <p v-else-if="!revisions.length" class="text-xs text-slate-500 dark:text-slate-400 italic p-2">No earlier versions yet. A version is kept each time you save.</p>
 
                     <div v-for="(revision, index) in revisions" :key="revision.id" class="flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
                         <div class="min-w-0 text-xs">
@@ -88,7 +88,7 @@ watch(() => props.show, (open) => { if (open) load(); });
                                 <Badge v-if="index === 0" variant="info">Latest</Badge>
                             </p>
                             <p class="text-slate-500 dark:text-slate-400 truncate">{{ SOURCES[revision.source] || 'Saved' }}<template v-if="revision.user"> by {{ revision.user }}</template> · {{ revision.block_count }} element{{ revision.block_count === 1 ? '' : 's' }}</p>
-                            <p class="text-slate-400 truncate">{{ revision.title }}</p>
+                            <p class="text-slate-500 dark:text-slate-400 truncate">{{ revision.title }}</p>
                         </div>
                         <Button variant="secondary" size="sm" class="shrink-0" :disabled="restoringId !== null" :loading="restoringId === revision.id" @click="restore(revision)">
                             {{ restoringId === revision.id ? 'Loading…' : 'Restore' }}

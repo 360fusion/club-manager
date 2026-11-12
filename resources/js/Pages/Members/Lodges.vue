@@ -58,7 +58,7 @@ function unfollow(lodge) {
         <div class="space-y-6">
             <div class="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">My lodges</h1>
+                    <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">My lodges</h2>
                     <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Lodges you follow. Only you can see this list, and the lodges are not told.</p>
                 </div>
                 <Link :href="route('lodges.index')" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Find more lodges</Link>

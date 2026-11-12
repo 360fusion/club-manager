@@ -73,7 +73,7 @@
             <x-slot:header>
                 <div class="flex items-center justify-between">
                     <h3 class="text-base font-semibold text-slate-900 dark:text-white">Update member information</h3>
-                    <span class="text-xs text-slate-400">* Required fields</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400">* Required fields</span>
                 </div>
             </x-slot:header>
 
@@ -139,7 +139,7 @@
                         <div class="space-y-1.5">
                             <div class="flex items-center justify-between">
                                 <span class="block text-xs font-medium text-slate-700 dark:text-slate-300">Current office</span>
-                                <span class="text-xs text-slate-400">Managed in the officer rosters</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">Managed in the officer rosters</span>
                             </div>
                             <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100">
                                 <span class="truncate">{{ $member->current_office?->label() ?: 'Member / Brethren' }}</span>
@@ -193,14 +193,14 @@
                                         @foreach(['address_line_1' => 'Address line 1', 'address_line_2' => 'Address line 2', 'city' => 'Town or city', 'county' => 'County or region', 'postcode' => 'Postcode', 'country' => 'Country'] as $field => $fieldLabel)
                                             @if($member->{$field})
                                                 <div>
-                                                    <span class="block text-slate-400">{{ $fieldLabel }}</span>
+                                                    <span class="block text-slate-500 dark:text-slate-400">{{ $fieldLabel }}</span>
                                                     <span class="font-medium text-slate-800 dark:text-slate-100 {{ $field === 'postcode' ? 'uppercase' : '' }}">{{ $member->{$field} }}</span>
                                                 </div>
                                             @endif
                                         @endforeach
                                     </div>
                                 @else
-                                    <span class="mt-0.5 block italic text-slate-400">No address registered</span>
+                                    <span class="mt-0.5 block italic text-slate-500 dark:text-slate-400">No address registered</span>
                                 @endif
                             </dd>
                         </div>
@@ -314,7 +314,7 @@
                             <span class="block text-xs text-slate-500 dark:text-slate-400">{{ $member->customerAccount->email }}</span>
                         </div>
                     @else
-                        <p class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-800/50">No accounting customer ledger account linked.</p>
+                        <p class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-center text-xs text-slate-500 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-800/50">No accounting customer ledger account linked.</p>
                     @endif
                 </x-card>
             </div>
@@ -389,7 +389,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="py-4 text-center italic text-slate-400">No subscription invoices recorded for this member.</td>
+                                        <td colspan="6" class="py-4 text-center italic text-slate-500 dark:text-slate-400">No subscription invoices recorded for this member.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

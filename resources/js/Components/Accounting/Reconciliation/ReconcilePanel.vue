@@ -115,7 +115,7 @@ defineProps({
                           type="button"
                           @click="$emit('close-details')"
                           aria-label="Close"
-                          class="rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          class="rounded-xl p-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                           <UiIcon name="x" :size="14" />
                         </button>
@@ -414,7 +414,7 @@ defineProps({
 
         <!-- Empty state -->
         <div v-if="filteredUnmatchedTx.length === 0" class="p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-center text-slate-500 dark:text-slate-400 text-sm">
-          <UiIcon name="check" :size="20" class="mx-auto mb-2 block text-emerald-600 dark:text-emerald-400" />
+          <UiIcon name="check" :size="20" class="mx-auto mb-2 block text-emerald-700 dark:text-emerald-400" />
           All bank statement lines are reconciled. Nothing is waiting to be matched.
         </div>
       </div>

@@ -122,7 +122,7 @@ const deleteContact = () => {
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Card padding="sm">
             <div class="flex items-start gap-3">
-              <span class="mt-0.5 text-slate-400 dark:text-slate-500"><UiIcon name="tag" :size="20" /></span>
+              <span class="mt-0.5 text-slate-500 dark:text-slate-500"><UiIcon name="tag" :size="20" /></span>
               <div>
                 <p class="mb-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">Membership plan</p>
                 <p v-if="memberSummary.membership_plan" class="text-sm font-semibold text-slate-900 dark:text-white">
@@ -139,7 +139,7 @@ const deleteContact = () => {
 
           <Card padding="sm">
             <div class="flex items-start gap-3">
-              <span class="mt-0.5 text-slate-400 dark:text-slate-500"><UiIcon name="calendar" :size="20" /></span>
+              <span class="mt-0.5 text-slate-500 dark:text-slate-500"><UiIcon name="calendar" :size="20" /></span>
               <div>
                 <p class="mb-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">Member since</p>
                 <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ memberSummary.member_since ?? 'Unknown' }}</p>

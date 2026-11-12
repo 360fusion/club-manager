@@ -193,7 +193,7 @@ const openMeetingRsvpModal = (meeting) => {
         <Card>
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="mail" class="text-slate-400" /> Club broadcasts</h3>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="mail" class="text-slate-500 dark:text-slate-400" /> Club broadcasts</h3>
               <Badge>Live feed</Badge>
             </div>
           </template>
@@ -214,7 +214,7 @@ const openMeetingRsvpModal = (meeting) => {
         <!-- My Active Dues Card -->
         <Card>
           <template #header>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="cash" class="text-slate-400" /> Membership dues</h3>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="cash" class="text-slate-500 dark:text-slate-400" /> Membership dues</h3>
           </template>
           <div class="space-y-4">
             <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
@@ -231,7 +231,7 @@ const openMeetingRsvpModal = (meeting) => {
         <!-- Attendance Stats Detail Card -->
         <Card>
           <template #header>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="chart" class="text-slate-400" /> Attendance</h3>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="chart" class="text-slate-500 dark:text-slate-400" /> Attendance</h3>
           </template>
           <div class="space-y-2 text-xs">
             <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">

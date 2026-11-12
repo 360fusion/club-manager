@@ -628,7 +628,7 @@ const updateMemberRank = (userId, newRank) => {
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div class="flex flex-wrap items-center gap-3">
-              <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Club settings</h1>
+              <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Club settings</h2>
               <Badge variant="info">{{ club.slug }}</Badge>
             </div>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure policies, feature modules, branding, automated notifications, and permission matrices for your club.</p>
@@ -729,7 +729,7 @@ const updateMemberRank = (userId, newRank) => {
                           :disabled="idx === 0"
                           title="Move up"
                           aria-label="Move up"
-                          class="flex items-center justify-center rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                          class="flex items-center justify-center rounded text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-colors"
                         >
                           <UiIcon name="chevron-down" :size="14" class="rotate-180" />
                         </button>
@@ -739,7 +739,7 @@ const updateMemberRank = (userId, newRank) => {
                           :disabled="idx === form.member_ranks.length - 1"
                           title="Move down"
                           aria-label="Move down"
-                          class="flex items-center justify-center rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                          class="flex items-center justify-center rounded text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-colors"
                         >
                           <UiIcon name="chevron-down" :size="14" />
                         </button>
@@ -1032,7 +1032,7 @@ const updateMemberRank = (userId, newRank) => {
       class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-4 text-sm"
     >
       <div class="flex items-center gap-2.5">
-        <UiIcon name="trash" class="text-slate-400" />
+        <UiIcon name="trash" class="text-slate-500 dark:text-slate-400" />
         <span>Position <strong class="font-semibold">“{{ lastDeletedRank.rank }}”</strong> was removed.</span>
       </div>
       <div class="flex items-center gap-3">
@@ -1044,7 +1044,7 @@ const updateMemberRank = (userId, newRank) => {
           type="button"
           @click="showUndoToast = false"
           aria-label="Dismiss"
-          class="rounded-xl p-1 text-slate-400 hover:text-white cursor-pointer"
+          class="rounded-xl p-1 text-slate-500 dark:text-slate-400 hover:text-white cursor-pointer"
         >
           <UiIcon name="x" />
         </button>

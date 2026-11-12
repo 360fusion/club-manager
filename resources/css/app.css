@@ -174,3 +174,15 @@
 .rt-size-large { font-size: 1.25em; }
 .rt-size-xlarge { font-size: 1.5em; }
 .rt-size-huge { font-size: 2em; }
+
+/* People who ask their system for less motion get no animations, transitions or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

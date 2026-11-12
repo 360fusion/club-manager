@@ -119,7 +119,7 @@ const filteredInvoices = computed(() => {
 
       <!-- Empty state -->
       <div v-if="!filteredInvoices.length" class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-800 dark:bg-slate-800/50">
-        <span class="mb-2 inline-flex text-slate-400 dark:text-slate-500"><UiIcon name="receipt" :size="20" /></span>
+        <span class="mb-2 inline-flex text-slate-500 dark:text-slate-500"><UiIcon name="receipt" :size="20" /></span>
         <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ (invoices || []).length ? 'No results match your filters' : 'No invoices yet' }}</span>
         <span class="text-xs text-slate-500 dark:text-slate-400">{{ (invoices || []).length ? 'Try adjusting your search or year filter.' : 'Use "Create invoice" to issue a new one.' }}</span>
       </div>
@@ -210,7 +210,7 @@ const filteredInvoices = computed(() => {
                   </Button>
                   <span v-else-if="inv.status === 'paid'" class="text-xs text-slate-500 dark:text-slate-400">
                     Paid {{ inv.paid_at }}
-                    <span v-if="!inv.reconciled_at" class="block text-slate-400 dark:text-slate-500">Not yet reconciled</span>
+                    <span v-if="!inv.reconciled_at" class="block text-slate-500 dark:text-slate-500">Not yet reconciled</span>
                   </span>
                   <span v-else class="text-xs text-slate-500 dark:text-slate-400">{{ STATUS[inv.status]?.label ?? inv.status }}</span>
                   <Button

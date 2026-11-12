@@ -46,7 +46,7 @@ function act(request, action) {
 
         <div class="space-y-6">
             <div>
-                <h1 class="text-2xl font-black text-slate-900 dark:text-white">Visiting brethren</h1>
+                <h2 class="text-2xl font-black text-slate-900 dark:text-white">Visiting brethren</h2>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Right now your lodge shares its meetings with: <strong>{{ visibilityOptions[visibility] }}</strong>.
                     <Link :href="route('admin.settings.show', { clubSlug: club.slug })" class="text-blue-600 hover:underline dark:text-blue-400">Change this in settings</Link>.
@@ -75,7 +75,7 @@ function act(request, action) {
                             <label :for="`visit-reply-${visit.id}`" class="sr-only">Reply</label>
                             <input :id="`visit-reply-${visit.id}`" v-model="replies[visit.id]" maxlength="1000" placeholder="Reply (optional), such as the start time or dining cost" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
                             <div class="flex gap-2">
-                                <button class="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="answer(visit, true)">Accept</button>
+                                <button class="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="answer(visit, true)">Accept</button>
                                 <button class="rounded-xl bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100" @click="answer(visit, false)">Decline</button>
                             </div>
                         </div>
@@ -109,11 +109,11 @@ function act(request, action) {
 
                     <div class="mt-3 flex gap-2">
                         <template v-if="request.status === 'pending'">
-                            <button class="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="act(request, 'approve')">Approve</button>
+                            <button class="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="act(request, 'approve')">Approve</button>
                             <button class="rounded-xl bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100" @click="act(request, 'decline')">Decline</button>
                         </template>
                         <button v-else-if="request.status === 'approved'" class="rounded-xl bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:bg-rose-950/50 dark:text-rose-400" @click="act(request, 'revoke')">Stop sharing</button>
-                        <button v-else class="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="act(request, 'approve')">Approve after all</button>
+                        <button v-else class="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="act(request, 'approve')">Approve after all</button>
                     </div>
                 </li>
             </ul>

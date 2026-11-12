@@ -49,12 +49,12 @@ const ICON_LINK = 'inline-flex h-8 w-8 items-center justify-center rounded-xl bo
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 <tr v-for="(p, idx) in pages" :key="p.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td class="p-4 text-center font-medium text-slate-400">
+                    <td class="p-4 text-center font-medium text-slate-500 dark:text-slate-400">
                         {{ idx + 1 }}
                     </td>
 
                     <td class="p-4 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <UiIcon :name="pageIconName(p)" class="text-slate-400" />
+                        <UiIcon :name="pageIconName(p)" class="text-slate-500 dark:text-slate-400" />
                         <span>{{ p.title }}</span>
                     </td>
 

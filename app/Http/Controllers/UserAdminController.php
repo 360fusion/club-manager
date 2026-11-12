@@ -78,6 +78,7 @@ class UserAdminController extends Controller
 
             return [
                 'matching_member' => $isJoinRequest ? $invitations->matchForUser($club, $u)?->full_name : null,
+                'visiting_from' => ($u->pivot->role ?? null) === 'visitor' ? trim(($u->pivot->home_club_name ?? '').($u->pivot->home_club_number ? ' No. '.$u->pivot->home_club_number : '')) : null,
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,

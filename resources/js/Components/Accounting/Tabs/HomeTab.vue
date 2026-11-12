@@ -41,7 +41,7 @@ defineProps({
           >
             <span
               v-if="step.done"
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white"
             ><UiIcon name="check" :size="16" /></span>
             <span v-else class="h-6 w-6 shrink-0 rounded-full border-2 border-slate-300 dark:border-slate-600" aria-hidden="true"></span>
             <span class="min-w-0 flex-1 text-sm font-medium text-slate-900 dark:text-white">{{ step.label }}</span>

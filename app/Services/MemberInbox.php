@@ -13,6 +13,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\SignatureRequest;
 use App\Models\User;
+use App\Support\ClubAccess;
 use App\Support\Currencies;
 use App\Support\MemberScope;
 use Illuminate\Support\Collection;
@@ -145,11 +146,12 @@ class MemberInbox
     private function pendingApprovals(MemberScope $scope): Collection
     {
         return $scope->clubs()
-            ->filter(fn ($club) => $scope->isStaffIn($club->id))
+            ->filter(fn ($club) => ClubAccess::can($scope->user, $club, 'manage_members'))
             ->map(function ($club) {
-                $waiting = DB::table('club_user')->where('club_id', $club->id)->where('status', 'pending')->count();
+                // Requests to join or visit, not invitations still waiting for an answer.
+                $waiting = DB::table('club_user')->where('club_id', $club->id)->where('status', 'pending')->whereNull('invitation_token')->count();
 
-                return $waiting === 0 ? null : $this->item('approvals', 1, $waiting.' '.($waiting === 1 ? 'member is' : 'members are').' waiting for approval', $club, 'Club admin', null, null, route('admin.club_acc.members.index', ['clubSlug' => $club->slug], false));
+                return $waiting === 0 ? null : $this->item('approvals', 1, $waiting.' '.($waiting === 1 ? 'person is' : 'people are').' asking to join or visit', $club, 'Club admin', null, null, route('admin.users.index', ['clubSlug' => $club->slug], false));
             })
             ->filter()
             ->values();

@@ -43,7 +43,7 @@ const submit = () => {
                     <UiIcon name="lock" :size="20" />
                 </div>
                 <h1 class="text-2xl font-semibold text-white">Log in to ClubManager</h1>
-                <p class="text-xs text-slate-400">Access your club portal and executive dashboard</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Access your club portal and executive dashboard</p>
             </div>
 
             <Alert v-if="notice" variant="success">{{ notice }}</Alert>
@@ -74,7 +74,7 @@ const submit = () => {
                 />
 
                 <div class="flex items-center justify-between text-xs">
-                    <label class="flex items-center gap-2 text-slate-400 cursor-pointer">
+                    <label class="flex items-center gap-2 text-slate-500 dark:text-slate-400 cursor-pointer">
                         <input type="checkbox" v-model="form.remember" class="w-4 h-4 rounded border-slate-700 accent-blue-600" />
                         Remember me
                     </label>
@@ -90,7 +90,7 @@ const submit = () => {
             </form>
 
             <div class="text-center pt-2">
-                <Link href="/" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+                <Link href="/" class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-white transition-colors">
                     <UiIcon name="arrow-left" /> Back to platform hub
                 </Link>
             </div>

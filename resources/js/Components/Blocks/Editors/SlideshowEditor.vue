@@ -43,7 +43,7 @@ const move = (i, by) => {
                 </div>
             </div>
             <div class="flex gap-3">
-                <div class="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-[10px] text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+                <div class="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-[10px] text-slate-500 dark:text-slate-400 dark:border-slate-700 dark:bg-slate-800">
                     <img v-if="slide.image_url" :src="slide.image_url" alt="" class="h-full w-full object-cover" />
                     <span v-else>No photo</span>
                 </div>
@@ -99,7 +99,7 @@ const move = (i, by) => {
         </div>
 
         <div :class="[CARD, 'space-y-3']">
-            <p :class="LABEL">Text over the photos <span class="font-normal text-slate-400">(optional, makes it a hero)</span></p>
+            <p :class="LABEL">Text over the photos <span class="font-normal text-slate-500 dark:text-slate-400">(optional, makes it a hero)</span></p>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <input v-model="block.eyebrow" type="text" maxlength="80" placeholder="Small label" :class="SMALL_INPUT" aria-label="Small label" />
                 <textarea v-model="block.heading" rows="2" maxlength="200" placeholder="Heading (press Enter for a second line)" :class="[SMALL_INPUT, 'sm:col-span-2']" aria-label="Heading"></textarea>

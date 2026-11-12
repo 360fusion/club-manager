@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
-use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Enums\DocumentStatus;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
@@ -23,10 +22,7 @@ class AnalyticsController extends Controller
      */
     public function show(string $slug): Response
     {
-        $club = Club::where('slug', $slug)
-            ->with(['membershipPlans', 'events.attendees'])
-            ->withCount(['users', 'events', 'posts'])
-            ->firstOrFail();
+        $club = $this->findClub($slug)->loadCount(['users', 'events', 'posts']);
 
         // 1. Members Count from Lodge Roster & Active Membership Database
         $accMembersCount = Member::where('club_id', $club->id)->active()->count();
@@ -53,12 +49,6 @@ class AnalyticsController extends Controller
         $paidSubscriptionsSum = (float) MemberSubscription::where('club_id', $club->id)->sum('amount_paid');
         $revenueTotal = $paidInvoicesSum + $paidSubscriptionsSum + (float) $totalEventRevenue;
 
-        if ($revenueTotal <= 0) {
-            $tier = SubscriptionTier::where('club_id', $club->id)->first();
-            $tierRate = $tier ? (float) $tier->annual_amount : 180.00;
-            $revenueTotal = $totalMembersCount * $tierRate;
-        }
-
         // 6. RSVP Attendance Metrics
         $totalRSVPs = EventRegistration::whereHas('event', fn ($q) => $q->where('club_id', $club->id))->count();
 
@@ -69,6 +59,7 @@ class AnalyticsController extends Controller
         $attendanceRate = $totalRSVPs > 0 ? round(($attendingRSVPs / $totalRSVPs) * 100, 1) : 0;
 
         $upcomingMeetings = Meeting::where('club_id', $club->id)
+            ->whereDate('meeting_date', '>=', now()->toDateString())
             ->withCount([
                 'rsvps as dining_count' => function ($query) {
                     $query->where('attendance_status', 'attending_dining');
@@ -85,7 +76,7 @@ class AnalyticsController extends Controller
                     'id' => $m->id,
                     'title' => $m->title && ! str_contains($m->title, 'Regular Meeting No.') ? $m->title : ('Meeting - '.Carbon::parse($m->meeting_date)->format('jS F Y')),
                     'meeting_date' => Carbon::parse($m->meeting_date)->format('D, jS M Y'),
-                    'starts_at' => $m->starts_at ? substr($m->starts_at, 0, 5) : '18:30',
+                    'starts_at' => $m->starts_at ? substr($m->starts_at, 0, 5) : null,
                     'venue' => $m->venue,
                     'status' => $m->status,
                     'dining_count' => $m->dining_count,

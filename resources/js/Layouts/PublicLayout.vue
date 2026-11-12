@@ -19,16 +19,20 @@ const followError = computed(() => page.props.errors?.follow ?? null);
         <meta v-if="description" name="description" :content="description" />
     </Head>
 
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
+      Skip to main content
+    </a>
+
     <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-                <div class="flex items-center gap-6">
+            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
+                <div class="flex min-w-0 items-center gap-3 sm:gap-6">
                     <Link :href="route('home')" class="text-base font-bold tracking-tight">ClubManager</Link>
-                    <nav class="flex items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300">
-                        <Link :href="route('lodges.index')" class="hover:text-slate-900 dark:hover:text-white">Find a lodge</Link>
+                    <nav aria-label="Main" class="flex items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+                        <Link :href="route('lodges.index')" class="whitespace-nowrap hover:text-slate-900 dark:hover:text-white">Find a lodge</Link>
                     </nav>
                 </div>
-                <div class="flex items-center gap-2 text-sm">
+                <div class="flex shrink-0 items-center gap-2 text-sm">
                     <ThemeToggle />
                     <Link v-if="user" :href="route('members.dashboard')" class="whitespace-nowrap rounded-xl bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-500">My area</Link>
                     <Link v-else :href="route('login')" class="whitespace-nowrap rounded-xl bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-500">Sign in</Link>
@@ -36,7 +40,7 @@ const followError = computed(() => page.props.errors?.follow ?? null);
             </div>
         </header>
 
-        <main class="mx-auto max-w-6xl px-4 py-8">
+        <main id="main-content" tabindex="-1" class="mx-auto max-w-6xl px-4 py-8 focus:outline-none">
             <p v-if="flash.success" role="status" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/50 dark:text-emerald-300">{{ flash.success }}</p>
             <p v-if="flash.error || followError" role="alert" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-800 dark:border-rose-800/50 dark:bg-rose-950/50 dark:text-rose-300">{{ flash.error || followError }}</p>
             <slot />

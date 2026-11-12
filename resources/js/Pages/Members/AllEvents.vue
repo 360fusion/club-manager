@@ -20,7 +20,7 @@ const when = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', 
 <template>
     <MembersLayout title="Events" active-tab="events">
         <div class="space-y-6">
-            <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Events</h1>
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Events</h2>
             <ClubChips :options="clubOptions" :current="scopeClub?.slug ?? null" route-name="members.events" />
 
             <Card v-if="events.length" padding="none">

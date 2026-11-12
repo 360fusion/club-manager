@@ -48,8 +48,8 @@ const submitDecline = () => {
         <div class="max-w-lg space-y-4">
             <Card v-if="status === 'signed'">
                 <div class="text-center space-y-3 py-4">
-                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="check" :size="20" /></div>
-                    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">Signed, thank you</h1>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="check" :size="20" /></div>
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Signed, thank you</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">You signed <strong>{{ documentLabel }}</strong> on {{ signedAt }}.</p>
                     <!-- A plain link, not the kit Button's Inertia Link, so the browser downloads the PDF. -->
                     <a :href="route('member.signatures.pdf', { slug: club.slug, id })" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"><UiIcon name="download" />Download PDF copy</a>
@@ -59,7 +59,7 @@ const submitDecline = () => {
             <Card v-else-if="status === 'declined'">
                 <div class="text-center space-y-3 py-4">
                     <div class="w-12 h-12 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="x" :size="20" /></div>
-                    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">Declined</h1>
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Declined</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">You declined to sign <strong>{{ documentLabel }}</strong>.</p>
                 </div>
             </Card>
@@ -67,7 +67,7 @@ const submitDecline = () => {
             <Card v-else-if="status === 'expired' || status === 'cancelled'">
                 <div class="text-center space-y-3 py-4">
                     <div class="w-12 h-12 bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="warning" :size="20" /></div>
-                    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">This request is no longer open</h1>
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">This request is no longer open</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Ask whoever requested it to send a fresh request if a signature is still needed.</p>
                 </div>
             </Card>
@@ -75,7 +75,7 @@ const submitDecline = () => {
             <Card v-else>
                 <div class="space-y-4">
                     <div>
-                        <h1 class="text-lg font-semibold text-slate-900 dark:text-white">You have been asked to sign</h1>
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">You have been asked to sign</h2>
                         <p class="text-base font-semibold text-slate-900 dark:text-white mt-1">{{ documentLabel }}</p>
                     </div>
 

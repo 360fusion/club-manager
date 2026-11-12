@@ -66,13 +66,13 @@ const apply = () => {
                 </div>
 
                 <ul class="space-y-1.5">
-                    <li v-if="!pages.length" class="text-xs text-slate-400 italic p-2">{{ emptyText }}</li>
+                    <li v-if="!pages.length" class="text-xs text-slate-500 dark:text-slate-400 italic p-2">{{ emptyText }}</li>
                     <li v-for="page in pages" :key="page.id">
                         <label class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer select-none text-sm font-medium text-slate-800 dark:text-slate-100">
                             <input :type="single ? 'radio' : 'checkbox'" name="page-chooser" :checked="ticked.has(page.id)" class="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer dark:border-slate-700" @change="toggle(page.id)" />
                             <span class="truncate">{{ page.title }}</span>
-                            <span v-if="page.is_homepage" class="ml-auto text-[10px] font-semibold uppercase tracking-wider text-slate-400">Home</span>
-                            <span v-else-if="page.note" class="ml-auto text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ page.note }}</span>
+                            <span v-if="page.is_homepage" class="ml-auto text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Home</span>
+                            <span v-else-if="page.note" class="ml-auto text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ page.note }}</span>
                         </label>
                     </li>
                 </ul>

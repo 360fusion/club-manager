@@ -88,7 +88,7 @@ const TAB = 'px-3 py-1.5 text-[11px] font-medium cursor-pointer transition-color
                 @blur="complete"
                 @keydown.enter.prevent="complete"
             />
-            <p v-if="notice" role="status" class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">{{ notice }}</p>
+            <p v-if="notice" role="status" class="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">{{ notice }}</p>
             <p v-if="problem" role="alert" class="text-[11px] font-medium text-rose-600 dark:text-rose-400">{{ problem }}</p>
             <p v-else-if="!notice" :class="HINT">Type or paste the address. If you leave off https:// it is added for you.</p>
         </div>

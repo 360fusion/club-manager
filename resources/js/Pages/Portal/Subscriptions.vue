@@ -145,7 +145,7 @@ const tabClass = (isActive) => [
                   {{ item.channel_icon }} {{ item.channel_name }}
                 </span>
               </div>
-              <span class="text-slate-400 font-mono text-[11px]">{{ item.sent_at }}</span>
+              <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px]">{{ item.sent_at }}</span>
             </div>
 
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ item.subject }}</h3>

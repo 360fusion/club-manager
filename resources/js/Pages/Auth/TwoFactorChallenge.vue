@@ -34,7 +34,7 @@ const submit = () => {
         <h1 class="text-2xl font-semibold text-white">
           Two-factor authentication
         </h1>
-        <p class="text-xs text-slate-400">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           {{ useRecoveryCode ? 'Enter one of your emergency recovery codes.' : 'Enter the 6-digit verification code from your authenticator app.' }}
         </p>
       </div>

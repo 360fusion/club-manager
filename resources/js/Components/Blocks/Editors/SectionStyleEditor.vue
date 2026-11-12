@@ -54,8 +54,8 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
 <template>
     <details class="group rounded-2xl border border-slate-200 bg-slate-50/60 text-xs dark:border-slate-800 dark:bg-slate-900/40">
         <summary class="flex cursor-pointer select-none items-center justify-between gap-2 px-3 py-2 font-medium text-slate-700 dark:text-slate-200">
-            <span class="flex flex-wrap items-center gap-1.5"><UiIcon name="palette" :size="14" class="text-slate-500 dark:text-slate-400" />Section style <span class="font-normal text-slate-400">· {{ summary }}<span v-if="section.anchor"> · #{{ section.anchor }}</span></span></span>
-            <span class="text-[10px] font-normal text-slate-400 group-open:hidden">Edit</span>
+            <span class="flex flex-wrap items-center gap-1.5"><UiIcon name="palette" :size="14" class="text-slate-500 dark:text-slate-400" />Section style <span class="font-normal text-slate-500 dark:text-slate-400">· {{ summary }}<span v-if="section.anchor"> · #{{ section.anchor }}</span></span></span>
+            <span class="text-[10px] font-normal text-slate-500 dark:text-slate-400 group-open:hidden">Edit</span>
         </summary>
 
         <div class="space-y-3 border-t border-slate-200 p-3 dark:border-slate-800">
@@ -140,7 +140,7 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
 
             <div class="flex flex-wrap items-end gap-3">
                 <div class="min-w-[12rem] flex-1">
-                    <label :for="`block-${index}-section-anchor`" :class="LABEL">Anchor name <span class="font-normal text-slate-400">(optional)</span></label>
+                    <label :for="`block-${index}-section-anchor`" :class="LABEL">Anchor name <span class="font-normal text-slate-500 dark:text-slate-400">(optional)</span></label>
                     <input :id="`block-${index}-section-anchor`" :value="section.anchor" type="text" maxlength="60" placeholder="e.g. about" :class="INPUT" @input="set({ anchor: $event.target.value })" />
                     <p :class="HINT">Lets a button or menu link jump here with #{{ section.anchor || 'about' }}.</p>
                 </div>

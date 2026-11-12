@@ -29,10 +29,10 @@ defineProps({
         <!-- Toolbar -->
         <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/90 px-6 py-4">
           <div class="flex items-center gap-3">
-            <span class="text-slate-400"><UiIcon name="document" :size="20" /></span>
+            <span class="text-slate-500 dark:text-slate-400"><UiIcon name="document" :size="20" /></span>
             <div>
               <h3 class="text-sm font-semibold text-white">{{ previewModal.title }}</h3>
-              <p class="font-mono text-xs text-slate-400">{{ previewModal.fileName }}</p>
+              <p class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ previewModal.fileName }}</p>
             </div>
           </div>
 

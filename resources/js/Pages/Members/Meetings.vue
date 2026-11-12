@@ -33,7 +33,7 @@ const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Go
 <template>
     <MembersLayout title="Meetings" :club="urlScoped ? scopeClub : null" active-tab="meetings">
         <div class="space-y-6">
-            <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Meetings and summonses</h1>
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Meetings and summonses</h2>
             <ClubChips :options="clubOptions" :current="scopeClub?.slug ?? null" :route-name="chipsRoute" />
 
             <Card v-if="meetings.length" padding="none">

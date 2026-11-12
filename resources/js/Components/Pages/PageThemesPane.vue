@@ -109,7 +109,7 @@ defineProps({
                         </div>
                     </button>
                     <div class="flex h-9 items-center justify-between gap-2 border-t border-slate-200 px-4 dark:border-slate-800">
-                        <span class="truncate text-[10px] font-medium text-slate-400">{{ c.custom ? (usedByLiveSite(c) ? 'Your scheme · live' : 'Your scheme') : 'Ready-made' }}</span>
+                        <span class="truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">{{ c.custom ? (usedByLiveSite(c) ? 'Your scheme · live' : 'Your scheme') : 'Ready-made' }}</span>
                         <span v-if="c.custom" class="flex gap-1">
                             <button type="button" :aria-label="`Edit ${c.name}`" title="Rename or change colours" class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" @click="editScheme(c)"><UiIcon name="pencil" :size="14" /></button>
                             <button type="button" :aria-label="`Delete ${c.name}`" title="Delete" class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-950/40 dark:hover:text-rose-400" @click="deleteScheme(c)"><UiIcon name="trash" :size="14" /></button>
@@ -122,7 +122,7 @@ defineProps({
                     Create your own colour scheme
                 </button>
             </div>
-            <p v-if="!canCreateScheme" class="text-[11px] text-slate-400">You can keep {{ maxCustomSchemes }} colour schemes of your own. Delete one to create another.</p>
+            <p v-if="!canCreateScheme" class="text-[11px] text-slate-500 dark:text-slate-400">You can keep {{ maxCustomSchemes }} colour schemes of your own. Delete one to create another.</p>
             <p v-if="schemeError" class="text-xs font-medium text-rose-600 dark:text-rose-400" role="alert">{{ schemeError }}</p>
 
             <form v-if="schemeEditorOpen" class="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50" @submit.prevent="saveScheme">
@@ -154,7 +154,7 @@ defineProps({
                 <div class="flex flex-wrap items-center gap-2">
                     <Button type="submit" variant="secondary" size="sm" :disabled="schemeForm.processing || !draftColours">Save colour scheme</Button>
                     <Button variant="ghost" size="sm" @click="closeSchemeEditor">Cancel</Button>
-                    <span class="text-[11px] text-slate-400">Saving adds it to the list above; use “Apply theme to live site” to put it on your website.</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">Saving adds it to the list above; use “Apply theme to live site” to put it on your website.</span>
                 </div>
             </form>
         </div>
