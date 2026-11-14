@@ -130,6 +130,27 @@ class PageLifecycleTest extends TestCase
         $this->assertNull($home->fresh()->publish_at);
     }
 
+    public function test_the_homepage_keeps_its_address_when_renamed_and_the_site_still_has_a_front_page(): void
+    {
+        $this->actingAs($this->admin);
+        $this->get($this->publicUrl(''))->assertOk();
+        $home = Page::where('club_id', $this->club->id)->where('is_homepage', true)->firstOrFail();
+
+        $this->post($this->saveUrl(), ['id' => $home->id, 'title' => 'Welcome', 'slug' => 'welcome', 'blocks' => []])->assertSessionHasNoErrors();
+
+        $this->assertSame('home', $home->fresh()->slug);
+        $this->assertTrue($home->fresh()->is_homepage);
+        $this->get('/site/lodge-of-fraternity')->assertOk();
+    }
+
+    public function test_a_site_left_without_a_homepage_shows_its_first_page_instead_of_a_404(): void
+    {
+        $this->get('/site/lodge-of-fraternity')->assertOk();
+        Page::where('club_id', $this->club->id)->update(['is_homepage' => false]);
+
+        $this->get('/site/lodge-of-fraternity')->assertOk();
+    }
+
     // ---- Drafts and previews --------------------------------------------------
 
     public function test_a_draft_stays_unseen_until_it_is_published(): void

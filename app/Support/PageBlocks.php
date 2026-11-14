@@ -6,7 +6,8 @@ use App\Models\Club;
 use App\Models\User;
 
 /**
- * Blocks as a particular visitor is allowed to see them: elements switched off ("hidden") are left out, and a
+ * Blocks as a particular visitor is allowed to see them: elements switched off ("hidden") are left out, a contact
+ * form's recipient addresses are removed, and a
  * members-only downloads block reaches a
  * non-member as a "log in to view" notice with its items removed, so not even the document titles leak.
  */
@@ -24,6 +25,11 @@ class PageBlocks
         $blocks = array_values(array_filter($blocks, fn ($block) => ! (is_array($block) && ! empty($block['hidden']))));
 
         return array_map(function (array $block) use ($isMember) {
+            // Where a contact form sends its messages is read on the server, so the addresses can't be harvested from the page.
+            if (($block['type'] ?? null) === 'contact_form') {
+                unset($block['recipient_email'], $block['cc_emails']);
+            }
+
             if (($block['type'] ?? null) === 'downloads' && ! empty($block['members_only']) && ! $isMember) {
                 $block['items'] = [];
                 $block['locked'] = true;

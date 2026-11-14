@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\PagePublisher;
 use App\Services\PublicCalendar;
 use App\Support\ClubAccess;
+use App\Support\ClubDomain;
 use App\Support\PageBlocks;
 use App\Support\SiteChrome;
 use App\Support\SiteSeo;
@@ -78,14 +79,15 @@ class PublicSiteController extends Controller
                 return $this->notFound($club, $viewer);
             }
         } else {
-            $page = $query->where('is_homepage', true)->first()
+            // clone: where() changes the builder, and the fallback must not keep the is_homepage condition.
+            $page = (clone $query)->where('is_homepage', true)->first()
                 ?? $query->orderBy('sort_order')->firstOrFail();
         }
 
         // A page kept for members only is not shown to a visitor who isn't an active member of this club
         // (being logged in as a member elsewhere doesn't count): they are sent to log in.
         if (! $preview && $page->is_members_only && ! ClubAccess::isActiveMember($viewer, $club)) {
-            return redirect()->guest(route('login'))->with('error', 'That page is for members only.');
+            return ClubDomain::membersOnlyRedirect(request(), 'That page is for members only.');
         }
 
         return $this->renderPage($club, $page, $viewer, 200, $preview);
@@ -114,7 +116,7 @@ class PublicSiteController extends Controller
             // A members-only article: a visitor is sent to log in, a signed-in non-member just gets the not-found page.
             abort_if($viewer, 404);
 
-            return redirect()->guest(route('login'))->with('error', 'That article is for members only.');
+            return ClubDomain::membersOnlyRedirect(request(), 'That article is for members only.');
         }
 
         $newsPage = Page::where('club_id', $club->id)->live()->where('is_members_only', false)->orderBy('sort_order')->get()

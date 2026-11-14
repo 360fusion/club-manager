@@ -74,13 +74,18 @@ class PageAdminController extends Controller
 
         $validated = $request->validated();
 
+        $isNew = empty($validated['id']);
+        $existing = $isNew ? null : Page::where('club_id', $club->id)->find($validated['id']);
+
+        // The homepage keeps the slug "home": renaming it would leave the site without a front page.
+        if ($existing?->is_homepage) {
+            $validated['slug'] = 'home';
+        }
+
         $isHome = ($validated['slug'] === 'home');
         if ($isHome) {
             Page::where('club_id', $club->id)->where('slug', '!=', 'home')->update(['is_homepage' => false]);
         }
-
-        $isNew = empty($validated['id']);
-        $existing = $isNew ? null : Page::where('club_id', $club->id)->find($validated['id']);
         $maxSortOrder = (int) (Page::where('club_id', $club->id)->max('sort_order') ?? 0);
 
         $data = [

@@ -312,7 +312,7 @@ const NEWS_IMAGE_POSITIONS = [
 
             <div v-show="seoOpen" id="page-seo-panel" class="px-6 sm:px-8 pb-6 sm:pb-8 space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 sm:items-start gap-4">
-                    <Input v-model="form.slug" label="Web address (slug)" placeholder="about" :hint="`/site/${club.slug}/${form.slug || ''}`" />
+                    <Input v-model="form.slug" label="Web address (slug)" placeholder="about" :disabled="form.is_homepage" :hint="form.is_homepage ? 'The homepage is always the site\'s front page.' : `/site/${club.slug}/${form.slug || ''}`" />
                     <Input v-model="form.meta_title" label="SEO title" maxlength="255" :placeholder="form.title || 'Page title'" />
                 </div>
                 <Textarea
@@ -843,6 +843,7 @@ const NEWS_IMAGE_POSITIONS = [
                             <Alert variant="info">
                                 <strong class="font-medium">Filled in automatically:</strong> shows active fundraising campaigns and their progress bars.
                             </Alert>
+                            <LinkField v-model="block.button_url" :pages="pages" :club="club" label="Where the Donate button goes (for example your JustGiving page; leave empty to hide the button)" />
                         </div>
 
                         <!-- 11. Contact details -->

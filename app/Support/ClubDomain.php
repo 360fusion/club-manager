@@ -4,6 +4,8 @@ namespace App\Support;
 
 use App\Models\Club;
 use Closure;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
@@ -164,6 +166,20 @@ class ClubDomain
         }
 
         return 'https://'.$club->custom_domain.(substr($url, strlen($prefix)) ?: '/');
+    }
+
+    /**
+     * Sends a visitor who isn't signed in to log in before a members-only page or file. On a lodge's own domain there is
+     * no session (it lives on the main address), so they go to the same page on the main address first, and the
+     * `members` flag stops that address forwarding them back to the domain; after signing in they land on it there.
+     */
+    public static function membersOnlyRedirect(Request $request, string $message): RedirectResponse
+    {
+        if ($request->attributes->has('tenant_club')) {
+            return redirect()->away(rtrim((string) config('app.url'), '/').$request->getPathInfo().'?members=1');
+        }
+
+        return redirect()->guest(route('login'))->with('error', $message);
     }
 
     /**

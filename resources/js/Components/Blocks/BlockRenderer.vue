@@ -196,33 +196,16 @@ const getPostImagePos = (block, idx) => {
     return pos === 'alternate' ? (idx % 2 === 0 ? 'left' : 'right') : pos;
 };
 
-// ---- donations: the "make a contribution" modal, live pages only -------------------------------------------------
-const showDonationModal = ref(false);
-const activeDonation = ref(null);
-const donationForm = useForm({ donor_name: '', donor_email: '', amount: 50 });
-
-const openDonation = (campaign) => {
-    if (!props.interactive) return;
-    activeDonation.value = campaign;
-    showDonationModal.value = true;
-};
-
-const submitDonation = () => {
-    if (!activeDonation.value) return;
-    donationForm.post(`/site/${props.club.slug}/donations/${activeDonation.value.id}`, {
-        onSuccess: () => { showDonationModal.value = false; },
-    });
-};
 
 // ---- contact form: one shared form, keyed success message per block (a page can have more than one) --------------
-const contactForm = useForm({ name: '', email: '', phone: '', message: '', recipient_email: '', cc_emails: '', website: '' });
+const contactForm = useForm({ name: '', email: '', phone: '', message: '', block_id: '', website: '' });
 const contactSuccessMap = ref({});
 
 const submitContactForm = (block) => {
     if (!props.interactive) return;
 
-    contactForm.recipient_email = block.recipient_email || props.club.contact_email || props.club.email || '';
-    contactForm.cc_emails = block.cc_emails || '';
+    // The server looks up this form's recipients from the saved page.
+    contactForm.block_id = block.id || '';
 
     contactForm.post(`/site/${props.club.slug}/contact-form`, {
         preserveScroll: true,
@@ -407,9 +390,10 @@ const submitContactForm = (block) => {
                             <h2 class="text-2xl sm:text-3xl font-black mt-2">{{ d.campaign_name }}</h2>
                             <p class="text-sm mt-1 max-w-2xl opacity-90">{{ d.description }}</p>
                         </div>
-                        <button type="button" :disabled="!interactive" @click="openDonation(d)" class="py-3.5 px-6 rounded-2xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-xl shadow-[var(--cm-accent)]/20 hover:scale-105 transition-transform disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                        <!-- There is no payment flow here: the button goes to the lodge's own fundraising page, and is hidden without one. -->
+                        <component :is="interactive ? 'a' : 'span'" v-if="block.button_url" :href="interactive ? resolveUrl(block.button_url) : undefined" class="py-3.5 px-6 rounded-2xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-xl shadow-[var(--cm-accent)]/20 hover:scale-105 transition-transform">
                             Make a contribution
-                        </button>
+                        </component>
                     </div>
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-sm opacity-90">
@@ -574,38 +558,5 @@ const submitContactForm = (block) => {
         </div>
         </div>
 
-        <!-- Donation modal (live pages only) -->
-        <div v-if="interactive && showDonationModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="donation-modal-title"
-                v-focus-trap="() => { showDonationModal = false; }"
-                class="bg-white dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl"
-            >
-                <div class="flex items-start justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
-                    <div>
-                        <h3 id="donation-modal-title" class="text-xl font-bold text-neutral-900 dark:text-white">Make a donation</h3>
-                        <p class="text-xs text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)]">{{ activeDonation?.campaign_name }}</p>
-                    </div>
-                    <button type="button" @click="showDonationModal = false" class="text-neutral-400 hover:text-neutral-700 dark:hover:text-white font-bold" aria-label="Close"><UiIcon name="x" /></button>
-                </div>
-                <form @submit.prevent="submitDonation" class="space-y-4 text-sm">
-                    <div>
-                        <label for="donation-donor-name" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Your full name</label>
-                        <input id="donation-donor-name" v-model="donationForm.donor_name" type="text" required placeholder="e.g. Jane Smith" class="w-full bg-neutral-50 dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 text-neutral-900 dark:text-white" />
-                    </div>
-                    <div>
-                        <label for="donation-donor-email" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Email address</label>
-                        <input id="donation-donor-email" v-model="donationForm.donor_email" type="email" required placeholder="e.g. jane@example.com" class="w-full bg-neutral-50 dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 text-neutral-900 dark:text-white" />
-                    </div>
-                    <div>
-                        <label for="donation-amount" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Donation amount ({{ $cs }})</label>
-                        <input id="donation-amount" v-model="donationForm.amount" type="number" min="1" required class="w-full bg-neutral-50 dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 text-neutral-900 dark:text-white font-bold text-lg" />
-                    </div>
-                    <button type="submit" :disabled="donationForm.processing" class="w-full py-3.5 rounded-xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-lg shadow-[var(--cm-accent)]/20 disabled:opacity-60">Confirm & process donation</button>
-                </form>
-            </div>
-        </div>
     </div>
 </template>

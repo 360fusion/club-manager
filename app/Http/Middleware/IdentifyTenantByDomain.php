@@ -79,11 +79,11 @@ class IdentifyTenantByDomain
 
     /**
      * On the main address, a page visit to /site/{club}/... of a lodge that sends visitors to its live domain.
-     * Theme and draft previews stay here, because they need the admin's session.
+     * Theme and draft previews, and members-only pages sent here to sign in (`?members`), stay here, because they need the session here.
      */
     private function forwardToDomain(Request $request): ?Response
     {
-        if (! $request->isMethodSafe() || $request->query->has('preview') || $request->query->has('preview_theme')
+        if (! $request->isMethodSafe() || $request->query->has('preview') || $request->query->has('preview_theme') || $request->query->has('members')
             || ! preg_match('#^/site/([^/]+)(/.*)?$#', $request->getPathInfo(), $match)) {
             return null;
         }

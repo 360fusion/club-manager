@@ -19,8 +19,8 @@ class SubmitContactFormRequest extends ClubRequest
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:50',
             'message' => 'nullable|string|max:5000',
-            'recipient_email' => 'nullable|email|max:255',
-            'cc_emails' => 'nullable|string|max:1000',
+            // Which contact form element sent it: its recipients are read from the saved page, never from the request.
+            'block_id' => 'nullable|string|max:100',
             'website' => 'nullable|string|max:255',
         ];
     }

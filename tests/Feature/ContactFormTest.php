@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\Page;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ContactFormTest extends TestCase
@@ -28,13 +30,23 @@ class ContactFormTest extends TestCase
             ],
         ]);
 
+        Page::create(['club_id' => $club->id, 'title' => 'Write to us', 'slug' => 'write-to-us', 'is_published' => true, 'blocks' => [[
+            'id' => 'form-1', 'type' => 'contact_form',
+            'recipient_email' => 'secretary@lodgeoffraternity.org.uk',
+            'cc_emails' => 'treasurer@lodgeoffraternity.org.uk, assistant@lodgeoffraternity.org.uk',
+        ]]]);
+
+        // The addresses are not in the page's data, so they can't be harvested from it.
+        $this->get('/site/lodge-of-fraternity/write-to-us')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('page.blocks.0.id', 'form-1')->missing('page.blocks.0.recipient_email')->missing('page.blocks.0.cc_emails'));
+
         $response = $this->post(route('public.site.contact_form', ['clubSlug' => $club->slug]), [
             'name' => 'Lord Edward Spencer',
             'email' => 'edward@example.com',
             'phone' => '+44 7123 456789',
             'message' => 'I would like to inquire about visiting your lodge.',
-            'recipient_email' => 'secretary@lodgeoffraternity.org.uk',
-            'cc_emails' => 'treasurer@lodgeoffraternity.org.uk, assistant@lodgeoffraternity.org.uk',
+            'block_id' => 'form-1',
+            'recipient_email' => 'someone-else@lodgeoffraternity.org.uk',
             'success_message' => 'Visit evil.example to claim your prize',
         ]);
 

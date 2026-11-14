@@ -8,6 +8,7 @@ use App\Mail\ContactFormSubmittedMail;
 use App\Models\Media;
 use App\Models\Page;
 use App\Support\ClubAccess;
+use App\Support\ClubDomain;
 use App\Support\IcsCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -58,7 +59,7 @@ class PublicSiteExtrasController extends Controller
         abort_unless($found, 404);
 
         if ($found['restricted'] && ! ClubAccess::isActiveMember(Auth::user(), $club)) {
-            return redirect()->guest(route('login'))->with('error', 'That document is for members only.');
+            return ClubDomain::membersOnlyRedirect(request(), 'That document is for members only.');
         }
 
         // Only formats a browser shows safely are opened in the tab; everything else is downloaded.
@@ -127,9 +128,17 @@ class PublicSiteExtrasController extends Controller
             || $memberEmails->contains(strtolower($email))
             || $clubDomains->contains(substr((string) strrchr(strtolower($email), '@'), 1));
 
+        // The recipients come from the form element as saved on one of the club's live pages, so they are never in the page's data.
+        // A form on a seeded page that was never re-saved has no id, so a form without one matches the first such element.
+        $blockId = filled($validated['block_id'] ?? null) ? (string) $validated['block_id'] : null;
+        $block = Page::where('club_id', $club->id)->live()->get(['id', 'blocks'])
+            ->flatMap(fn (Page $page) => $page->blocks ?? [])
+            ->first(fn ($block) => is_array($block) && ($block['type'] ?? null) === 'contact_form' && empty($block['hidden'])
+                && ($block['id'] ?? null) === $blockId);
+
         $recipientEmail = $club->settings['contact_email'] ?? $club->email;
-        if (! empty($validated['recipient_email']) && $isAllowed($validated['recipient_email'])) {
-            $recipientEmail = $validated['recipient_email'];
+        if (! empty($block['recipient_email']) && $isAllowed((string) $block['recipient_email'])) {
+            $recipientEmail = $block['recipient_email'];
         }
 
         // With nowhere to send it the email would fail unseen in the queue, so tell the visitor instead of saying it was sent.
@@ -138,8 +147,8 @@ class PublicSiteExtrasController extends Controller
         }
 
         $ccEmails = [];
-        if (! empty($validated['cc_emails'])) {
-            foreach (preg_split('/[\s,]+/', $validated['cc_emails']) as $candidate) {
+        if (! empty($block['cc_emails'])) {
+            foreach (preg_split('/[\s,]+/', (string) $block['cc_emails']) as $candidate) {
                 $candidate = trim($candidate);
                 if (filter_var($candidate, FILTER_VALIDATE_EMAIL) && $isAllowed($candidate)) {
                     $ccEmails[] = $candidate;

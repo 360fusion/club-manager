@@ -92,6 +92,22 @@ class ClubCustomDomainTest extends TestCase
             ->assertRedirect(rtrim(config('app.url'), '/').'/login');
     }
 
+    public function test_a_members_only_page_on_the_domain_sends_the_visitor_to_sign_in_on_the_main_address_and_back(): void
+    {
+        Page::where('club_id', $this->club->id)->where('slug', 'history')->update(['is_members_only' => true]);
+        $this->redirectToDomain(true);
+        $mainPage = rtrim(config('app.url'), '/').'/site/lodge-of-fraternity/history?members=1';
+
+        $this->get('http://'.self::DOMAIN.'/history')->assertRedirect($mainPage);
+
+        // The main address does not bounce the visit back to the domain, and asks the guest to sign in.
+        $this->get($mainPage)->assertRedirect(route('login'));
+
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+        $this->actingAs($member)->get($mainPage)->assertOk();
+    }
+
     public function test_the_main_address_keeps_the_pages_unless_the_lodge_sends_visitors_to_its_domain(): void
     {
         $this->get('/site/lodge-of-fraternity/history')->assertOk();
