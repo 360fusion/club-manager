@@ -18,7 +18,10 @@ use Inertia\Response;
  */
 trait BuildsWebsiteScreens
 {
-    protected function builderScreen(string $clubSlug, string $selected, bool $withTrash = false): Response
+    /**
+     * @param  array<string, mixed>  $extra  props only this screen needs
+     */
+    protected function builderScreen(string $clubSlug, string $selected, bool $withTrash = false, array $extra = []): Response
     {
         $club = $this->findClub($clubSlug);
         $club->ensureDefaultPages();
@@ -30,7 +33,7 @@ trait BuildsWebsiteScreens
             'pages' => $pages,
             'selectedId' => $selected,
             'websiteSettings' => $this->getWebsiteSettings($club),
-        ], $withTrash ? ['trashedPages' => $this->trashedPages($club)] : [], $this->getPreviewData($club)));
+        ], $withTrash ? ['trashedPages' => $this->trashedPages($club)] : [], $this->getPreviewData($club), $extra));
     }
 
     /**

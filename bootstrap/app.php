@@ -41,9 +41,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Third-party webhooks cannot present a CSRF token; they are verified
-        // by signature in the controller instead.
+        // by signature in the controller instead. The public contact form is also sent from clubs' static websites,
+        // which have no session: it is anonymous anyway, and protected by its rate limit, hidden field and fixed recipients.
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
+            'site/*/contact-form',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

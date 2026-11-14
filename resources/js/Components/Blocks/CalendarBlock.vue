@@ -2,7 +2,7 @@
 // Public events calendar: a month grid (or an upcoming list) of the events this visitor may see. The server sends
 // dates already worked out in the club's timezone, so the grid never shifts with the visitor's own timezone.
 import { computed, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
@@ -11,6 +11,7 @@ const props = defineProps({
     club: { type: Object, required: true },
     calendar: { type: Object, default: null },
     interactive: { type: Boolean, default: true },
+    resolveUrl: { type: Function, default: (url) => url },
     radiusMd: { type: String, default: 'rounded-2xl' },
     radiusLg: { type: String, default: 'rounded-3xl' },
 });
@@ -52,11 +53,13 @@ const byDay = computed(() => {
 });
 
 const upcoming = computed(() => (props.calendar?.upcoming || []).slice(0, Number(props.block.list_length) || 10));
-const eventUrl = (event) => `/site/${props.club.slug}/events/${event.slug}`;
+const eventUrl = (event) => props.resolveUrl(`/site/${props.club.slug}/events/${event.slug}`);
+// A static copy of the site has only the months it was built with, so it doesn't offer to change month.
+const canChangeMonth = computed(() => props.interactive && !usePage().props.staticSite);
 const longDate = (isoDate) => utc(isoDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
 
 const go = (month) => {
-    if (!props.interactive || !month) return;
+    if (!canChangeMonth.value || !month) return;
     const url = new URL(window.location.href);
     url.searchParams.set('cal', month);
     router.get(url.pathname + url.search, {}, {
@@ -82,12 +85,12 @@ const go = (month) => {
         <template v-else>
             <div v-if="view === 'month'" :class="['border overflow-hidden transition-opacity', loading ? 'opacity-60' : '', radiusLg, theme.cardBg]">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-current/10">
-                    <button type="button" :disabled="!interactive || !calendar.prev" :class="['px-3 py-1.5 text-sm font-bold rounded-lg cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed', theme.bodyText]" aria-label="Previous month" @click="go(calendar.prev)">‹</button>
+                    <button type="button" :disabled="!canChangeMonth || !calendar.prev" :class="['px-3 py-1.5 text-sm font-bold rounded-lg cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed', theme.bodyText]" aria-label="Previous month" @click="go(calendar.prev)">‹</button>
                     <div class="flex items-center gap-3">
                         <span :class="['font-extrabold', theme.headingText]" aria-live="polite">{{ calendar.label }}</span>
-                        <button v-if="interactive && calendar.month !== calendar.today_month" type="button" :class="['text-xs font-bold underline cursor-pointer', theme.accentText]" @click="go(calendar.today_month)">Today</button>
+                        <button v-if="canChangeMonth && calendar.month !== calendar.today_month" type="button" :class="['text-xs font-bold underline cursor-pointer', theme.accentText]" @click="go(calendar.today_month)">Today</button>
                     </div>
-                    <button type="button" :disabled="!interactive || !calendar.next" :class="['px-3 py-1.5 text-sm font-bold rounded-lg cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed', theme.bodyText]" aria-label="Next month" @click="go(calendar.next)">›</button>
+                    <button type="button" :disabled="!canChangeMonth || !calendar.next" :class="['px-3 py-1.5 text-sm font-bold rounded-lg cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed', theme.bodyText]" aria-label="Next month" @click="go(calendar.next)">›</button>
                 </div>
 
                 <div class="grid grid-cols-7 text-center text-[11px] font-bold uppercase tracking-wider opacity-70 py-2">

@@ -91,6 +91,7 @@ use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\ProvinceLodgeCorrectionController;
 use App\Http\Controllers\QuickRsvpController;
 use App\Http\Controllers\SignatureAdminController;
+use App\Http\Controllers\StaticSiteController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
@@ -163,6 +164,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/pages/geocode', [PagePlacesController::class, 'geocode'])->middleware('throttle:20,1')->name('admin.pages.geocode');
     Route::post('/{clubSlug}/admin/pages/downloads', [PagePlacesController::class, 'uploadDownload'])->middleware('throttle:60,1')->name('admin.pages.downloads.upload');
     Route::get('/{clubSlug}/admin/pages/redirects', [PageSiteSettingsController::class, 'redirects'])->name('admin.pages.redirects');
+    // Publishing the website as static files: versions, the zip, and pushes to FTP(S) or GitHub (StaticSiteController).
+    Route::get('/{clubSlug}/admin/pages/publish', [StaticSiteController::class, 'show'])->name('admin.pages.publish');
+    Route::post('/{clubSlug}/admin/pages/publish/build', [StaticSiteController::class, 'build'])->middleware('throttle:10,1,publish')->name('admin.pages.publish.build');
+    Route::post('/{clubSlug}/admin/pages/publish/serve', [StaticSiteController::class, 'serve'])->name('admin.pages.publish.serve');
+    Route::post('/{clubSlug}/admin/pages/publish/releases/{releaseId}/activate', [StaticSiteController::class, 'activate'])->whereNumber('releaseId')->name('admin.pages.publish.activate');
+    Route::get('/{clubSlug}/admin/pages/publish/releases/{releaseId}/download', [StaticSiteController::class, 'download'])->whereNumber('releaseId')->middleware('throttle:10,1,publish')->name('admin.pages.publish.download');
+    Route::post('/{clubSlug}/admin/pages/publish/targets', [StaticSiteController::class, 'saveTarget'])->name('admin.pages.publish.targets.save');
+    Route::delete('/{clubSlug}/admin/pages/publish/targets/{targetId}', [StaticSiteController::class, 'destroyTarget'])->whereNumber('targetId')->name('admin.pages.publish.targets.destroy');
+    Route::post('/{clubSlug}/admin/pages/publish/targets/{targetId}/deploy', [StaticSiteController::class, 'deploy'])->whereNumber('targetId')->middleware('throttle:10,1,publish')->name('admin.pages.publish.targets.deploy');
     Route::get('/{clubSlug}/admin/pages/overview', [PageSiteSettingsController::class, 'overview'])->name('admin.pages.overview');
     Route::post('/{clubSlug}/admin/pages/redirects', [PageRedirectController::class, 'storeRedirect'])->name('admin.pages.redirects.store');
     Route::delete('/{clubSlug}/admin/pages/redirects/{id}', [PageRedirectController::class, 'destroyRedirect'])->name('admin.pages.redirects.destroy');

@@ -5,6 +5,7 @@ import PageEditPane from '@/Components/Pages/PageEditPane.vue';
 import PageThemesPane from '@/Components/Pages/PageThemesPane.vue';
 import PageHeaderFooterPane from '@/Components/Pages/PageHeaderFooterPane.vue';
 import PageRedirectsPane from '@/Components/Pages/PageRedirectsPane.vue';
+import PagePublishPane from '@/Components/Pages/PagePublishPane.vue';
 import PageTablePane from '@/Components/Pages/PageTablePane.vue';
 import PageTrashPane from '@/Components/Pages/PageTrashPane.vue';
 import PageSettingsPane from '@/Components/Pages/PageSettingsPane.vue';
@@ -58,6 +59,11 @@ const props = defineProps({
     websiteSettings: {
         type: Object,
         default: () => ({}),
+    },
+    // Only on the Publish screen: versions of the static website and where they are sent (StaticSiteController).
+    publishing: {
+        type: Object,
+        default: null,
     },
     latestPosts: {
         type: Array,
@@ -401,7 +407,7 @@ const themeLabel = (key) => {
     return `${layoutName(layoutId)} — ${colorSchemeName(colorSchemeId)}`;
 };
 
-const MANAGEMENT_SELECTIONS = ['overview', 'settings', 'themes', 'header_footer', 'redirects'];
+const MANAGEMENT_SELECTIONS = ['overview', 'settings', 'themes', 'header_footer', 'redirects', 'publish'];
 
 const activePage = computed(() => {
     if (activeNavSelection.value === 'new' || MANAGEMENT_SELECTIONS.includes(activeNavSelection.value)) {
@@ -985,6 +991,7 @@ const confirmDeleteActivePage = () => {
                                 <option value="header_footer">Header & footer</option>
                                 <option value="themes">Website themes</option>
                                 <option value="redirects">Redirects</option>
+                                <option value="publish">Publish as files</option>
                                 <option value="new">Add a new custom page</option>
                                 <option value="overview">Manage pages</option>
                             </optgroup>
@@ -1072,6 +1079,15 @@ const confirmDeleteActivePage = () => {
                                 </a>
 
                                 <a
+                                    :href="selectionUrl('publish')"
+                                    :aria-current="activeNavSelection === 'publish' ? 'page' : undefined"
+                                    @click="navClick($event, 'publish')"
+                                    :class="navLinkClass(activeNavSelection === 'publish')"
+                                >
+                                    <UiIcon name="upload" /> Publish as files
+                                </a>
+
+                                <a
                                     :href="selectionUrl('overview')"
                                     :aria-current="activeNavSelection === 'overview' ? 'page' : undefined"
                                     @click="navClick($event, 'overview')"
@@ -1147,6 +1163,8 @@ const confirmDeleteActivePage = () => {
                     <PageThemesPane :club="club" :layouts="LAYOUTS" v-else-if="activeNavSelection === 'themes'" :color-schemes="COLOR_SCHEMES" :legacy="LEGACY" :max-custom-schemes="MAX_CUSTOM_SCHEMES" :scheme-shades="SCHEME_SHADES" :can-create-scheme="canCreateScheme" :close-scheme-editor="closeSchemeEditor" :current-theme-key="currentThemeKey" :custom-colour-schemes="customColourSchemes" :delete-scheme="deleteScheme" :draft-colours="draftColours" :draft-colours-close="draftColoursClose" :draft-palette="draftPalette" :edit-scheme="editScheme" :effective-preview-theme-key="effectivePreviewThemeKey" :form="form" :open-apply-theme-modal="openApplyThemeModal" :open-new-scheme="openNewScheme" :preview-theme-in-builder="previewThemeInBuilder" :save-scheme="saveScheme" :scheme-editor-open="schemeEditorOpen" :scheme-error="schemeError" :scheme-form="schemeForm" :style-changed="styleChanged" :theme-form="themeForm" :theme-label="themeLabel" :used-by-live-site="usedByLiveSite" v-model:selected-color-scheme-id="selectedColorSchemeId" v-model:selected-layout-id="selectedLayoutId" />
 
                     <!-- View Mode: Redirects -->
+                    <PagePublishPane v-else-if="activeNavSelection === 'publish'" :club="club" :publishing="publishing" />
+
                     <PageRedirectsPane :club="club" v-else-if="activeNavSelection === 'redirects'" :add-redirect="addRedirect" :form="form" :is-saved-success="isSavedSuccess" :redirect-form="redirectForm" :redirects="redirects" :remove-redirect="removeRedirect" />
 
                     <!-- View Mode 4: All Pages Overview Table -->

@@ -11,6 +11,7 @@ use App\Support\ClubAccess;
 use App\Support\ClubDomain;
 use App\Support\IcsCalendar;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -104,7 +105,7 @@ class PublicSiteExtrasController extends Controller
     /**
      * Handle contact form submission from public website.
      */
-    public function submitContactForm(SubmitContactFormRequest $request, string $clubSlug): RedirectResponse
+    public function submitContactForm(SubmitContactFormRequest $request, string $clubSlug): RedirectResponse|JsonResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -112,8 +113,11 @@ class PublicSiteExtrasController extends Controller
         $thanks = 'Thank you! Your message has been sent successfully.';
 
         // A filled hidden field, or a message stuffed with links, is a robot: it is told the message went, so it learns nothing.
+        // A club's static website sends the form from another address as JSON (see BlockRenderer), and reads the answer.
+        $done = fn () => $request->wantsJson() ? response()->json(['message' => $thanks]) : back()->with('success', $thanks);
+
         if (filled($validated['website'] ?? null) || preg_match_all('#https?://|www\.#i', (string) ($validated['message'] ?? '')) > 2) {
-            return back()->with('success', $thanks);
+            return $done();
         }
 
         // Recipients are never taken on trust from the request. A form may only send to the
@@ -170,6 +174,6 @@ class PublicSiteExtrasController extends Controller
         }
         $mail->send($mailable);
 
-        return back()->with('success', $thanks);
+        return $done();
     }
 }

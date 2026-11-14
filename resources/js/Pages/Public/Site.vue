@@ -45,6 +45,15 @@ const getSiteUrl = (urlPath) => {
     if (!urlPath) return '';
     // On the lodge's own domain its pages live at the root, not under /site/{club}.
     const prefix = `/site/${props.club.slug}`;
+    const staticSite = inertiaPage.props.staticSite;
+    if (staticSite && (urlPath === prefix || urlPath.startsWith(`${prefix}/`))) {
+        // On the static website: the site's own pages are files at the root; events, bookings, documents, forms
+        // and members-only pages still need the server, so they go to the platform.
+        const rest = urlPath.slice(prefix.length);
+        const path = rest.replace(/^\//, '').split(/[?#]/)[0];
+        const needsServer = (staticSite.server_paths || []).includes(path.split('/')[0]) || (staticSite.server_pages || []).includes(path);
+        return needsServer ? `${staticSite.platform}${urlPath}` : (rest || '/');
+    }
     if (inertiaPage.props.onClubDomain && (urlPath === prefix || urlPath.startsWith(`${prefix}/`))) return urlPath.slice(prefix.length) || '/';
     if (!props.previewTheme) return urlPath;
     if (urlPath.startsWith('/site/') || urlPath.includes('/site/')) {

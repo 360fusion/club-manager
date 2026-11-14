@@ -96,6 +96,7 @@ class Club extends Model implements HasMedia
     {
         return [
             'settings' => 'array',
+            'domain_verified_at' => 'datetime',
         ];
     }
 

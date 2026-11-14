@@ -1,6 +1,6 @@
 // Every screen in the website builder has its own address, so it can be bookmarked, reloaded, opened in a new tab and
 // reached with the back button. A page is /pages/7/edit (add ?view=preview for the preview); the rest are named screens.
-export const SCREEN_PATHS = { new: 'create', settings: 'settings', themes: 'themes', header_footer: 'header-footer', redirects: 'redirects', overview: 'overview' };
+export const SCREEN_PATHS = { new: 'create', settings: 'settings', themes: 'themes', header_footer: 'header-footer', redirects: 'redirects', overview: 'overview', publish: 'publish' };
 
 /** The address of a screen: a named one (`settings`) or a page id, in edit or preview mode. */
 export const selectionUrl = (clubSlug, selection, mode = 'edit') => {

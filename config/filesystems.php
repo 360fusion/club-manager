@@ -38,6 +38,15 @@ return [
             'report' => false,
         ],
 
+        // Clubs' published static websites: one folder per version, and a `current` link (App\Models\SiteRelease).
+        // Never public: files are served from it only by IdentifyTenantByDomain (or a web server rule pointing at it).
+        'sites' => [
+            'driver' => 'local',
+            'root' => storage_path('app/sites'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

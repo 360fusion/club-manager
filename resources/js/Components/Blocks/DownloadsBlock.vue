@@ -28,7 +28,7 @@ const extension = (item) => {
 };
 const kind = (item) => TYPES[extension(item)] || (item.source === 'link' ? ['LINK', 'link'] : ['FILE', 'document']);
 const titleOf = (item) => item.title || item.file_name || 'Untitled document';
-const href = (item) => (item.source === 'upload' ? `/site/${props.club.slug}/files/${item.media_id}` : props.resolveUrl(item.url));
+const href = (item) => props.resolveUrl(item.source === 'upload' ? `/site/${props.club.slug}/files/${item.media_id}` : item.url);
 const dateOf = (item) => (item.added_at ? new Date(`${item.added_at}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 const items = computed(() => {

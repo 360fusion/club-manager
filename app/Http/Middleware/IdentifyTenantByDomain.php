@@ -3,11 +3,14 @@
 namespace App\Http\Middleware;
 
 use App\Models\Club;
+use App\Models\SiteRelease;
+use App\Services\StaticSite\StaticSiteBuilder;
 use App\Support\ClubDomain;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -31,6 +34,8 @@ class IdentifyTenantByDomain
         $host = strtolower($request->getHost());
 
         if ($host === strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST))) {
+            $this->markStaticRender($request);
+
             return $this->forwardToDomain($request) ?? $next($request);
         }
 
@@ -49,6 +54,10 @@ class IdentifyTenantByDomain
 
         if (in_array($first, self::APP_PATHS, true) || str_starts_with($first, 'livewire')) {
             return new RedirectResponse(rtrim((string) config('app.url'), '/').$request->getRequestUri());
+        }
+
+        if ($static = $this->staticFile($request, $club)) {
+            return $static;
         }
 
         // The session cookie must belong to this host, or forms on the lodge's domain fail their CSRF check.
@@ -77,13 +86,79 @@ class IdentifyTenantByDomain
         return $next($rewritten);
     }
 
+    /** What a static website file is sent as; anything else in a release is never served. */
+    private const STATIC_TYPES = [
+        'html' => 'text/html; charset=utf-8', 'css' => 'text/css; charset=utf-8', 'js' => 'text/javascript; charset=utf-8',
+        'json' => 'application/json', 'xml' => 'application/xml; charset=utf-8', 'txt' => 'text/plain; charset=utf-8',
+        'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp',
+        'ico' => 'image/x-icon', 'woff' => 'font/woff', 'woff2' => 'font/woff2', 'pdf' => 'application/pdf',
+    ];
+
+    /**
+     * A lodge that serves its published static website (settings.static_site_serve) gets each page and file from the
+     * live version's folder, without running the app. Addresses it doesn't have (events, bookings, forms, members-only
+     * pages) and previews fall through to the app as usual.
+     *
+     * shortcut: PHP still answers these requests; letting the web server (Caddy) serve storage/app/sites/{club}/current
+     * directly is faster, and is a server config change.
+     */
+    private function staticFile(Request $request, Club $club): ?Response
+    {
+        if (! $request->isMethodSafe() || empty($club->settings['static_site_serve'])
+            || $request->query->has('preview') || $request->query->has('preview_theme')) {
+            return null;
+        }
+
+        $root = realpath(SiteRelease::currentPath($club->id));
+        $path = rawurldecode($request->getPathInfo());
+
+        if (! $root || str_contains($path, '..') || preg_match('#/\.#', $path)) {
+            return null;
+        }
+
+        foreach ([$path, rtrim($path, '/').'/index.html'] as $candidate) {
+            $file = realpath($root.'/'.ltrim($candidate, '/'));
+            $type = self::STATIC_TYPES[strtolower(pathinfo((string) $file, PATHINFO_EXTENSION))] ?? null;
+
+            if ($file && $type && is_file($file) && str_starts_with($file, $root.DIRECTORY_SEPARATOR)) {
+                return new BinaryFileResponse($file, 200, [
+                    'Content-Type' => $type,
+                    // Built files have hashed names and never change; pages and images are checked again each visit.
+                    'Cache-Control' => str_contains($candidate, '/build/') ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate',
+                    'X-Content-Type-Options' => 'nosniff',
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Headless Chrome opening a page for the static website build (App\Services\StaticSite\StaticSiteBuilder) comes
+     * with a signed `?static` link: the page is then drawn exactly as it is for the static files, with its static address.
+     */
+    private function markStaticRender(Request $request): void
+    {
+        if (! $request->query->has('static') || ! preg_match('#^/site/([^/]+)(/.*)?$#', $request->getPathInfo(), $match)
+            || ! URL::hasValidSignature($request)) {
+            return;
+        }
+
+        $club = Club::where('slug', $match[1])->first();
+
+        if ($club) {
+            $request->attributes->set('club_domain_uri', $match[2] ?? '/');
+            $request->attributes->set('static_site', StaticSiteBuilder::flags($club));
+        }
+    }
+
     /**
      * On the main address, a page visit to /site/{club}/... of a lodge that sends visitors to its live domain.
      * Theme and draft previews, and members-only pages sent here to sign in (`?members`), stay here, because they need the session here.
      */
     private function forwardToDomain(Request $request): ?Response
     {
-        if (! $request->isMethodSafe() || $request->query->has('preview') || $request->query->has('preview_theme') || $request->query->has('members')
+        if (! $request->isMethodSafe() || $request->attributes->has('static_site') || $request->query->has('preview') || $request->query->has('preview_theme') || $request->query->has('members')
             || ! preg_match('#^/site/([^/]+)(/.*)?$#', $request->getPathInfo(), $match)) {
             return null;
         }

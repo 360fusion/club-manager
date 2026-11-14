@@ -46,7 +46,8 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
     <header :class="theme.header">
         <!-- Login / Member Area: always the top right corner, whether the logo is on the left or centred -->
         <div v-if="showAccountLinks && mode !== 'logo_only'" class="max-w-7xl mx-auto px-6 pt-2 flex justify-end">
-            <SiteAccountMenu :club="club" :theme="theme" :interactive="interactive" />
+            <!-- A static copy of the site has no sign-in of its own. -->
+            <SiteAccountMenu v-if="!$page.props.staticSite" :club="club" :theme="theme" :interactive="interactive" />
         </div>
 
         <div :class="['max-w-7xl mx-auto px-6 flex', isCentered ? 'flex-col items-center py-5 gap-4' : 'min-h-20 py-3 items-center justify-between flex-wrap gap-y-2']">

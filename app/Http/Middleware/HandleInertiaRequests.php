@@ -70,6 +70,8 @@ class HandleInertiaRequests extends Middleware
             'currency' => fn () => $this->currencyFor($request),
             // The lodge site's links drop their /site/{club} prefix when it is served on the lodge's own domain.
             'onClubDomain' => $request->attributes->has('club_domain_uri'),
+            // Set while a page is rendered for the club's static website (App\Services\StaticSite\StaticSiteBuilder).
+            'staticSite' => $request->attributes->get('static_site'),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,

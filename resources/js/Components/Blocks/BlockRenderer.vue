@@ -2,7 +2,7 @@
 // Renders a page's blocks. Used by both the website builder's live preview and the real public page
 // (Public/Site.vue), so a block only has to be written once: what an admin previews is what a visitor sees.
 import { ref, computed } from 'vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 import ObfuscatedEmail from '@/Components/ObfuscatedEmail.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { parseYouTubeUrl, youtubeEmbedUrl, youtubeThumbnail } from '@/Utils/youtube';
@@ -201,13 +201,43 @@ const getPostImagePos = (block, idx) => {
 const contactForm = useForm({ name: '', email: '', phone: '', message: '', block_id: '', website: '' });
 const contactSuccessMap = ref({});
 
+// On the static website the form is sent to the platform directly (no Inertia server behind the page), as JSON.
+const submitStaticContactForm = async (block, url) => {
+    contactForm.clearErrors();
+    contactForm.processing = true;
+    const failed = 'Your message could not be sent. Please try again later.';
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(contactForm.data()),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (response.ok) {
+            contactSuccessMap.value[block.id] = block.success_message || body.message || 'Thank you! Your message has been sent successfully.';
+            contactForm.reset('name', 'email', 'phone', 'message');
+        } else if (response.status === 422 && body.errors) {
+            contactForm.setError(Object.fromEntries(Object.entries(body.errors).map(([field, messages]) => [field, messages[0]])));
+        } else {
+            contactForm.setError('message', body.message || failed);
+        }
+    } catch {
+        contactForm.setError('message', failed);
+    } finally {
+        contactForm.processing = false;
+    }
+};
+
 const submitContactForm = (block) => {
     if (!props.interactive) return;
 
     // The server looks up this form's recipients from the saved page.
     contactForm.block_id = block.id || '';
 
-    contactForm.post(`/site/${props.club.slug}/contact-form`, {
+    const url = props.resolveUrl(`/site/${props.club.slug}/contact-form`);
+    if (usePage().props.staticSite) return submitStaticContactForm(block, url);
+
+    contactForm.post(url, {
         preserveScroll: true,
         onSuccess: () => {
             contactSuccessMap.value[block.id] = block.success_message || 'Thank you! Your message has been sent successfully.';
@@ -357,7 +387,7 @@ const submitContactForm = (block) => {
             <FaqBlock v-else-if="block.type === 'faq'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
             <MapBlock v-else-if="block.type === 'map'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
             <DownloadsBlock v-else-if="block.type === 'downloads'" :block="block" :theme="theme" :club="club" :interactive="interactive" :resolve-url="resolveUrl" :radius-md="radiusMd" />
-            <CalendarBlock v-else-if="block.type === 'calendar'" :block="block" :theme="theme" :club="club" :calendar="calendar" :interactive="interactive" :radius-md="radiusMd" :radius-lg="radiusLg" />
+            <CalendarBlock v-else-if="block.type === 'calendar'" :block="block" :theme="theme" :club="club" :calendar="calendar" :interactive="interactive" :resolve-url="resolveUrl" :radius-md="radiusMd" :radius-lg="radiusLg" />
 
             <!-- 7. Membership pricing -->
             <section v-else-if="block.type === 'pricing_cards'" class="max-w-6xl mx-auto space-y-6">
@@ -374,7 +404,7 @@ const submitContactForm = (block) => {
                                 <span :class="['text-2xl font-black', theme.headingText]">{{ $cs }}{{ plan.price }}</span>
                                 <span :class="['text-xs', theme.bodyText]"> / {{ plan.billing_period }}</span>
                             </div>
-                            <Link v-if="interactive" :href="`/${club.slug}/admin/subscriptions`" :class="['py-2 px-4 font-bold text-xs', radiusMd, theme.heroCta]">Subscribe →</Link>
+                            <Link v-if="interactive && !$page.props.staticSite" :href="`/${club.slug}/admin/subscriptions`" :class="['py-2 px-4 font-bold text-xs', radiusMd, theme.heroCta]">Subscribe →</Link>
                             <span v-else :class="['text-xs font-bold', theme.accentText]">Subscribe →</span>
                         </div>
                     </div>
@@ -476,7 +506,7 @@ const submitContactForm = (block) => {
                     <div v-for="e in upcomingEvents" :key="e.id" :class="['p-6 space-y-4', radiusMd, theme.cardBg]">
                         <h3 :class="['text-lg font-bold', theme.headingText]">{{ e.title }}</h3>
                         <p :class="['text-xs flex flex-wrap items-center gap-x-3 gap-y-1', theme.bodyText]"><span class="inline-flex items-center gap-1.5"><UiIcon name="building" />{{ e.location }}</span><span class="inline-flex items-center gap-1.5"><UiIcon name="clock" />{{ e.starts_at }}</span></p>
-                        <Link v-if="interactive" :href="`/site/${club.slug}/events/${e.slug}`" :class="['block w-full py-2.5 px-4 bg-black/10 dark:bg-white/10 text-center font-bold text-xs', radiusMd]">Event details & booking →</Link>
+                        <Link v-if="interactive" :href="resolveUrl(`/site/${club.slug}/events/${e.slug}`)" :class="['block w-full py-2.5 px-4 bg-black/10 dark:bg-white/10 text-center font-bold text-xs', radiusMd]">Event details & booking →</Link>
                     </div>
                 </div>
             </section>
