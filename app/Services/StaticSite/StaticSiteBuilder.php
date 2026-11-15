@@ -136,6 +136,7 @@ class StaticSiteBuilder
 
         // The not-found page: whatever the site shows for an address it doesn't have (the club's own choice, or the default).
         [, $html] = $this->fetch($club, '__clubmanager-not-found', $staticSite);
+        $html = $this->prerenderer->render($this->signedUrl($club, '__clubmanager-not-found'), $html);
         $this->writeFile($dir.'/404.html', $this->rewrite($club, $html, $dir));
 
         if ($count === 0) {

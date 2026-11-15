@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Casts\SanitizedHtmlBlocks;
+use App\Observers\RebuildsStaticSite;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy(RebuildsStaticSite::class)]
 class Page extends Model
 {
     use HasFactory, SoftDeletes;

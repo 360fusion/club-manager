@@ -89,7 +89,7 @@ class StaticSiteController extends Controller
             : new SiteDeployTarget(['club_id' => $club->id]);
 
         $config = $data['type'] === 'github'
-            ? ['repository' => $data['repository'], 'branch' => $data['branch'], 'token' => $data['token'] ?? null]
+            ? ['repository' => $data['repository'], 'branch' => $data['branch'], 'cpanel_path' => trim((string) ($data['cpanel_path'] ?? ''), '/ '), 'token' => $data['token'] ?? null]
             : ['host' => strtolower($data['host']), 'port' => (int) ($data['port'] ?? 21), 'username' => $data['username'], 'password' => $data['password'] ?? null, 'path' => trim((string) ($data['path'] ?? ''), '/ '), 'insecure' => (bool) ($data['insecure'] ?? false)];
 
         // A blank password or token on an edit keeps the saved one (it is never sent back to the browser).

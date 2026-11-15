@@ -99,8 +99,8 @@ class IdentifyTenantByDomain
      * live version's folder, without running the app. Addresses it doesn't have (events, bookings, forms, members-only
      * pages) and previews fall through to the app as usual.
      *
-     * shortcut: PHP still answers these requests; letting the web server (Caddy) serve storage/app/sites/{club}/current
-     * directly is faster, and is a server config change.
+     * Once Caddy is set up (REMINDERS.md) it answers these from storage/app/sites/hosts/{domain} before PHP runs; this
+     * stays as the fallback for servers that don't (Forge today) and keeps the same rules.
      */
     private function staticFile(Request $request, Club $club): ?Response
     {

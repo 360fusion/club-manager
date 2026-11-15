@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Observers\RebuildsStaticSite;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * An address on a club's public site (after /site/{club}/) that sends visitors somewhere else.
  */
+#[ObservedBy(RebuildsStaticSite::class)]
 class ClubRedirect extends Model
 {
     public const MAX_PER_CLUB = 200;

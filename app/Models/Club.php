@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Observers\RebuildsStaticSite;
 use App\Services\DefaultSitePages;
 use App\Support\Currencies;
 use App\Support\MasonicRanks;
@@ -11,6 +12,7 @@ use App\Support\ReservedClubSlugs;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Database\Factories\ClubFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +27,7 @@ use Launchpad\Models\Workspace;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy(RebuildsStaticSite::class)]
 class Club extends Model implements HasMedia
 {
     /** @use HasFactory<ClubFactory> */

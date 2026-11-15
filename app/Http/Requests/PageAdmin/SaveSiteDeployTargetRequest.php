@@ -33,6 +33,7 @@ class SaveSiteDeployTargetRequest extends ClubRequest
 
             'repository' => ['exclude_unless:type,github', 'required', 'string', 'max:200', 'regex:/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/'],
             'branch' => ['exclude_unless:type,github', 'required', 'string', 'max:100', 'not_regex:/\.\./', 'regex:/^[A-Za-z0-9._\/-]+$/'],
+            'cpanel_path' => ['exclude_unless:type,github', 'nullable', 'string', 'max:255', 'not_regex:/\.\./', 'regex:/^[A-Za-z0-9_\-.\/]*$/'],
             'token' => ['exclude_unless:type,github', $isNew ? 'required' : 'nullable', 'string', 'max:255'],
         ];
     }

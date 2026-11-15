@@ -101,16 +101,25 @@ class SiteDeployer
         $remoteManifest = $this->github($api->get('contents/'.StaticSiteBuilder::MANIFEST, ['ref' => $branch]), [404]);
         $remote = $remoteManifest ? (json_decode((string) base64_decode((string) $remoteManifest['content']), true) ?: []) : [];
 
+        // Files made for this repository rather than taken from the release (the cPanel deploy instructions).
+        $extra = filled($config['cpanel_path'] ?? null) ? ['.cpanel.yml' => self::cpanelYaml((string) $config['cpanel_path'])] : [];
+
         $local = StaticSiteBuilder::manifest($release);
+        unset($local[StaticSiteBuilder::MANIFEST]);
+        $local += array_map('sha1', $extra);
+        ksort($local);
         [$changed, $removed] = $this->diff($local, $remote);
 
         if ($changed === [] && $removed === []) {
             return [0, 0, 'Already up to date.'];
         }
 
+        $contents = fn (string $path) => $extra[$path] ?? (string) file_get_contents($release->path().'/'.$path);
+        $files = [...array_map(fn (string $path) => [$path, $contents($path)], $changed), [StaticSiteBuilder::MANIFEST, (string) json_encode($local, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)]];
+
         $tree = [];
-        foreach ([...$changed, StaticSiteBuilder::MANIFEST] as $path) {
-            $blob = $this->github($api->post('git/blobs', ['content' => base64_encode((string) file_get_contents($release->path().'/'.$path)), 'encoding' => 'base64']));
+        foreach ($files as [$path, $content]) {
+            $blob = $this->github($api->post('git/blobs', ['content' => base64_encode($content), 'encoding' => 'base64']));
             $tree[] = ['path' => $path, 'mode' => '100644', 'type' => 'blob', 'sha' => $blob['sha']];
         }
         foreach ($removed as $path) {
@@ -126,6 +135,18 @@ class SiteDeployer
         $this->github($api->patch('git/refs/heads/'.rawurlencode($branch), ['sha' => $commit['sha']]));
 
         return [count($changed), count($removed), 'Committed '.substr((string) $commit['sha'], 0, 7).' to '.$branch.'.'];
+    }
+
+    /**
+     * cPanel's Git Version Control runs these tasks when it deploys the repository: copy the site into the folder under
+     * the account's home (for example public_html), leaving the repository's own files behind. Nothing is deleted there.
+     */
+    public static function cpanelYaml(string $folder): string
+    {
+        $folder = trim($folder, '/ ');
+
+        return "---\ndeployment:\n  tasks:\n    - export DEPLOYPATH=\$HOME/{$folder}/\n"
+            .'    - /bin/rsync -a --exclude=.git --exclude=.cpanel.yml --exclude='.StaticSiteBuilder::MANIFEST." ./ \$DEPLOYPATH\n";
     }
 
     /**

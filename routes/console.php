@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\BuildStaticSite;
+use App\Models\Club;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -29,3 +31,9 @@ Schedule::command('lodges:check-sources')->weeklyOn(0, '02:00')->withoutOverlapp
 Schedule::command('lodges:remind-secretaries')->dailyAt('09:30')->withoutOverlapping();
 // Blanks accounts whose owners asked to close them 30 or more days ago (see App\Support\AccountPurging).
 Schedule::command('accounts:purge-closed')->dailyAt('03:15')->withoutOverlapping();
+// Rebuilds the published website of every club whose domain shows the files, so things that change with time
+// (events passing, articles scheduled to appear) reach it; edits themselves rebuild within minutes (RebuildsStaticSite).
+Artisan::command('app:rebuild-static-sites', function () {
+    Club::where('settings->static_site_serve', true)->each(fn (Club $club) => BuildStaticSite::dispatch($club));
+})->purpose('Queue a new version of every website served as static files');
+Schedule::command('app:rebuild-static-sites')->dailyAt('04:30');

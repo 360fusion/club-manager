@@ -154,8 +154,11 @@ class StaticSiteTest extends TestCase
     public function test_the_domain_serves_the_live_version_from_its_files_and_the_rest_from_the_app(): void
     {
         $release = $this->build();
+        Queue::fake(); // turning serving on queues a rebuild, which would replace the version this test edits
         $this->club->update(['settings' => array_merge($this->club->settings ?? [], ['static_site_serve' => true])]);
         file_put_contents($release->path().'/history/index.html', 'STATIC COPY');
+        // The web server's own way in: the domain's link leads to the live version.
+        $this->assertFileExists(Storage::disk('sites')->path('hosts/www.fraternity.example/history/index.html'));
 
         $response = $this->get('http://www.fraternity.example/history');
         $response->assertOk();
@@ -169,6 +172,7 @@ class StaticSiteTest extends TestCase
         $this->get('http://www.fraternity.example/..%2F..%2Fcurrent/index.html')->assertNotFound();
 
         $this->club->update(['settings' => array_merge($this->club->settings, ['static_site_serve' => false])]);
+        $this->assertFalse(is_link(Storage::disk('sites')->path('hosts/www.fraternity.example')));
         $this->get('http://www.fraternity.example/history')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Public/Site'));
     }
 
@@ -266,9 +270,14 @@ class StaticSiteTest extends TestCase
             };
         });
 
-        $target = SiteDeployTarget::create(['club_id' => $this->club->id, 'type' => 'github', 'name' => 'Repo', 'config' => ['repository' => 'fraternity/website', 'branch' => 'main', 'token' => 'ghp_test']]);
+        $target = SiteDeployTarget::create(['club_id' => $this->club->id, 'type' => 'github', 'name' => 'Repo', 'config' => ['repository' => 'fraternity/website', 'branch' => 'main', 'cpanel_path' => 'public_html', 'token' => 'ghp_test']]);
         $deploy = SiteDeploy::create(['club_id' => $this->club->id, 'site_deploy_target_id' => $target->id, 'site_release_id' => $release->id, 'status' => 'queued']);
         app(SiteDeployer::class)->run($deploy);
+
+        // The cPanel deploy instructions go in with the site, and the manifest lists them so a later push can remove them.
+        Http::assertSent(fn (HttpRequest $request) => str_ends_with($request->url(), '/git/trees') && collect($request['tree'])->contains('path', '.cpanel.yml'));
+        Http::assertSent(fn (HttpRequest $request) => str_ends_with($request->url(), '/git/blobs')
+            && str_contains((string) base64_decode($request['content']), 'export DEPLOYPATH=$HOME/public_html/'));
 
         $this->assertSame('done', $deploy->fresh()->status, (string) $deploy->fresh()->message);
         $this->assertSame('Committed commit2 to main.', $deploy->fresh()->message);
@@ -314,6 +323,23 @@ class StaticSiteTest extends TestCase
         $otherRelease = SiteRelease::create(['club_id' => $other->id, 'status' => 'ready']);
         $this->post(route('admin.pages.publish.activate', ['clubSlug' => $this->club->slug, 'releaseId' => $otherRelease->id]))->assertNotFound();
         $this->get(route('admin.pages.publish.download', ['clubSlug' => $this->club->slug, 'releaseId' => $otherRelease->id]))->assertNotFound();
+    }
+
+    public function test_an_edit_rebuilds_the_site_only_when_the_domain_shows_the_published_files(): void
+    {
+        Queue::fake();
+        $page = Page::where('club_id', $this->club->id)->firstOrFail();
+
+        $page->update(['title' => 'Changed']);
+        Queue::assertNotPushed(BuildStaticSite::class);
+
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], ['static_site_serve' => true])]);
+        $page->update(['title' => 'Changed again']);
+        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->club->is($this->club) && $job->delay !== null);
+
+        Queue::fake();
+        $this->artisan('app:rebuild-static-sites')->assertSuccessful();
+        Queue::assertPushed(BuildStaticSite::class, 1);
     }
 
     public function test_a_version_downloads_as_a_zip(): void

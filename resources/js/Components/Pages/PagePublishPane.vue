@@ -50,7 +50,7 @@ const TYPE_OPTIONS = [
     { value: 'ftps', label: 'FTP server (cPanel and most web hosts)' },
     { value: 'github', label: 'GitHub repository' },
 ];
-const blankTarget = () => ({ id: null, type: 'ftps', name: '', host: '', port: 21, username: '', password: '', path: 'public_html', insecure: false, repository: '', branch: 'main', token: '' });
+const blankTarget = () => ({ id: null, type: 'ftps', name: '', host: '', port: 21, username: '', password: '', path: 'public_html', insecure: false, repository: '', branch: 'main', cpanel_path: '', token: '' });
 const targetForm = useForm(blankTarget());
 const editing = ref(false);
 
@@ -99,11 +99,11 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                             <td class="p-3 text-slate-500 dark:text-slate-400">{{ when(release.created_at) }}<template v-if="release.created_by"> by {{ release.created_by }}</template></td>
                             <td class="p-3 text-slate-500 dark:text-slate-400">{{ release.status === 'ready' ? release.page_count : '' }}</td>
                             <td class="p-3 text-slate-500 dark:text-slate-400">{{ release.status === 'ready' ? size(release.bytes) : '' }}</td>
-                            <td class="p-3 text-right whitespace-nowrap space-x-2">
-                                <template v-if="release.status === 'ready'">
+                            <td class="p-3">
+                                <div v-if="release.status === 'ready'" class="flex flex-wrap justify-end gap-2">
                                     <Button v-if="!release.is_current" size="sm" variant="secondary" :disabled="busy" @click="makeLive(release)">Make live</Button>
-                                    <a :href="`${base}/releases/${release.id}/download`" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">Download zip</a>
-                                </template>
+                                    <a :href="`${base}/releases/${release.id}/download`" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap">Download zip</a>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -125,7 +125,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                     <Button v-if="!data.serving" variant="secondary" :disabled="busy || !current" @click="setServing(true)">Show the published version on my domain</Button>
                     <Button v-else variant="secondary" :disabled="busy" @click="setServing(false)">Show the website as I edit it</Button>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400">With the published version, changes only appear on your domain once you build a new version.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">With the published version, a new version is built a few minutes after each change and again every night, so changes reach your domain shortly after you save them.</p>
             </template>
             <p v-else class="text-sm text-slate-500 dark:text-slate-400">Once your own domain is connected (in Website and SEO settings), it can show the published version from here.</p>
         </Card>
@@ -160,6 +160,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                         <Input v-model="targetForm.repository" label="Repository" placeholder="yourlodge/website" :error="targetForm.errors.repository" class="sm:col-span-2" />
                         <Input v-model="targetForm.branch" label="Branch" :error="targetForm.errors.branch" />
                         <Input v-model="targetForm.token" type="password" label="Access token" autocomplete="new-password" :placeholder="targetForm.id ? 'Leave empty to keep the saved one' : ''" :error="targetForm.errors.token" class="sm:col-span-3" />
+                        <Input v-model="targetForm.cpanel_path" label="cPanel folder (optional)" placeholder="public_html" hint="Adds a .cpanel.yml so cPanel's Git Version Control copies the site into this folder of your hosting account when it deploys." :error="targetForm.errors.cpanel_path" class="sm:col-span-3" />
                     </div>
                     <Alert variant="info">On GitHub, create a fine-grained personal access token for just this repository with "Contents: read and write". Each push is one commit. cPanel's Git Version Control can then pull the repository into your site, or GitHub Pages can serve it.</Alert>
                 </template>
