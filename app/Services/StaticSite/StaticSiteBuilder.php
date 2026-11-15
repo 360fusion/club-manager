@@ -212,10 +212,9 @@ class StaticSiteBuilder
             'Content-Security-Policy' => implode('; ', [
                 "default-src 'self'",
                 "script-src 'self' 'unsafe-inline' https://plausible.io https://www.googletagmanager.com",
-                // The app's stylesheet imports the signature font from Google Fonts.
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: https:",
-                "font-src 'self' data: https://fonts.gstatic.com",
+                "font-src 'self' data:",
                 "connect-src 'self' {$platform} https://plausible.io https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
                 'frame-src https:',
                 "form-action 'self' {$platform}",

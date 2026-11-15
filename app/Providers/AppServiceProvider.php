@@ -20,6 +20,7 @@ use App\Support\Currencies;
 use App\Support\ReservedClubSlugs;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
@@ -56,6 +57,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // `composer dev`'s worker runs the email and newsletter queues too (the default one only takes `default`). Not
+        // `sites`: a website build refuses to run while the Vite dev server does, so start that worker by hand.
+        DevCommands::artisan('queue:listen --queue=transactional,default,bulk --tries=1 --timeout=0', 'queue');
+
         // Livewire views get the club's currency symbol ($cs) and code ($cc) from the component's public clubSlug.
         View::composer('livewire.*', function ($view) {
             static $clubs = [];

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Club;
 use App\Models\Lodge;
 use App\Models\LodgeCorrection;
 use App\Models\Province;
@@ -116,5 +117,42 @@ class ProvinceAdminTest extends TestCase
 
         $this->actingAs($member)->get(route('members.lodges.fixes.index'))->assertForbidden();
         $this->actingAs($member)->post(route('members.lodges.fixes.apply', $correction->id), [])->assertForbidden();
+    }
+
+    public function test_a_provincial_admin_edits_and_adds_listings_only_in_their_provinces(): void
+    {
+        $managed = Lodge::factory()->create(['province_id' => $this->durham->id, 'club_id' => Club::factory()->create()->id]);
+        $values = fn (array $changes = []) => [
+            'club_type_id' => $this->durhamLodge->club_type_id, 'province_id' => $this->durham->id, 'name' => 'Lodge of Industry',
+            'number' => '48', 'status' => 'active', ...$changes,
+        ];
+
+        $this->actingAs($this->provincialAdmin)->get(route('members.lodges.directory.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('SuperAdmin/Lodges/Index')
+                ->where('layout', 'members')
+                ->where('full', false)
+                ->where('totals.all', 2)
+                ->has('provinces', 1)
+                ->where('linkableClubs', []));
+
+        $this->put(route('members.lodges.directory.update', $this->durhamLodge->id), $values())->assertSessionHasNoErrors()->assertRedirect(route('members.lodges.directory.index'));
+        $this->assertSame('Lodge of Industry', $this->durhamLodge->fresh()->name);
+
+        // Another province's lodge is not found; a lodge with its own club account keeps its listing; a lodge cannot be
+        // moved to (or added in) a province they don't look after.
+        $this->put(route('members.lodges.directory.update', $this->otherLodge->id), $values())->assertNotFound();
+        $this->put(route('members.lodges.directory.update', $managed->id), $values())->assertForbidden();
+        $this->put(route('members.lodges.directory.update', $this->durhamLodge->id), $values(['province_id' => $this->otherLodge->province_id]))->assertSessionHasErrors('province_id');
+        $this->post(route('members.lodges.directory.store'), $values(['province_id' => $this->otherLodge->province_id, 'number' => '9999']))->assertSessionHasErrors('province_id');
+        $this->assertSame($this->durham->id, $this->durhamLodge->fresh()->province_id);
+
+        $this->post(route('members.lodges.directory.store'), $values(['name' => 'New Lodge', 'number' => '9999']))->assertSessionHasNoErrors();
+        $this->assertTrue(Lodge::where('number', '9999')->where('province_id', $this->durham->id)->exists());
+
+        // Someone who looks after no province is refused before anything is validated.
+        $this->actingAs(User::factory()->create())->get(route('members.lodges.directory.index'))->assertForbidden();
+        $this->post(route('members.lodges.directory.store'), [])->assertForbidden();
     }
 }

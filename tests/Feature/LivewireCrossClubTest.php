@@ -213,7 +213,7 @@ class LivewireCrossClubTest extends TestCase
             if ($idParam) {
                 foreach ($this->foreignIds($idTable) as $foreignId) {
                     DB::beginTransaction();
-                    $before = $this->snapshot();
+                    $before = $this->snapshotBefore();
 
                     try {
                         $html = Livewire::test($class, [...$mount, $idParam => $foreignId])->html();
@@ -225,7 +225,7 @@ class LivewireCrossClubTest extends TestCase
                         // refused, which is the secure outcome
                     }
 
-                    foreach ($this->foreignChanges($before, $this->snapshot(), $this->attackerClub->id) as $change) {
+                    foreach ($this->foreignChangesSince($before, $this->attackerClub->id) as $change) {
                         $changes["{$short} mounted on foreign {$idParam}={$foreignId} changed {$change}"] = true;
                     }
 
@@ -247,7 +247,7 @@ class LivewireCrossClubTest extends TestCase
             foreach ($foreign as $id) {
                 foreach ([null, ...$this->actionsOf($class)] as $action) {
                     DB::beginTransaction();
-                    $before = $this->snapshot();
+                    $before = $this->snapshotBefore();
                     $label = ($properties === [] ? '' : $short.' with '.implode(', ', $properties)." = {$id}, ").($action ? "{$short}::{$action->getName()}(...) with id {$id}" : 'render only');
                     $tested[$label] = true;
 
@@ -269,7 +269,7 @@ class LivewireCrossClubTest extends TestCase
                         // refused, or failed validation
                     }
 
-                    foreach ($this->foreignChanges($before, $this->snapshot(), $this->attackerClub->id) as $change) {
+                    foreach ($this->foreignChangesSince($before, $this->attackerClub->id) as $change) {
                         $changes["{$label} changed {$change}"] = true;
                     }
 

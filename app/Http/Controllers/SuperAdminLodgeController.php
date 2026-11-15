@@ -13,6 +13,7 @@ use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Services\Lodges\LodgeClaimService;
 use App\Support\Months;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,15 +21,47 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Superadmin management of the lodge directory, the same shape as the Masonic Halls page.
+ * Superadmin management of the lodge directory, the same shape as the Masonic Halls page. ProvinceLodgeController is the
+ * same screen for a provincial admin, limited to their provinces (scope(), provinces()).
  */
 class SuperAdminLodgeController extends Controller
 {
+    /**
+     * The lodges this screen may show and change.
+     *
+     * @return Builder<Lodge>
+     */
+    protected function scope(Request $request): Builder
+    {
+        return Lodge::query();
+    }
+
+    /**
+     * The provinces a lodge may be put in from this screen.
+     *
+     * @return Builder<Province>
+     */
+    protected function provinces(Request $request): Builder
+    {
+        return Province::query();
+    }
+
+    /**
+     * The route name prefix and layout the page uses, and whether it may delete lodges and link them to clubs.
+     *
+     * @return array{routes: string, layout: string, full: bool}
+     */
+    protected function screen(): array
+    {
+        return ['routes' => 'superadmin.lodges', 'layout' => 'superadmin', 'full' => true];
+    }
+
     public function index(IndexSuperAdminLodgeRequest $request): Response
     {
         $filters = $request->validated();
+        $provinceIds = $this->screen()['full'] ? null : $this->provinces($request)->pluck('id');
 
-        $query = Lodge::query()->with(['clubType:id,code,name', 'province:id,name', 'masonicHall:id,name,town', 'schedules', 'sources', 'club:id,name,slug']);
+        $query = $this->scope($request)->with(['clubType:id,code,name', 'province:id,name', 'masonicHall:id,name,town', 'schedules', 'sources', 'club:id,name,slug']);
 
         if ($q = trim((string) ($filters['q'] ?? ''))) {
             $like = '%'.$q.'%';
@@ -58,6 +91,7 @@ class SuperAdminLodgeController extends Controller
         };
 
         return Inertia::render('SuperAdmin/Lodges/Index', [
+            ...$this->screen(),
             'lodges' => $query->orderBy('name')->paginate(50)->withQueryString()->through(fn (Lodge $lodge) => [
                 'id' => $lodge->id,
                 'name' => $lodge->name,
@@ -94,20 +128,20 @@ class SuperAdminLodgeController extends Controller
                 'status' => $filters['status'] ?? '',
                 'gaps' => $filters['gaps'] ?? '',
             ],
-            'provinces' => Province::orderBy('name')->get(['id', 'code', 'name']),
+            'provinces' => $this->provinces($request)->orderBy('name')->get(['id', 'code', 'name']),
             'orders' => ClubType::whereHas('lodges')->orderBy('name')->get(['id', 'code', 'name']),
             'allOrders' => ClubType::orderBy('name')->get(['id', 'name']),
-            'halls' => MasonicHall::orderBy('name')->get(['id', 'province_id', 'name', 'town']),
-            'linkableClubs' => Club::whereDoesntHave('lodge')->orderBy('name')->limit(500)->get(['id', 'name']),
+            'halls' => MasonicHall::when($provinceIds, fn ($halls) => $halls->whereIn('province_id', $provinceIds))->orderBy('name')->get(['id', 'province_id', 'name', 'town']),
+            'linkableClubs' => $this->screen()['full'] ? Club::whereDoesntHave('lodge')->orderBy('name')->limit(500)->get(['id', 'name']) : [],
             'statuses' => Lodge::STATUSES,
             'months' => Months::NAMES,
             'occurrences' => LodgeSchedule::OCCURRENCES,
             'days' => LodgeSchedule::DAYS,
             'totals' => [
-                'all' => Lodge::count(),
-                'managed' => Lodge::whereNotNull('club_id')->count(),
-                'no_hall' => Lodge::whereNull('masonic_hall_id')->count(),
-                'no_schedule' => Lodge::whereDoesntHave('schedules')->count(),
+                'all' => $this->scope($request)->count(),
+                'managed' => $this->scope($request)->whereNotNull('club_id')->count(),
+                'no_hall' => $this->scope($request)->whereNull('masonic_hall_id')->count(),
+                'no_schedule' => $this->scope($request)->whereDoesntHave('schedules')->count(),
             ],
         ]);
     }
@@ -126,19 +160,19 @@ class SuperAdminLodgeController extends Controller
         $lodge = Lodge::create([...$validated['lodge'], 'slug' => $slug]);
         $this->saveSchedule($lodge, $validated);
 
-        return redirect()->route('superadmin.lodges.index')->with('success', "'{$lodge->displayName()}' added.");
+        return redirect()->route($this->screen()['routes'].'.index')->with('success', "'{$lodge->displayName()}' added.");
     }
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        $lodge = Lodge::findOrFail($id);
+        $lodge = $this->editable($request, $id);
         $validated = $this->validated($request);
 
         // The slug stays put so a lodge's address never changes when it is renamed.
         $lodge->update($validated['lodge']);
         $this->saveSchedule($lodge, $validated);
 
-        return redirect()->route('superadmin.lodges.index')->with('success', "'{$lodge->displayName()}' updated.");
+        return redirect()->route($this->screen()['routes'].'.index')->with('success', "'{$lodge->displayName()}' updated.");
     }
 
     public function linkClub(LinkClubRequest $request, int $id, LodgeClaimService $claims): RedirectResponse
@@ -174,15 +208,24 @@ class SuperAdminLodgeController extends Controller
         return redirect()->route('superadmin.lodges.index')->with('success', "'{$name}' deleted.");
     }
 
+    /** A lodge this screen may change: one in its scope (another is "not found"). */
+    protected function editable(Request $request, int $id): Lodge
+    {
+        return $this->scope($request)->findOrFail($id);
+    }
+
     /**
      * @return array<string, mixed>
      */
     private function validated(Request $request): array
     {
+        $provinceIds = $this->screen()['full'] ? null : $this->provinces($request)->pluck('id')->all();
+
         $data = $request->validate([
             'club_type_id' => 'required|exists:club_types,id',
-            'province_id' => 'nullable|exists:provinces,id',
-            'masonic_hall_id' => 'nullable|exists:masonic_halls,id',
+            // A provincial admin can only put a lodge in a province they look after.
+            'province_id' => $provinceIds === null ? 'nullable|exists:provinces,id' : ['required', Rule::in($provinceIds)],
+            'masonic_hall_id' => $provinceIds === null ? 'nullable|exists:masonic_halls,id' : ['nullable', Rule::exists('masonic_halls', 'id')->whereIn('province_id', $provinceIds)],
             'name' => 'required|string|max:255',
             'number' => 'nullable|string|max:20',
             'status' => ['sometimes', Rule::in(Lodge::STATUSES)],

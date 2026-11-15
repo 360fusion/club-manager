@@ -149,7 +149,7 @@ class CrossClubRecordSweepTest extends TestCase
 
             foreach ($this->urlsFor($uri, $slug) as [$ids, $url]) {
                 DB::beginTransaction();
-                $before = $this->snapshot();
+                $before = $this->snapshotBefore();
                 $payload = self::PAYLOADS["{$method} {$uri}"] ?? [];
                 $response = $this->send($method, $url, $payload);
 
@@ -183,7 +183,7 @@ class CrossClubRecordSweepTest extends TestCase
                     }
                 }
 
-                foreach ($this->foreignChanges($before, $this->snapshot(), $attackerClub->id) as $change) {
+                foreach ($this->foreignChangesSince($before, $attackerClub->id) as $change) {
                     $mutations["{$method} {$uri} (ids {$ids}) [{$status}] changed {$change}"] = true;
                 }
 

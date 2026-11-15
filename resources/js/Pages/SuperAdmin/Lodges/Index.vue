@@ -3,6 +3,7 @@ import { debounce } from '@/Utils/debounce';
 import { ref, reactive, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 import { describePattern } from '@/Utils/lodgeDates';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
@@ -26,7 +27,14 @@ const props = defineProps({
     occurrences: { type: Array, default: () => [] },
     days: { type: Array, default: () => [] },
     totals: { type: Object, required: true },
+    // The same screen serves a provincial admin (ProvinceLodgeController): their routes, the members layout, and no
+    // deleting or linking to clubs (`full` false).
+    routes: { type: String, default: 'superadmin.lodges' },
+    layout: { type: String, default: 'superadmin' },
+    full: { type: Boolean, default: true },
 });
+
+const Layout = props.layout === 'members' ? MembersLayout : SuperAdminLayout;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -34,7 +42,7 @@ const search = reactive({ ...props.filters });
 
 function applyFilters() {
     const query = Object.fromEntries(Object.entries(search).filter(([, value]) => value));
-    router.get(route('superadmin.lodges.index'), query, { preserveState: true, preserveScroll: true, replace: true });
+    router.get(route(`${props.routes}.index`), query, { preserveState: true, preserveScroll: true, replace: true });
 }
 
 watch(() => search.q, debounce(() => applyFilters(), 300));
@@ -106,9 +114,9 @@ function submit() {
     const options = { preserveScroll: true, onSuccess: () => { showModal.value = false; } };
 
     if (editingId.value) {
-        form.put(route('superadmin.lodges.update', editingId.value), options);
+        form.put(route(`${props.routes}.update`, editingId.value), options);
     } else {
-        form.post(route('superadmin.lodges.store'), options);
+        form.post(route(`${props.routes}.store`), options);
     }
 }
 
@@ -134,13 +142,13 @@ const labelClass = 'block text-xs font-medium text-slate-700 mb-1.5 dark:text-sl
 </script>
 
 <template>
-    <SuperAdminLayout title="Lodge directory">
-        <Head title="Superadmin - Lodge directory" />
+    <component :is="Layout" :title="full ? 'Lodge directory' : 'Lodge listings'" active-tab="lodges">
+        <Head :title="full ? 'Superadmin - Lodge directory' : 'Lodge listings'" />
 
         <div class="space-y-6">
             <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div class="min-w-0">
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Lodge directory</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{{ full ? 'Lodge directory' : `Lodge listings for ${provinces.map((p) => p.name).join(', ')}` }}</h1>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                         {{ totals.all }} lodges and chapters ({{ totals.managed }} managed). The public list is at
                         <Link :href="route('lodges.index')" class="text-blue-600 hover:underline dark:text-blue-400">/lodges</Link>.
@@ -205,8 +213,9 @@ const labelClass = 'block text-xs font-medium text-slate-700 mb-1.5 dark:text-sl
                                 </td>
                                 <td class="py-3 px-4 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-2">
-                                        <Button variant="secondary" size="sm" @click="openEdit(l)">Edit</Button>
-                                        <Button variant="secondary" size="sm" @click="remove(l)">Delete</Button>
+                                        <Button v-if="full || !l.is_managed" variant="secondary" size="sm" @click="openEdit(l)">Edit</Button>
+                                        <span v-else class="text-slate-500 dark:text-slate-400" title="A lodge with its own club account keeps its listing up to date itself.">Kept by the lodge</span>
+                                        <Button v-if="full" variant="secondary" size="sm" @click="remove(l)">Delete</Button>
                                     </div>
                                 </td>
                             </tr>
@@ -318,13 +327,14 @@ const labelClass = 'block text-xs font-medium text-slate-700 mb-1.5 dark:text-sl
                             </a>
                             <span class="block text-xs text-slate-500 dark:text-slate-400">
                                 <template v-if="src.last_checked_at">Checked {{ src.last_checked_at }}: {{ src.last_status }}<span v-if="src.changed_at"> (page changed {{ src.changed_at }})</span></template>
-                                <template v-else>Not checked yet. Run <code>php artisan lodges:check-sources</code>.</template>
+                                <template v-else-if="full">Not checked yet. Run <code>php artisan lodges:check-sources</code>.</template>
+                                <template v-else>Not checked yet.</template>
                             </span>
                         </li>
                     </ul>
                 </fieldset>
 
-                <fieldset v-if="editingLodge" class="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+                <fieldset v-if="editingLodge && full" class="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                     <legend class="px-1 text-xs font-medium text-slate-700 dark:text-slate-300">Club account</legend>
                     <div v-if="editingLodge.club" class="flex flex-wrap items-center justify-between gap-2">
                         <span class="text-slate-700 dark:text-slate-300">Managed by <strong>{{ editingLodge.club.name }}</strong></span>
@@ -346,5 +356,5 @@ const labelClass = 'block text-xs font-medium text-slate-700 mb-1.5 dark:text-sl
                 </div>
             </form>
         </Modal>
-    </SuperAdminLayout>
+    </component>
 </template>

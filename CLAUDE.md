@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 composer setup                                  # install, .env, key, migrate, npm build
-composer dev                                    # runs the dev processes (`php artisan dev`, see `dev:list`)
+composer dev                                    # runs the dev processes (`php artisan dev`, see `dev:list`); its worker takes transactional,default,bulk. Website builds need `php artisan queue:work --queue=sites` with the Vite dev server stopped
 npm run build                                   # Vite build; needed after any Vue/CSS change if `composer dev` isn't running
-php artisan test --compact                      # full suite (in-memory SQLite, ~8s)
+php artisan test --compact                      # full suite (in-memory SQLite, about 3 minutes; the cross-club sweeps and lodge seeder tests are the slowest)
 php artisan test --compact tests/Feature/SecurityAuditTest.php --filter=test_name
 vendor/bin/pint --dirty --format agent          # required after touching PHP
 composer analyse                                # PHPStan/Larastan at level 5; the problems that already existed are in phpstan-baseline.neon, so only new code is held to it (fix some, then regenerate with --generate-baseline)
@@ -49,7 +49,7 @@ Multi-tenant club manager (Masonic lodges and rowing clubs) on Laravel 13 / Iner
 - Tests build clubs with `Club::factory()` and `ClubType::factory()`.
 - Financial rows are protected from `ON DELETE CASCADE` of a club or user on PostgreSQL (migration `protect_financial_records_from_cascade_deletes`); there is no code path that deletes a club or a user.
 
-**Code layout.** `app/Models`, `app/Http/Controllers` and `resources/js/Pages` hold most of the app (Inertia pages, controllers often over 500 lines; `AccountingAdminController` and `Accounting/Index.vue` are very large). `app/Domains/ClubAccounting` is a second, Livewire-based layer (models on `club_acc_*` tables, services, Blade views in `resources/views/livewire`) for banking, reconciliation, subscriptions, members roster, candidates and committee governance. Shared UI kit: `resources/js/Components/Ui`; dark mode is the `.dark` class and the members layout has an optional side nav (`Utils/navMode`).
+**Code layout.** `app/Models`, `app/Http/Controllers` and `resources/js/Pages` hold most of the app (Inertia pages, controllers often over 500 lines; `AccountingAdminController` and `Accounting/Index.vue` are very large). `app/Domains/ClubAccounting` is a second, Livewire-based layer (models on `club_acc_*` tables, services, Blade views in `resources/views/livewire`) for banking, reconciliation, subscriptions, members roster, candidates and committee governance. Shared UI kit: `resources/js/Components/Ui`; dark mode is the `.dark` class and the members layout has an optional side nav (`Utils/navMode`). Fonts are self-hosted in `public/fonts` (`@font-face` in `app.css`); load no font from an outside service, since the static sites' security policy only allows the site's own fonts.
 
 **Cross-cutting helpers in `app/Support`** that new code should reuse:
 - `UploadRules` / `ImageDownscaler`: every upload uses them (no SVG or HTML, 6000px max side, photos shrunk to 1920px). Rules on nested keys make `validated()` drop the sibling keys, so validate block files in a separate call.

@@ -42,6 +42,44 @@ trait PlantsForeignRecords
 
     private const TEXT_COLUMNS = ['title', 'name', 'subject', 'vendor_name', 'first_name', 'last_name', 'email', 'heading', 'label'];
 
+    /** The snapshot every request starts from (each runs in a transaction that is rolled back), taken once. */
+    private ?array $snapshotBeforeRequests = null;
+
+    /** Whether anything was written since the last snapshotBefore(); set by a query listener. */
+    private bool $wroteSinceSnapshot = false;
+
+    /**
+     * The database as it is before each request of a sweep. Taking it reads every table, so it is taken once: each
+     * request is rolled back, so the next one starts from the same rows. Call it inside the request's transaction.
+     *
+     * @return array<string, array<string, array{hash: string, club: mixed}>>
+     */
+    private function snapshotBefore(): array
+    {
+        if ($this->snapshotBeforeRequests === null) {
+            $this->snapshotBeforeRequests = $this->snapshot();
+            DB::listen(function ($query) {
+                $this->wroteSinceSnapshot = $this->wroteSinceSnapshot || ! preg_match('/^\s*(select|pragma|with)\b/i', $query->sql);
+            });
+        }
+
+        $this->wroteSinceSnapshot = false;
+
+        return $this->snapshotBeforeRequests;
+    }
+
+    /**
+     * Rows of other clubs changed since snapshotBefore(). When the request wrote nothing, nothing can have changed, so
+     * the tables are only read again after a write.
+     *
+     * @param  array<string, array<string, array{hash: string, club: mixed}>>  $before
+     * @return list<string>
+     */
+    private function foreignChangesSince(array $before, int $attackerClubId): array
+    {
+        return $this->wroteSinceSnapshot ? $this->foreignChanges($before, $this->snapshot(), $attackerClubId) : [];
+    }
+
     /**
      * Every row of every table, keyed by table and row, with the club it belongs to when it has one.
      *

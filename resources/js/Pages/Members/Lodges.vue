@@ -67,7 +67,10 @@ function unfollow(lodge) {
             <Card v-if="province">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <p class="text-sm text-slate-600 dark:text-slate-300">You look after the listings for {{ province.names.join(', ') }}. <strong>{{ province.waiting }}</strong> suggested {{ province.waiting === 1 ? 'fix is' : 'fixes are' }} waiting.</p>
-                    <Link :href="route('members.lodges.fixes.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Review suggested fixes</Link>
+                    <div class="flex flex-wrap gap-2">
+                        <Link :href="route('members.lodges.fixes.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Review suggested fixes</Link>
+                        <Link :href="route('members.lodges.directory.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit lodge listings</Link>
+                    </div>
                 </div>
             </Card>
 

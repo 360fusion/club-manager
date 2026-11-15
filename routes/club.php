@@ -88,6 +88,7 @@ use App\Http\Controllers\PageSiteSettingsController;
 use App\Http\Controllers\PageThemeController;
 use App\Http\Controllers\PaymentOptionsController;
 use App\Http\Controllers\PostAdminController;
+use App\Http\Controllers\ProvinceLodgeController;
 use App\Http\Controllers\ProvinceLodgeCorrectionController;
 use App\Http\Controllers\QuickRsvpController;
 use App\Http\Controllers\SignatureAdminController;
@@ -306,6 +307,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/lodges/fixes', [ProvinceLodgeCorrectionController::class, 'index'])->name('members.lodges.fixes.index');
     Route::post('/members/lodges/fixes/{id}/apply', [ProvinceLodgeCorrectionController::class, 'apply'])->name('members.lodges.fixes.apply');
     Route::post('/members/lodges/fixes/{id}/reject', [ProvinceLodgeCorrectionController::class, 'reject'])->name('members.lodges.fixes.reject');
+    // A provincial admin's listings: the superadmin lodge directory screen, limited to their provinces.
+    Route::get('/members/lodges/listings', [ProvinceLodgeController::class, 'index'])->name('members.lodges.directory.index');
+    Route::post('/members/lodges/listings', [ProvinceLodgeController::class, 'store'])->middleware('throttle:30,1')->name('members.lodges.directory.store');
+    Route::put('/members/lodges/listings/{id}', [ProvinceLodgeController::class, 'update'])->middleware('throttle:60,1')->name('members.lodges.directory.update');
     Route::post('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'store'])->middleware('throttle:10,1')->name('lodges.visitor_access');
     Route::delete('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.visitor_access.withdraw');
     Route::post('/lodges/{slug}/visits', [LodgeVisitorController::class, 'storeVisit'])->middleware('throttle:10,1')->name('lodges.visits.store');
