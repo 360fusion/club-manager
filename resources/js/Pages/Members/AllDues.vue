@@ -1,5 +1,4 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -53,7 +52,7 @@ const statusVariant = (status) => ({ paid: 'success', waived: 'neutral', partial
                             <div class="flex items-center gap-3">
                                 <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ invoice.club.currency_symbol }}{{ invoice.amount }}</span>
                                 <Badge :variant="invoice.status === 'paid' ? 'success' : 'warning'">{{ invoice.status }}</Badge>
-                                <Link :href="route('invoices.download', { slug: invoice.club.slug, id: invoice.id })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Download</Link>
+                                <a :href="route('invoices.download', { slug: invoice.club.slug, id: invoice.id })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Download</a>
                             </div>
                         </li>
                     </ul>

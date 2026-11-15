@@ -13,7 +13,7 @@ const props = defineProps({
   club: { type: Object, required: true },
   user: { type: Object, default: () => null },
   memberRole: { type: String, default: 'member' },
-  memberNumber: { type: String, default: 'MEM-1001' },
+  memberNumber: { type: String, default: null },
   memberProfile: { type: Object, default: () => ({}) },
 });
 
@@ -85,7 +85,7 @@ const submitProfile = () => {
         <div>
           <div class="flex flex-wrap items-center gap-3">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ club.name }} membership profile</h2>
-            <Badge>#{{ memberNumber }}</Badge>
+            <Badge v-if="memberNumber">#{{ memberNumber }}</Badge>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage your roster information, emergency details, and dietary notes for {{ club.name }}.</p>
         </div>

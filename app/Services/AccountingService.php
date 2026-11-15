@@ -15,6 +15,8 @@ use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Support\Currencies;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -121,6 +123,30 @@ class AccountingService
     /**
      * Get or create a specific account by code.
      */
+    /**
+     * Where money goes in or out when the person recording it names no account: the lodge's chosen main bank account
+     * (settings.default_bank_account_code), else 1000.
+     */
+    public function defaultBankAccount(Club $club): Account
+    {
+        $code = $club->settings['default_bank_account_code'] ?? null;
+        $chosen = $code ? Account::where('club_id', $club->id)->where('code', $code)->where('type', 'asset')->first() : null;
+
+        return $chosen ?? $this->getAccount($club, '1000');
+    }
+
+    /**
+     * Accounts money can be paid into or out of: bank and cash (asset accounts below 1200, where receivables start).
+     *
+     * @return Collection<int, Account>
+     */
+    public function moneyAccounts(Club $club): Collection
+    {
+        $this->seedDefaultAccounts($club);
+
+        return Account::where('club_id', $club->id)->where('type', 'asset')->where('is_active', true)->where('code', '<', '1200')->orderBy('code')->get();
+    }
+
     public function getAccount(Club $club, string $code): Account
     {
         $this->seedDefaultAccounts($club);
@@ -522,10 +548,10 @@ class AccountingService
      * whether the payment has since been confirmed against a bank statement line, see
      * markBillReconciled().
      */
-    public function markBillAsPaid(Bill $bill, ?User $actor = null): void
+    public function markBillAsPaid(Bill $bill, ?User $actor = null, ?Account $bankAccount = null, ?CarbonInterface $paidOn = null): void
     {
         // Checked on the locked row, so a double click or a second treasurer cannot pay it twice.
-        DB::transaction(function () use ($bill, $actor) {
+        DB::transaction(function () use ($bill, $actor, $bankAccount, $paidOn) {
             $status = Bill::whereKey($bill->id)->lockForUpdate()->value('status');
 
             if ($status === DocumentStatus::Paid->value) {
@@ -539,16 +565,17 @@ class AccountingService
 
             $bill->update([
                 'status' => DocumentStatus::Paid->value,
-                'paid_at' => now(),
+                'paid_at' => $paidOn ?? now(),
                 'paid_by_user_id' => $actor?->id,
             ]);
 
             $club = $bill->club;
             $apAcc = $this->getAccount($club, '2000');
-            $bankAcc = $this->getAccount($club, '1000');
+            $bankAcc = $bankAccount ?? $this->defaultBankAccount($club);
 
             $this->postJournalEntry($club, [
                 'description' => "Paid Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
+                'entry_date' => ($paidOn ?? now())->toDateString(),
                 'source_type' => 'VendorBillPayment',
                 'source_id' => $bill->id,
                 'items' => [
@@ -565,10 +592,10 @@ class AccountingService
      * Mark a member Invoice as Paid & Post Settlement Journal. See markBillAsPaid() —
      * same "manual declaration, independent of bank reconciliation" semantics.
      */
-    public function markInvoiceAsPaid(Invoice $invoice, ?User $actor = null): void
+    public function markInvoiceAsPaid(Invoice $invoice, ?User $actor = null, ?Account $bankAccount = null, ?CarbonInterface $paidOn = null): void
     {
         // Checked on the locked row, so a double click or a second treasurer cannot pay it twice.
-        DB::transaction(function () use ($invoice, $actor) {
+        DB::transaction(function () use ($invoice, $actor, $bankAccount, $paidOn) {
             $status = Invoice::whereKey($invoice->id)->lockForUpdate()->value('status');
 
             if ($status === DocumentStatus::Paid->value) {
@@ -582,16 +609,17 @@ class AccountingService
 
             $invoice->update([
                 'status' => DocumentStatus::Paid->value,
-                'paid_at' => now(),
+                'paid_at' => $paidOn ?? now(),
                 'paid_by_user_id' => $actor?->id,
             ]);
 
             $club = $invoice->club;
             $arAcc = $this->getAccount($club, '1200');
-            $bankAcc = $this->getAccount($club, '1000');
+            $bankAcc = $bankAccount ?? $this->defaultBankAccount($club);
 
             $this->postJournalEntry($club, [
                 'description' => "Invoice Paid: {$invoice->title} ({$invoice->invoice_number})",
+                'entry_date' => ($paidOn ?? now())->toDateString(),
                 'source_type' => 'InvoicePayment',
                 'source_id' => $invoice->id,
                 'items' => [

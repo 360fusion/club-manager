@@ -27,11 +27,11 @@ class EventPaymentService
     /**
      * Record money received. Defaults to the whole balance; a smaller amount records a part payment.
      */
-    public function markPaid(EventRegistration $registration, ?User $actor, ?float $amount = null, ?string $method = null, ?Carbon $receivedAt = null, ?string $comment = null, string $source = 'admin', ?string $externalId = null, ?string $paymentIntent = null): EventRegistration
+    public function markPaid(EventRegistration $registration, ?User $actor, ?float $amount = null, ?string $method = null, ?Carbon $receivedAt = null, ?string $comment = null, string $source = 'admin', ?string $externalId = null, ?string $paymentIntent = null, ?Account $bankAccount = null): EventRegistration
     {
         $received = 0.0;
 
-        $registration = DB::transaction(function () use ($registration, $actor, &$amount, $method, $receivedAt, $comment, $source, $externalId, $paymentIntent, &$received) {
+        $registration = DB::transaction(function () use ($registration, $actor, &$amount, $method, $receivedAt, $comment, $source, $externalId, $paymentIntent, $bankAccount, &$received) {
             $registration = $this->lock($registration);
             $balance = $registration->balanceDue();
 
@@ -57,7 +57,7 @@ class EventPaymentService
                 'paypal' => 'paypal_paid',
                 default => null,
             } ?? ($registration->payment_status === 'paid' ? 'marked_paid' : 'marked_part_paid'), $amount, $method, $comment, $actor, $source, $receivedAt, $externalId);
-            $this->postIncome($registration, $amount, $actor);
+            $this->postIncome($registration, $amount, $actor, $bankAccount, $receivedAt);
             $received = $amount;
 
             return $registration;
@@ -229,9 +229,10 @@ class EventPaymentService
     /**
      * Money in: debit the bank (or cash for the door), credit ticket income and any booking fee.
      */
-    private function postIncome(EventRegistration $registration, float $amount, ?User $actor): void
+    private function postIncome(EventRegistration $registration, float $amount, ?User $actor, ?Account $bankAccount = null, ?Carbon $receivedAt = null): void
     {
         [$club, $bank, $income, $fees, $share] = $this->accountsFor($registration, $amount);
+        $bank = $bankAccount ?? $bank;
 
         $items = [
             ['account_id' => $bank->id, 'debit' => $amount, 'credit' => 0, 'memo' => 'Event payment'],
@@ -244,6 +245,7 @@ class EventPaymentService
 
         $this->accounting->postJournalEntry($club, [
             'description' => 'Event payment: '.$registration->event->title.' - '.$registration->contact_name,
+            'entry_date' => ($receivedAt ?? now())->toDateString(),
             'source_type' => 'EventRegistration',
             'source_id' => $registration->id,
             'created_by' => $actor?->id,
@@ -287,7 +289,7 @@ class EventPaymentService
         );
 
         $isCash = $registration->paymentMethod?->type === ClubPaymentMethod::DOOR;
-        $bank = Account::where('club_id', $club->id)->where('code', $isCash ? '1100' : '1000')->firstOrFail();
+        $bank = $isCash ? Account::where('club_id', $club->id)->where('code', '1100')->firstOrFail() : $this->accounting->defaultBankAccount($club);
         $income = Account::where('club_id', $club->id)->where('code', '4100')->firstOrFail();
 
         // Split the money in proportion to how the total was made up.

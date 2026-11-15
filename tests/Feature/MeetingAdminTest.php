@@ -200,6 +200,18 @@ class MeetingAdminTest extends TestCase
         ]);
     }
 
+    public function test_a_generated_season_copies_the_lodges_last_meeting_not_placeholders()
+    {
+        $club = Club::factory()->create();
+        $this->actingAs($this->makeClubAdmin(User::factory()->create(), $club));
+        Meeting::create(['club_id' => $club->id, 'title' => 'Last', 'meeting_date' => '2025-12-02', 'starts_at' => '18:00', 'venue' => 'Freemasons Hall, Durham', 'dress_code' => 'Morning Dress', 'dining_cost_member' => 28, 'dining_cost_guest' => 32, 'status' => 'published']);
+
+        $this->post(route('admin.meetings.generate_season', ['clubSlug' => $club->slug]), ['year' => 2026, 'occurrence' => '3rd', 'day_of_week' => 'Tuesday', 'active_months' => [10]])
+            ->assertSessionHas('success', fn ($message) => str_starts_with($message, 'Added 1 meeting for 2026'));
+
+        $this->assertDatabaseHas('meetings', ['club_id' => $club->id, 'meeting_date' => '2026-10-20 00:00:00', 'venue' => 'Freemasons Hall, Durham', 'dress_code' => 'Morning Dress', 'dining_cost_member' => 28, 'dining_cost_guest' => 32]);
+    }
+
     public function test_admin_can_view_and_download_summons_pdf()
     {
         $clubType = ClubType::create([

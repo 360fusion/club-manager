@@ -5,6 +5,7 @@ namespace App\Domains\ClubAccounting\Models;
 use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Models\Club;
 use App\Models\Meeting;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,20 @@ class CharityGrant extends Model
             'amount' => 'decimal:2',
             'approval_status' => GrantApprovalStatus::class,
         ];
+    }
+
+    /**
+     * The grants a summons lists: those put to the lodge at that meeting and not yet voted on. Relief grants are
+     * confidential, so a summons never shows other meetings' grants or ones already decided.
+     *
+     * @param  Builder<CharityGrant>  $query
+     * @return Builder<CharityGrant>
+     */
+    public function scopeForSummons(Builder $query, Meeting $meeting): Builder
+    {
+        return $query->where('meeting_id', $meeting->id)
+            ->whereIn('approval_status', [GrantApprovalStatus::Proposed->value, GrantApprovalStatus::CommitteeApproved->value])
+            ->orderBy('created_at');
     }
 
     /**

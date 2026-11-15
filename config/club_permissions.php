@@ -38,7 +38,7 @@ return [
         'manage_members' => [
             'label' => 'Members',
             'description' => 'View member roster, approve new join applications, and manage member roles',
-            'roles' => ['owner', 'admin'],
+            'roles' => ['owner', 'admin', 'coach', 'secretary'],
         ],
         'manage_billing' => [
             'label' => 'Billing',

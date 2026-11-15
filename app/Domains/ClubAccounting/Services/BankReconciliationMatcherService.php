@@ -366,6 +366,10 @@ class BankReconciliationMatcherService
             $targetCode = '4000'; // Default Revenue
             $ledgerAlreadyPosted = false;
             $memo = $transaction->raw_description ?: 'Bank Statement Match';
+            // The money moves in the ledger account of the bank account the line belongs to, on the day the bank shows.
+            $bankAcc = ($transaction->bankAccount?->account_id ? Account::where('club_id', $club->id)->find($transaction->bankAccount->account_id) : null)
+                ?? $accountingService->defaultBankAccount($club);
+            $lineDate = Carbon::parse($transaction->transaction_date);
 
             if ($matchType === 'member_subscription') {
                 $sub = MemberSubscription::where('club_id', $transaction->club_id)->find((int) $targetId);
@@ -375,8 +379,8 @@ class BankReconciliationMatcherService
                         abs($amount),
                         $transaction->reference ?: 'Bank Import Match',
                         $transaction->raw_description,
-                        $transaction->bankAccount?->account_id,
-                        Carbon::parse($transaction->transaction_date),
+                        $bankAcc->id,
+                        $lineDate,
                     );
                     $ledgerAlreadyPosted = true;
                     $note .= " [Member Subscription Invoice: {$sub->invoice_reference}]";
@@ -395,9 +399,10 @@ class BankReconciliationMatcherService
                     auth()->user(),
                     min(abs($amount), $registration->balanceDue()),
                     'Bank transfer',
-                    Carbon::parse($transaction->transaction_date),
+                    $lineDate,
                     'Matched to bank line: '.($transaction->raw_description ?: 'bank statement'),
                     'bank_reconciliation',
+                    bankAccount: $bankAcc,
                 );
                 $ledgerAlreadyPosted = true;
                 $note .= " [Event booking: {$registration->payment_reference}]";
@@ -405,7 +410,7 @@ class BankReconciliationMatcherService
                 $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
                     if ($bill->status !== DocumentStatus::Paid->value) {
-                        $accountingService->markBillAsPaid($bill, auth()->user());
+                        $accountingService->markBillAsPaid($bill, auth()->user(), $bankAcc, $lineDate);
                     }
                     $accountingService->markBillReconciled($bill, $transaction);
                     $ledgerAlreadyPosted = true;
@@ -416,7 +421,7 @@ class BankReconciliationMatcherService
                 $invoice = Invoice::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($invoice) {
                     if ($invoice->status !== DocumentStatus::Paid->value) {
-                        $accountingService->markInvoiceAsPaid($invoice, auth()->user());
+                        $accountingService->markInvoiceAsPaid($invoice, auth()->user(), $bankAcc, $lineDate);
                     }
                     $accountingService->markInvoiceReconciled($invoice, $transaction);
                     $ledgerAlreadyPosted = true;
@@ -434,9 +439,6 @@ class BankReconciliationMatcherService
             }
 
             // Post double-entry journal entry to general ledger if not already posted
-            // The money moves in the ledger account of the bank account the line belongs to; lines with none use the main bank account.
-            $bankAcc = ($transaction->bankAccount?->account_id ? Account::where('club_id', $club->id)->find($transaction->bankAccount->account_id) : null)
-                ?? Account::where('club_id', $club->id)->where('code', '1000')->first();
             $offsetAcc = Account::where('club_id', $club->id)->where('code', $targetCode)->first();
             if (! $offsetAcc) {
                 $offsetAcc = Account::create([
@@ -454,7 +456,7 @@ class BankReconciliationMatcherService
                 ->where('source_id', $transaction->id)
                 ->exists();
 
-            if ($bankAcc && ! $alreadyPosted && ! $ledgerAlreadyPosted) {
+            if (! $alreadyPosted && ! $ledgerAlreadyPosted) {
                 $absAmount = abs($amount);
                 $txDate = Carbon::parse($transaction->transaction_date)->format('Y-m-d');
                 if ($amount > 0) {

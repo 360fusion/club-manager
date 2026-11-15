@@ -9,8 +9,10 @@ use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
 use App\Exceptions\LedgerRuleException;
 use App\Models\Club;
+use App\Services\AccountingService;
 use App\Support\Currencies;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -61,6 +63,10 @@ class SubscriptionIndex extends Component
     public string $payment_reference = '';
 
     public string $payment_notes = '';
+
+    public string $payment_date = '';
+
+    public ?int $payment_account_id = null;
 
     public function mount(string $clubSlug): void
     {
@@ -187,6 +193,8 @@ class SubscriptionIndex extends Component
         $this->payment_amount = (string) $sub->balance_due;
         $this->payment_reference = 'BAC-'.Carbon::now()->format('Ymd');
         $this->payment_notes = '';
+        $this->payment_date = Carbon::today()->toDateString();
+        $this->payment_account_id = app(AccountingService::class)->defaultBankAccount($this->getClub())->id;
         $this->showPaymentModal = true;
     }
 
@@ -199,6 +207,8 @@ class SubscriptionIndex extends Component
             'payment_amount' => 'required|numeric|min:0.01|max:99999999.99',
             'payment_reference' => 'nullable|string|max:100',
             'payment_notes' => 'nullable|string|max:10000',
+            'payment_date' => 'required|date|before_or_equal:today',
+            'payment_account_id' => ['required', 'integer', Rule::in(app(AccountingService::class)->moneyAccounts($club)->modelKeys())],
         ]);
 
         try {
@@ -206,7 +216,9 @@ class SubscriptionIndex extends Component
                 $sub,
                 (float) $this->payment_amount,
                 $this->payment_reference,
-                $this->payment_notes
+                $this->payment_notes,
+                $this->payment_account_id,
+                Carbon::parse($this->payment_date),
             );
         } catch (LedgerRuleException $e) {
             $this->addError('payment_amount', $e->getMessage());
@@ -284,9 +296,11 @@ class SubscriptionIndex extends Component
 
         // Aggregate Metrics for Selected Year
         $yearSubscriptions = MemberSubscription::where('club_id', $club->id)->year($this->selectedYear)->get();
-        $totalBilled = $yearSubscriptions->sum('amount_due');
+        // Waived dues are no longer owed, so they count neither as billed nor as outstanding.
+        $owed = $yearSubscriptions->reject(fn (MemberSubscription $sub) => $sub->status === SubscriptionStatus::Waived);
+        $totalBilled = $owed->sum('amount_due');
         $totalCollected = $yearSubscriptions->sum('amount_paid');
-        $totalOutstanding = max(0, $totalBilled - $totalCollected);
+        $totalOutstanding = max(0, $totalBilled - $owed->sum('amount_paid'));
         $arrearsCount = MemberSubscription::where('club_id', $club->id)->arrears()->count();
 
         // Arrears list for confidential review drawer
@@ -308,6 +322,7 @@ class SubscriptionIndex extends Component
             'arrearsSubscriptions' => $arrearsSubscriptions,
             'activeMembers' => $activeMembers,
             'statuses' => SubscriptionStatus::cases(),
+            'moneyAccounts' => $this->showPaymentModal ? app(AccountingService::class)->moneyAccounts($club) : collect(),
         ])->layout('components.layouts.app', [
             'title' => 'Subscriptions — '.$club->name,
             'club' => $club,

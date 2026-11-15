@@ -2,6 +2,7 @@
 
 namespace App\Domains\ClubAccounting\Services;
 
+use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
@@ -21,7 +22,8 @@ class ReliefChestExportService
         $clubObj = $club instanceof Club ? $club : Club::findOrFail($club);
         $target = FestivalTarget::where('club_id', $clubObj->id)->first();
         $chestRef = $target?->relief_chest_ref ?: '';
-        $provincialRef = 'L'.($clubObj->id ?: '1418').'BEN'.Carbon::now()->format('Y');
+        // Left empty rather than made up: the Province gives the lodge its reference, and it is not stored here yet.
+        $provincialRef = '';
 
         if (! $collections) {
             $collections = CharityCollection::where('club_id', $clubObj->id)->with(['countedBy', 'witnessedBy'])->get();
@@ -36,8 +38,8 @@ class ReliefChestExportService
             $cash = number_format((float) $col->cash_amount, 2, '.', '');
             $cheque = number_format((float) $col->cheque_amount, 2, '.', '');
             $total = number_format((float) $col->total_amount, 2, '.', '');
-            $counter = $col->countedBy?->full_name ?? 'Charity Steward';
-            $witness = $col->witnessedBy?->full_name ?? 'Assistant DC';
+            $counter = $col->countedBy?->full_name ?? '';
+            $witness = $col->witnessedBy?->full_name ?? '';
 
             $csv .= Csv::line([$chestRef, $provincialRef, $date, $type, $cash, $cheque, $total, $counter, $witness]);
         }
@@ -53,7 +55,10 @@ class ReliefChestExportService
         $clubObj = $club instanceof Club ? $club : Club::findOrFail($club);
 
         if (! $grants) {
-            $grants = CharityGrant::where('club_id', $clubObj->id)->get();
+            // A payment schedule lists only grants the lodge has voted for (and those already paid), never mere proposals.
+            $grants = CharityGrant::where('club_id', $clubObj->id)
+                ->whereIn('approval_status', [GrantApprovalStatus::LodgeVoted->value, GrantApprovalStatus::Disbursed->value])
+                ->get();
         }
 
         $sym = trim(Currencies::symbolFor($clubObj));

@@ -462,7 +462,7 @@
         {{ $meeting->intro_text ?? ('You are respectfully requested to attend the Regular Meeting of this Lodge of Free and Accepted Masons, to be held in the ' . $meeting->venue . ', on ' . \Carbon\Carbon::parse($meeting->meeting_date)->format('l jS F Y') . ' at ' . $meeting->starts_at . '.') }}
         <br><br>
         By order of the Worshipful Master.<br>
-        <em>Yours fraternally{{ $secretaryUser?->name ? ' — WBro '.$secretaryUser->name.', Secretary' : '' }}</em>
+        <em>Yours fraternally{{ $secretaryUser?->name ? ' — '.$secretaryUser->name.', Secretary' : '' }}</em>
       </div>
 
       <h2>BUSINESS</h2>

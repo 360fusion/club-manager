@@ -285,6 +285,14 @@
         <form id="dues-payment-form" wire:submit.prevent="recordPayment" class="space-y-4">
             <x-input type="number" step="0.01" label="Payment amount ({{ $cs }})" required wire:model="payment_amount" />
             <x-input label="Payment reference (BACS, cheque or cash)" wire:model="payment_reference" placeholder="e.g. BACS-20260916" />
+            <div class="grid gap-4 sm:grid-cols-2">
+                <x-input type="date" label="Date received" required wire:model="payment_date" max="{{ now()->toDateString() }}" />
+                <x-select label="Paid into" required wire:model="payment_account_id">
+                    @foreach ($moneyAccounts as $account)
+                        <option value="{{ $account->id }}">{{ $account->code }} {{ $account->name }}</option>
+                    @endforeach
+                </x-select>
+            </div>
             <x-textarea label="Notes" rows="2" wire:model="payment_notes" placeholder="Optional notes..." />
         </form>
 

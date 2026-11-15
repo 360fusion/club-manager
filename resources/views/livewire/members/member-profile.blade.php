@@ -42,8 +42,8 @@
                             variant="danger"
                             size="sm"
                             wire:click="deleteMember"
-                            wire:confirm="Are you sure you want to remove {{ $member->formatted_rank_name }} from the roster? This action cannot be undone."
-                            title="Delete the member from the roster"
+                            wire:confirm="Delete {{ $member->formatted_rank_name }}? This is only for an entry made by mistake: someone with dues, offices or giving on record stays on the roll. It cannot be undone."
+                            title="Delete an entry made by mistake"
                         >Delete member</x-button>
                     </div>
                 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventRegistration;
@@ -114,11 +115,19 @@ class MemberPortalController extends Controller
             ])
             ->values();
 
+        // What the member still owes this lodge in dues, so the dashboard never claims good standing it cannot know.
+        $duesOwed = MemberSubscription::where('club_id', $club->id)
+            ->whereHas('member', fn ($member) => $member->where('user_id', $user->id))
+            ->get()
+            ->filter(fn (MemberSubscription $subscription) => $subscription->status->isOutstanding())
+            ->sum('balance_due');
+
         return Inertia::render('Member/Dashboard', [
             'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'isPending' => $isPending,
             'memberRole' => $role,
-            'memberNumber' => $memberPivot->member_number ?? 'MEM-1001',
+            'memberNumber' => $memberPivot?->member_number,
+            'duesOwed' => round((float) $duesOwed, 2),
             'attendanceRate' => $attendanceRate,
             'attendedCount' => $attendedCount,
             'totalRsvps' => $totalRsvps,

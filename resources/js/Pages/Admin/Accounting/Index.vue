@@ -13,6 +13,7 @@ import SumUpModal from '@/Components/Accounting/Modals/SumUpModal.vue';
 import StripeModal from '@/Components/Accounting/Modals/StripeModal.vue';
 import PayPalModal from '@/Components/Accounting/Modals/PayPalModal.vue';
 import BankAccountModal from '@/Components/Accounting/Modals/BankAccountModal.vue';
+import MarkPaidModal from '@/Components/Accounting/Modals/MarkPaidModal.vue';
 import ChartOfAccountsTab from '@/Components/Accounting/Tabs/ChartOfAccountsTab.vue';
 import AccountingNavBar from '@/Components/Accounting/Tabs/AccountingNavBar.vue';
 import ContactsTab from '@/Components/Accounting/Tabs/ContactsTab.vue';
@@ -578,7 +579,7 @@ const { vatSettingsForm, submitVatSettings, financialYearEndForm, submitFinancia
 // New Account Form
 
 
-const { publishInvoice, publishBill, openEditInvoiceModal, openEditBillModal, activityModal, openActivityLog, markInvoicePaid, markBillPaid, forgetMatchRule, approveInvoice, approveBill } = useLedgerDocumentActions(props.club);
+const { publishInvoice, publishBill, openEditInvoiceModal, openEditBillModal, activityModal, openActivityLog, markInvoicePaid, markBillPaid, payDialog, submitPayDialog, forgetMatchRule, approveInvoice, approveBill } = useLedgerDocumentActions(props.club);
 
 
 // ── Attachment Preview Modal State & Controls ────────────────────────────────
@@ -722,6 +723,8 @@ const getTypeBadge = (type) => {
     <AttachmentPreviewModal v-if="previewModal.show" :delete-attachment="deleteAttachment" :preview-modal="previewModal" :reset-zoom="resetZoom" :rotate-image="rotateImage" :rotation="rotation" :zoom-in="zoomIn" :zoom-level="zoomLevel" :zoom-out="zoomOut" @close="previewModal.show = false" />
 
     <!-- Modal 13: Activity Log -->
+    <MarkPaidModal v-model="payDialog" :accounts="accounts" :errors="$page.props.errors" @submit="submitPayDialog" />
+
     <Modal :open="activityModal.show" title="Activity log" :subtitle="activityModal.label" size="md" @close="activityModal.show = false">
       <p v-if="activityModal.loading" class="text-center py-8 text-sm text-slate-500 dark:text-slate-400">Loading…</p>
       <p v-else-if="!activityModal.entries.length" class="text-center py-8 text-sm text-slate-500 dark:text-slate-400">No activity recorded yet.</p>

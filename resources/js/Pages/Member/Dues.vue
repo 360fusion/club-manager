@@ -7,7 +7,7 @@ import Badge from '@/Components/Ui/Badge.vue';
 defineProps({
   club: { type: Object, required: true },
   memberRole: { type: String, default: 'member' },
-  memberNumber: { type: String, default: 'MEM-1001' },
+  memberNumber: { type: String, default: null },
   plans: { type: Array, default: () => [] },
   invoices: { type: Array, default: () => [] },
 });
@@ -23,7 +23,7 @@ defineProps({
         <div>
           <div class="flex flex-wrap items-center gap-3">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Membership dues and billing</h2>
-            <Badge variant="success">Good standing #{{ memberNumber }}</Badge>
+            <Badge v-if="memberNumber" variant="neutral">#{{ memberNumber }}</Badge>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Review active membership dues, download receipts, and view payment transaction history.</p>
         </div>
@@ -49,9 +49,6 @@ defineProps({
               <p class="text-xs text-slate-500 dark:text-slate-400">{{ plan.description }}</p>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-              <Badge variant="success">Active subscription tier</Badge>
-            </div>
           </Card>
         </div>
 

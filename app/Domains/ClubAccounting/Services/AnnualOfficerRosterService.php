@@ -203,39 +203,56 @@ class AnnualOfficerRosterService
     }
 
     /**
-     * Automatically install confirmed rosters if the Installation Meeting has passed.
+     * Install a roster as the lodge's current officers, standing down whichever roster was installed before.
+     */
+    public function install(AnnualOfficerRoster $roster): AnnualOfficerRoster
+    {
+        return DB::transaction(function () use ($roster) {
+            AnnualOfficerRoster::where('club_id', $roster->club_id)
+                ->where('status', 'installed')
+                ->where('id', '!=', $roster->id)
+                ->update(['status' => 'confirmed']);
+
+            $installed = $this->confirmRoster($roster);
+            $installed->update(['status' => 'installed']);
+
+            return $installed;
+        });
+    }
+
+    /**
+     * Install the confirmed roster for the most recent installation meeting once it has passed, unless that year (or a
+     * later one) is already installed. Safe to run on every page load: it never goes back to an earlier year.
      */
     public function checkAndAutoInstallPassedInstallationMeetings(Club $club): void
     {
         $installationMonthName = $club->settings['installation_month'] ?? 'October';
 
-        // Find meetings in the installation month that have passed
-        $passedInstallationMeetings = Meeting::where('club_id', $club->id)
+        $latest = Meeting::where('club_id', $club->id)
             ->where('meeting_date', '<', Carbon::today())
+            ->orderByDesc('meeting_date')
             ->get()
-            ->filter(function ($meeting) use ($installationMonthName) {
-                return Carbon::parse($meeting->meeting_date)->format('F') === $installationMonthName;
-            });
+            ->first(fn ($meeting) => Carbon::parse($meeting->meeting_date)->format('F') === $installationMonthName);
 
-        foreach ($passedInstallationMeetings as $meeting) {
-            $year = Carbon::parse($meeting->meeting_date)->format('Y');
-            $nextYear = Carbon::parse($meeting->meeting_date)->year + 1;
-            $masonicYear = "{$year}-{$nextYear}";
+        if (! $latest) {
+            return;
+        }
 
-            $roster = AnnualOfficerRoster::where('club_id', $club->id)
-                ->where('masonic_year', $masonicYear)
-                ->whereIn('status', ['confirmed', 'proposed'])
-                ->first();
+        $year = Carbon::parse($latest->meeting_date)->year;
+        $masonicYear = $year.'-'.($year + 1);
 
-            if ($roster) {
-                AnnualOfficerRoster::where('club_id', $club->id)
-                    ->where('status', 'installed')
-                    ->where('id', '!=', $roster->id)
-                    ->update(['status' => 'confirmed']);
+        $alreadyInstalled = AnnualOfficerRoster::where('club_id', $club->id)
+            ->where('status', 'installed')
+            ->where('masonic_year', '>=', $masonicYear)
+            ->exists();
 
-                $installed = $this->confirmRoster($roster);
-                $installed->update(['status' => 'installed']);
-            }
+        $roster = AnnualOfficerRoster::where('club_id', $club->id)
+            ->where('masonic_year', $masonicYear)
+            ->where('status', 'confirmed')
+            ->first();
+
+        if ($roster && ! $alreadyInstalled) {
+            $this->install($roster);
         }
     }
 }

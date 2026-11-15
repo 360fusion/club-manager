@@ -234,6 +234,39 @@ class SubscriptionDomainTest extends TestCase
         $this->assertEquals(0.00, $sub->fresh()->amount_paid);
     }
 
+    public function test_the_payment_component_posts_to_the_chosen_account_on_the_day_received(): void
+    {
+        $this->actingAs($this->adminUser);
+        (new SubscriptionBillingService)->generateAnnualBillingRun($this->club, 2026);
+        $sub = MemberSubscription::where('member_id', $this->member1->id)->first();
+        $cash = Account::where('club_id', $this->club->id)->where('code', '1100')->sole();
+        $received = now()->subDays(5)->toDateString();
+
+        Livewire::test(SubscriptionIndex::class, ['clubSlug' => $this->club->slug])
+            ->call('openPaymentModal', $sub->id)
+            ->set('payment_amount', '10')
+            ->set('payment_account_id', $cash->id)
+            ->set('payment_date', $received)
+            ->call('recordPayment')
+            ->assertHasNoErrors();
+
+        $entry = JournalEntry::where('club_id', $this->club->id)->whereHas('items', fn ($q) => $q->where('account_id', $cash->id))->sole();
+        $this->assertSame($received, $entry->entry_date->toDateString());
+    }
+
+    public function test_waived_dues_are_not_counted_as_outstanding(): void
+    {
+        $this->actingAs($this->adminUser);
+        $service = new SubscriptionBillingService;
+        $service->generateAnnualBillingRun($this->club, 2026);
+        $subs = MemberSubscription::where('club_id', $this->club->id)->where('billing_year', 2026)->get();
+        $service->waive($subs->first());
+
+        Livewire::test(SubscriptionIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('selectedYear', 2026)
+            ->assertViewHas('totalOutstanding', (float) $subs->skip(1)->sum('amount_due'));
+    }
+
     public function test_a_subscription_billed_before_the_books_were_kept_is_caught_up_when_it_is_paid(): void
     {
         $old = MemberSubscription::create(['club_id' => $this->club->id, 'member_id' => $this->member1->id, 'billing_year' => 2025, 'due_date' => '2025-04-01', 'amount_due' => 160.00, 'amount_paid' => 0, 'status' => SubscriptionStatus::Unpaid, 'invoice_reference' => 'INV-2025-OLD']);

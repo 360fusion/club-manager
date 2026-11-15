@@ -217,6 +217,14 @@ class MemberProfile extends Component
     {
         $member = $this->getMember();
         $name = $member->formatted_rank_name;
+
+        // The lodge roll keeps everyone who has dues, offices or giving on record; only a mistaken entry is deleted.
+        if ($member->hasLodgeHistory()) {
+            $this->notify("{$name} has dues, offices or giving on record, so they stay on the roll. Change their status to Resigned, Deceased or Historical instead.", 'error');
+
+            return null;
+        }
+
         $member->delete();
 
         session()->flash('success', "Member {$name} removed from roster.");

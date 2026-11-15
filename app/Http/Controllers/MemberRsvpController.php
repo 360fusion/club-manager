@@ -86,18 +86,20 @@ class MemberRsvpController extends Controller
         $surname = strtoupper(last(explode(' ', $user->name)));
         $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
 
-        $rsvp = MeetingRsvp::updateOrCreate(
-            ['meeting_id' => $meeting->id, 'user_id' => $user->id],
+        // The emailed reply link keeps working: its token is only set when there is no reply row yet.
+        $rsvp = MeetingRsvp::firstOrNew(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+        if (! $rsvp->exists) {
+            $rsvp->fill(['token_hash' => Str::random(40), 'token_expires_at' => Carbon::now()->addDays(30)]);
+        }
+        $rsvp->fill(
             [
-                'token_hash' => Str::random(40),
-                'token_expires_at' => Carbon::now()->addDays(30),
                 'attendance_status' => $validated['attendance_status'],
                 'apology_reason' => $validated['apology_reason'] ?? null,
                 'dietary_requirements' => $validated['dietary_requirements'] ?? null,
                 'payment_reference' => $paymentRef,
                 'responded_at' => Carbon::now(),
             ]
-        );
+        )->save();
 
         if (array_key_exists('guests', $validated)) {
             $rsvp->guests()->delete();
@@ -108,7 +110,7 @@ class MemberRsvpController extends Controller
                             'guest_name' => $g['guest_name'],
                             'dietary_requirements' => $g['dietary_requirements'] ?? null,
                             'attending_dining' => $g['attending_dining'] ?? true,
-                            'dining_fee' => $meeting->dining_cost_guest,
+                            'dining_fee' => ($g['attending_dining'] ?? true) ? $meeting->dining_cost_guest : 0,
                         ]);
                     }
                 }

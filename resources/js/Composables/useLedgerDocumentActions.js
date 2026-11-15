@@ -48,16 +48,22 @@ export function useLedgerDocumentActions(club) {
       }
     };
 
-    const markInvoicePaid = (id) => {
-      if (confirm('Mark this invoice as paid? This will automatically deposit funds to Operating Bank Account.')) {
-        router.post(route('admin.accounting.invoices.pay', { clubSlug: club.slug, id }));
-      }
+    // Marking paid asks which bank or cash account the money went through and on what day, so the ledger matches the bank.
+    const payDialog = ref({ show: false, kind: 'invoice', id: null, paid_on: '', bank_account_id: null, processing: false });
+    const today = () => new Date().toISOString().slice(0, 10);
+    const openPayDialog = (kind, id) => {
+      payDialog.value = { show: true, kind, id, paid_on: today(), bank_account_id: null, processing: false };
     };
-
-    const markBillPaid = (id) => {
-      if (confirm('Mark this vendor bill as paid? This will automatically clear Accounts Payable.')) {
-        router.post(route('admin.accounting.bills.pay', { clubSlug: club.slug, id }));
-      }
+    const markInvoicePaid = (id) => openPayDialog('invoice', id);
+    const markBillPaid = (id) => openPayDialog('bill', id);
+    const submitPayDialog = () => {
+      const { kind, id, paid_on, bank_account_id } = payDialog.value;
+      payDialog.value.processing = true;
+      router.post(route(kind === 'bill' ? 'admin.accounting.bills.pay' : 'admin.accounting.invoices.pay', { clubSlug: club.slug, id }), { paid_on, bank_account_id }, {
+        preserveScroll: true,
+        onSuccess: () => { payDialog.value.show = false; },
+        onFinish: () => { payDialog.value.processing = false; },
+      });
     };
 
     const forgetMatchRule = (id) => {
@@ -78,5 +84,5 @@ export function useLedgerDocumentActions(club) {
       }
     };
 
-    return { publishInvoice, publishBill, openEditInvoiceModal, openEditBillModal, activityModal, openActivityLog, markInvoicePaid, markBillPaid, forgetMatchRule, approveInvoice, approveBill };
+    return { publishInvoice, publishBill, openEditInvoiceModal, openEditBillModal, activityModal, openActivityLog, markInvoicePaid, markBillPaid, payDialog, submitPayDialog, forgetMatchRule, approveInvoice, approveBill };
 }

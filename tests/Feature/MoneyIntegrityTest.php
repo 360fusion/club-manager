@@ -277,4 +277,49 @@ class MoneyIntegrityTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $service->requestYearAudit($this->club, 2026, $three, $two);
     }
+
+    public function test_a_paid_bill_is_posted_from_the_account_and_on_the_day_the_treasurer_says(): void
+    {
+        $charity = Account::create(['club_id' => $this->club->id, 'code' => '1010', 'name' => 'Charity Account', 'type' => 'asset', 'currency' => 'GBP', 'is_active' => true]);
+        $bill = Bill::create(['club_id' => $this->club->id, 'bill_number' => 'BILL-9', 'vendor_name' => 'Caterer', 'category' => 'Dining', 'amount' => 80, 'due_date' => now(), 'status' => 'unpaid']);
+        $paidOn = now()->subDays(10)->toDateString();
+
+        $this->actingAs($this->admin)->post(route('admin.accounting.bills.pay', [$this->club->slug, $bill->id]), ['paid_on' => $paidOn, 'bank_account_id' => $charity->id])
+            ->assertSessionHasNoErrors();
+
+        $entry = JournalEntry::where('source_type', 'VendorBillPayment')->where('source_id', $bill->id)->sole();
+        $this->assertSame($paidOn, $entry->entry_date->toDateString());
+        $this->assertEquals(80, $entry->items()->where('account_id', $charity->id)->sum('credit'));
+    }
+
+    public function test_a_bill_cannot_be_paid_from_an_account_that_is_not_bank_or_cash_or_another_lodges(): void
+    {
+        $other = $this->makeLodge('Lodge of Peace', 'lodge-of-peace');
+        $bill = Bill::create(['club_id' => $this->club->id, 'bill_number' => 'BILL-9', 'vendor_name' => 'Caterer', 'category' => 'Dining', 'amount' => 80, 'due_date' => now(), 'status' => 'unpaid']);
+        $pay = fn (Account $account) => $this->actingAs($this->admin)->post(route('admin.accounting.bills.pay', [$this->club->slug, $bill->id]), ['bank_account_id' => $account->id]);
+
+        $pay(Account::where('club_id', $this->club->id)->where('code', '4000')->sole())->assertSessionHasErrors('bank_account_id');
+        $pay(Account::where('club_id', $other->id)->where('code', '1000')->sole())->assertSessionHasErrors('bank_account_id');
+        $this->assertSame('unpaid', $bill->fresh()->status);
+    }
+
+    public function test_a_payment_with_no_account_named_goes_to_the_lodges_chosen_main_account(): void
+    {
+        $main = Account::create(['club_id' => $this->club->id, 'code' => '1020', 'name' => 'Lodge Current Account', 'type' => 'asset', 'currency' => 'GBP', 'is_active' => true]);
+        $this->club->update(['settings' => ['default_bank_account_code' => '1020']]);
+        $bill = Bill::create(['club_id' => $this->club->id, 'bill_number' => 'BILL-9', 'vendor_name' => 'Caterer', 'category' => 'Dining', 'amount' => 80, 'due_date' => now(), 'status' => 'unpaid']);
+
+        $this->accounting->markBillAsPaid($bill->fresh());
+
+        $this->assertEquals(80, JournalEntry::where('source_type', 'VendorBillPayment')->sole()->items()->where('account_id', $main->id)->sum('credit'));
+    }
+
+    public function test_a_meeting_return_is_posted_on_the_meeting_date(): void
+    {
+        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Regular', 'meeting_date' => now()->subWeeks(3)->toDateString(), 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Dark suits', 'status' => 'published']);
+
+        app(MeetingFinancialReturns::class)->postMeetingFinancialReturn($this->club, $meeting, ['dining_fee_per_head' => 30, 'paid_diners_count' => 10, 'kitchen_cost_per_head' => 20]);
+
+        $this->assertSame(now()->subWeeks(3)->toDateString(), JournalEntry::where('source_type', 'MeetingReturn')->sole()->entry_date->toDateString());
+    }
 }

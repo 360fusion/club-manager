@@ -61,7 +61,7 @@ class MemberProfileController extends Controller
         return Inertia::render('Member/Dues', [
             'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'memberRole' => $memberPivot->role ?? 'member',
-            'memberNumber' => $memberPivot->member_number ?? 'MEM-1001',
+            'memberNumber' => $memberPivot?->member_number,
             'plans' => $plans,
             'invoices' => $invoices,
         ]);
@@ -91,10 +91,10 @@ class MemberProfileController extends Controller
                 'two_factor_enabled' => ! empty($user->two_factor_secret),
             ] : null,
             'memberRole' => $memberPivot->role ?? 'member',
-            'memberNumber' => $memberPivot->member_number ?? 'MEM-1001',
+            'memberNumber' => $memberPivot?->member_number,
             'memberProfile' => [
                 'role' => $memberPivot->role ?? 'member',
-                'member_number' => $memberPivot->member_number ?? 'MEM-1001',
+                'member_number' => $memberPivot?->member_number,
                 'phone' => $memberPivot->phone ?? '',
                 'emergency_contact' => $memberPivot->emergency_contact ?? '',
                 'dietary_notes' => $memberPivot->dietary_notes ?? '',

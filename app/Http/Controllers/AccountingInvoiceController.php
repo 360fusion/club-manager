@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Enums\DocumentStatus;
 use App\Http\Controllers\Concerns\LinksAccountingAttachments;
+use App\Models\Accounting\Account;
 use App\Models\Accounting\JournalEntry;
+use App\Models\Club;
 use App\Models\Invoice;
 use App\Services\AccountingService;
 use App\Support\ClubAccess;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -328,7 +332,8 @@ class AccountingInvoiceController extends Controller
         ClubAccess::authorize($request->user(), $club, 'manage_billing');
         $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
-        $this->accountingService->markInvoiceAsPaid($invoice, $request->user());
+        [$bankAccount, $paidOn] = $this->paymentDetails($request, $club);
+        $this->accountingService->markInvoiceAsPaid($invoice, $request->user(), $bankAccount, $paidOn);
 
         return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} marked as paid.");
     }
@@ -346,5 +351,24 @@ class AccountingInvoiceController extends Controller
         }
 
         return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} approved and posted to Accounts Receivable.");
+    }
+
+    /**
+     * The account the money went through and the day it did, from the "mark paid" dialog (both optional: older
+     * callers get the lodge's main bank account and today).
+     *
+     * @return array{0: ?Account, 1: ?CarbonInterface}
+     */
+    private function paymentDetails(Request $request, Club $club): array
+    {
+        $validated = $request->validate([
+            'paid_on' => ['nullable', 'date', 'before_or_equal:today'],
+            'bank_account_id' => ['nullable', 'integer', Rule::in($this->accountingService->moneyAccounts($club)->modelKeys())],
+        ]);
+
+        return [
+            ! empty($validated['bank_account_id']) ? Account::find($validated['bank_account_id']) : null,
+            ! empty($validated['paid_on']) ? Carbon::parse($validated['paid_on']) : null,
+        ];
     }
 }

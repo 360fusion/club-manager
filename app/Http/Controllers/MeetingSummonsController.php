@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
-use App\Enums\ClubRole;
 use App\Http\Requests\MeetingAdmin\GenerateSeasonRequest;
 use App\Models\Meeting;
 use App\Models\RecurringRule;
@@ -36,12 +35,12 @@ class MeetingSummonsController extends Controller
 
         $members = $club->users()->wherePivot('role', '!=', 'visitor')->get();
         // No stand-ins: a summons must not name someone else as Secretary or Master when the lodge has not said who they are.
-        $secretaryUser = $club->users()->wherePivotIn('role', [ClubRole::Coach->value, ClubRole::Secretary->value])->wherePivot('status', 'active')->first();
-        $worshipfulMaster = Member::where('club_id', $club->id)->active()->where('current_office', LodgeOffice::WorshipfulMaster->value)->first();
+        $secretaryUser = ($secretary = Member::summonsSecretary($club)) ? (object) $secretary : null;
+        $worshipfulMaster = Member::holdingOffice($club, LodgeOffice::WorshipfulMaster);
 
         $charityGrants = CharityGrant::where('club_id', $club->id)
+            ->forSummons($meeting)
             ->with(['proposer', 'seconder'])
-            ->orderBy('created_at', 'desc')
             ->get();
 
         $viewData = [
@@ -127,6 +126,11 @@ class MeetingSummonsController extends Controller
         $startTime = $request->starts_at ?: '18:30';
         $rehearsalTime = $request->rehearsal_starts_at ?: '17:30';
 
+        // New meetings copy the lodge's own last meeting (venue, dress, dining prices); a lodge with none starts from its hall.
+        $previous = Meeting::where('club_id', $club->id)->orderByDesc('meeting_date')->first();
+        $venue = $previous->venue ?? $club->defaultMeetingVenue();
+        $dressCode = $previous->dress_code ?? 'Dark Suit, Craft Regalia';
+
         $rule = RecurringRule::create([
             'club_id' => $club->id,
             'name' => "Regular Meetings ({$request->year})",
@@ -135,8 +139,8 @@ class MeetingSummonsController extends Controller
             'active_months' => $request->active_months,
             'default_start_time' => $startTime,
             'default_rehearsal_time' => $rehearsalTime,
-            'default_venue' => 'Masonic Hall, Oxford',
-            'default_dress_code' => 'Dark Suit, Craft Regalia',
+            'default_venue' => $venue ?: null,
+            'default_dress_code' => $dressCode,
         ]);
 
         $dates = $scheduleService->generateSeasonDates(
@@ -148,7 +152,7 @@ class MeetingSummonsController extends Controller
 
         $count = 0;
         foreach ($dates as $index => $date) {
-            Meeting::firstOrCreate(
+            $meeting = Meeting::firstOrCreate(
                 [
                     'club_id' => $club->id,
                     'meeting_date' => $date->format('Y-m-d'),
@@ -159,10 +163,10 @@ class MeetingSummonsController extends Controller
                     'title' => 'Meeting - '.$date->format('jS F Y'),
                     'starts_at' => $startTime,
                     'rehearsal_starts_at' => $rehearsalTime,
-                    'venue' => $club->defaultMeetingVenue(),
-                    'dress_code' => 'Dark Suit, Craft Regalia',
-                    'dining_cost_member' => 35.00,
-                    'dining_cost_guest' => 35.00,
+                    'venue' => $venue,
+                    'dress_code' => $dressCode,
+                    'dining_cost_member' => $previous->dining_cost_member ?? 0,
+                    'dining_cost_guest' => $previous->dining_cost_guest ?? 0,
                     'bank_sort_code' => $club->settings['bank_sort_code'] ?? null,
                     'bank_account_number' => $club->settings['bank_account_number'] ?? null,
                     'payment_reference_prefix' => 'SUMMONS',
@@ -170,9 +174,9 @@ class MeetingSummonsController extends Controller
                     'status' => 'draft',
                 ]
             );
-            $count++;
+            $count += $meeting->wasRecentlyCreated ? 1 : 0;
         }
 
-        return redirect()->back()->with('success', "Batch generated {$count} season meetings for {$request->year}.");
+        return redirect()->back()->with('success', "Added {$count} ".Str::plural('meeting', $count)." for {$request->year}; dates that already had a meeting were left as they were.");
     }
 }

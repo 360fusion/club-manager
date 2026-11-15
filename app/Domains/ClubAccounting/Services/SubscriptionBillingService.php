@@ -182,7 +182,7 @@ class SubscriptionBillingService
                 'source_type' => 'MemberSubscriptionPayment',
                 'source_id' => $subscription->id,
                 'items' => [
-                    ['account_id' => $cashLedgerAccountId ?? $ledger->getAccount($club, '1000')->id, 'debit' => $amount, 'credit' => 0, 'memo' => $reference],
+                    ['account_id' => $cashLedgerAccountId ?? $ledger->defaultBankAccount($club)->id, 'debit' => $amount, 'credit' => 0, 'memo' => $reference],
                     ['account_id' => $ledger->getAccount($club, '1200')->id, 'debit' => 0, 'credit' => $amount, 'memo' => 'Subscription '.$subscription->invoice_reference],
                 ],
             ]);

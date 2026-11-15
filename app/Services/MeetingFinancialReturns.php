@@ -63,7 +63,7 @@ class MeetingFinancialReturns
 
             // 2. Post Journal Entry to General Ledger
             $journalItems = [];
-            $bankAcc = $this->accounting->getAccount($club, '1000');
+            $bankAcc = $this->accounting->defaultBankAccount($club);
             $diningRevenueAcc = $this->accounting->getAccount($club, '4200');
             $raffleAcc = $this->accounting->getAccount($club, '4300');
             $almsAcc = $this->accounting->getAccount($club, '4400');
@@ -93,6 +93,7 @@ class MeetingFinancialReturns
             if (count($journalItems) >= 2) {
                 $journalEntry = $this->accounting->postJournalEntry($club, [
                     'description' => "Meeting Financial Return: {$meeting->title} ({$returnDate})",
+                    'entry_date' => $returnDate,
                     'source_type' => 'MeetingReturn',
                     'source_id' => $meeting->id,
                     'items' => $journalItems,

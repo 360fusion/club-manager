@@ -135,15 +135,9 @@ class OfficerRosterAdminController extends Controller
         $club = $this->findClub($clubSlug);
         $roster = AnnualOfficerRoster::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
-        // Mark previously installed roster as archived/past
-        AnnualOfficerRoster::where('club_id', $club->id)
-            ->where('status', 'installed')
-            ->update(['status' => 'confirmed']);
+        $installedRoster = $rosterService->install($roster);
 
-        $installedRoster = $rosterService->confirmRoster($roster);
-        $installedRoster->update(['status' => 'installed']);
-
-        return redirect()->back()->with('success', "✨ Officers for {$installedRoster->masonic_year} successfully Installed! Active member badges updated.");
+        return redirect()->back()->with('success', "Officers for {$installedRoster->masonic_year} installed. Members' offices are updated.");
     }
 
     /**

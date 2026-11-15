@@ -233,9 +233,10 @@ class CharityAdminController extends Controller
             'witnessed_by_member_id' => $validated['witnessed_by_member_id'] ?? null,
             'donor_member_id' => $validated['donor_member_id'] ?? null,
             'donor_name' => $validated['donor_name'] ?? null,
-            'is_gift_aid_eligible' => true,
+            // Gift Aid can only be claimed on a gift from a named donor (HMRC needs who gave it), never on an anonymous alms plate.
+            'is_gift_aid_eligible' => $hasDonor = ! empty($validated['donor_member_id']) || filled($validated['donor_name'] ?? null),
             'gift_aid_status' => 'pending',
-            'gift_aid_amount' => round(($validated['cash_amount'] + $validated['cheque_amount']) * 0.25, 2),
+            'gift_aid_amount' => $hasDonor ? round(($validated['cash_amount'] + $validated['cheque_amount']) * 0.25, 2) : 0,
             'notes' => $validated['notes'] ?? null,
         ]);
 

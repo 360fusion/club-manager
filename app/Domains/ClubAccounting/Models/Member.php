@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Enums\MemberAccountStatus;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Observers\MemberObserver;
 use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
 use App\Models\User;
@@ -84,6 +85,31 @@ class Member extends Model
     }
 
     // Accessors
+
+    /**
+     * The active member holding an office in the lodge (Secretary, Worshipful Master...), or null when nobody does.
+     */
+    public static function holdingOffice(Club $club, LodgeOffice $office): ?self
+    {
+        return self::where('club_id', $club->id)->active()->where('current_office', $office->value)->with('user')->first();
+    }
+
+    /**
+     * Who signs the summons and takes replies: the member holding the Secretary office (with their rank), else the
+     * account given the Secretary role. Null when the lodge has neither, so nobody is named by mistake.
+     *
+     * @return array{name: string, email: ?string}|null
+     */
+    public static function summonsSecretary(Club $club): ?array
+    {
+        if ($secretary = self::holdingOffice($club, LodgeOffice::Secretary)) {
+            return ['name' => $secretary->formatted_rank_name, 'email' => $secretary->email ?: $secretary->user?->email];
+        }
+
+        $user = $club->users()->wherePivotIn('role', [ClubRole::Coach->value, ClubRole::Secretary->value])->wherePivot('status', 'active')->first();
+
+        return $user ? ['name' => $user->name, 'email' => $user->email] : null;
+    }
 
     /**
      * The member's title, taken from their masonic rank. The old stored `title` column is no longer read.
@@ -311,6 +337,18 @@ class Member extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(MemberSubscription::class, 'member_id');
+    }
+
+    /**
+     * Whether deleting this member would lose lodge records: dues, offices held, festival giving, or the candidate
+     * record they were initiated from. Such a member is marked as resigned, deceased or historical instead.
+     */
+    public function hasLodgeHistory(): bool
+    {
+        return $this->subscriptions()->exists()
+            || $this->annualAssignments()->exists()
+            || MemberFestivalGiving::where('member_id', $this->id)->exists()
+            || Candidate::where('converted_member_id', $this->id)->exists();
     }
 
     /**

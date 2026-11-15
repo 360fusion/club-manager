@@ -2,6 +2,7 @@
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { ref } from 'vue';
+import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 import Alert from '@/Components/Ui/Alert.vue';
@@ -14,7 +15,8 @@ defineProps({
   club: { type: Object, required: true },
   isPending: { type: Boolean, default: false },
   memberRole: { type: String, default: 'member' },
-  memberNumber: { type: String, default: 'MEM-1001' },
+  memberNumber: { type: String, default: null },
+  duesOwed: { type: Number, default: 0 },
   attendanceRate: { type: Number, default: 100 },
   attendedCount: { type: Number, default: 0 },
   totalRsvps: { type: Number, default: 0 },
@@ -57,13 +59,13 @@ const openMeetingRsvpModal = (meeting) => {
       <Card class="flex flex-col justify-between space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Member standing</span>
-          <Badge variant="success">Active #{{ memberNumber }}</Badge>
+          <Badge v-if="memberNumber" variant="neutral">#{{ memberNumber }}</Badge>
         </div>
         <div class="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
           {{ memberRole.toUpperCase() }}
         </div>
-        <div class="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-          Good standing · {{ club.name }}
+        <div class="text-xs font-medium text-slate-600 dark:text-slate-300">
+          {{ club.name }}
         </div>
       </Card>
 
@@ -218,13 +220,11 @@ const openMeetingRsvpModal = (meeting) => {
           </template>
           <div class="space-y-4">
             <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
-              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Active plan</div>
-              <div class="text-sm font-semibold text-slate-900 dark:text-white">Senior Rower Tier</div>
-              <div class="text-xs text-slate-600 dark:text-slate-300 font-medium">{{ $cs }}35.00 a month</div>
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Still to pay</div>
+              <div class="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">{{ $money(duesOwed) }}</div>
+              <div class="text-xs text-slate-600 dark:text-slate-300 font-medium">{{ duesOwed > 0 ? 'Your dues for this lodge are not fully paid yet.' : 'Nothing owed on your dues.' }}</div>
             </div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              Status: <Badge variant="success">Good standing</Badge>
-            </div>
+            <Link :href="route('members.dues', { club: club.slug })" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">See your dues</Link>
           </div>
         </Card>
 

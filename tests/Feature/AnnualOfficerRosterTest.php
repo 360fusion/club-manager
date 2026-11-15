@@ -227,6 +227,7 @@ class AnnualOfficerRosterTest extends TestCase
         $roster = $service->saveRoster($this->club, '2025-2026', $assignments, $pastInstallationMeeting->id, 'confirmed');
 
         $this->assertEquals('confirmed', $roster->status);
+        $this->travelTo('2025-11-01');
 
         // Run auto install check
         $service->checkAndAutoInstallPassedInstallationMeetings($this->club);
@@ -236,5 +237,38 @@ class AnnualOfficerRosterTest extends TestCase
 
         $this->member1->refresh();
         $this->assertEquals(LodgeOffice::WorshipfulMaster, $this->member1->current_office);
+    }
+
+    public function test_installing_on_the_night_is_not_undone_by_last_years_installation_meeting(): void
+    {
+        $service = new AnnualOfficerRosterService;
+        $meeting = fn (string $date) => Meeting::create(['club_id' => $this->club->id, 'title' => 'Installation', 'meeting_date' => $date, 'starts_at' => '18:00', 'venue' => 'Hall', 'dress_code' => 'Dark Suit', 'status' => 'published']);
+        $meeting('2027-10-14');
+        $tonight = $meeting('2028-10-12');
+        $this->travelTo('2028-10-12 21:00');
+
+        $old = $service->saveRoster($this->club, '2027-2028', [['member_id' => $this->member1->id, 'office' => 'wm']], null, 'confirmed');
+        $service->install($old);
+        $new = $service->saveRoster($this->club, '2028-2029', [['member_id' => $this->member2->id, 'office' => 'wm']], $tonight->id, 'confirmed');
+        $service->install($new);
+
+        $service->checkAndAutoInstallPassedInstallationMeetings($this->club);
+
+        $this->assertSame('installed', $new->fresh()->status);
+        $this->assertSame('confirmed', $old->fresh()->status);
+        $this->assertEquals(LodgeOffice::WorshipfulMaster, $this->member2->fresh()->current_office);
+        $this->assertEquals(LodgeOffice::Member, $this->member1->fresh()->current_office);
+    }
+
+    public function test_a_proposed_roster_is_never_installed_automatically(): void
+    {
+        $service = new AnnualOfficerRosterService;
+        Meeting::create(['club_id' => $this->club->id, 'title' => 'Installation', 'meeting_date' => '2025-10-15', 'starts_at' => '18:00', 'venue' => 'Hall', 'dress_code' => 'Dark Suit', 'status' => 'published']);
+        $roster = $service->saveRoster($this->club, '2025-2026', [['member_id' => $this->member1->id, 'office' => 'wm']], null, 'proposed');
+        $this->travelTo('2025-11-01');
+
+        $service->checkAndAutoInstallPassedInstallationMeetings($this->club);
+
+        $this->assertSame('proposed', $roster->fresh()->status);
     }
 }
