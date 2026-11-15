@@ -46,10 +46,12 @@ class StaticSiteBuilder
     /**
      * @param  bool  $skipIfUnchanged  for automatic builds: when every file matches the live version, the new one is
      *                                 discarded and null is returned
+     * @param  SiteRelease|null  $release  the queued version to build (BuildStaticSite); a new one otherwise
      */
-    public function build(Club $club, ?User $by = null, bool $skipIfUnchanged = false): ?SiteRelease
+    public function build(Club $club, ?User $by = null, bool $skipIfUnchanged = false, ?SiteRelease $release = null): ?SiteRelease
     {
-        $release = SiteRelease::create(['club_id' => $club->id, 'created_by' => $by?->id, 'status' => 'building']);
+        $release ??= SiteRelease::create(['club_id' => $club->id, 'created_by' => $by?->id]);
+        $release->update(['status' => 'building']);
         $hotFile = Vite::hotFile();
 
         try {
@@ -63,7 +65,7 @@ class StaticSiteBuilder
             $dir = $release->path();
             File::ensureDirectoryExists($dir);
 
-            $pages = $this->writePages($club, $dir);
+            $pages = $this->writePages($club, $dir, $release);
             $this->copyBuild($dir);
             $this->writeExtras($club, $dir);
             $manifest = $this->writeManifest($dir);
@@ -117,7 +119,7 @@ class StaticSiteBuilder
     {
         $keep = SiteRelease::where('club_id', $club->id)->where('status', 'ready')->latest('id')->limit(SiteRelease::KEEP)->pluck('id');
 
-        SiteRelease::where('club_id', $club->id)->whereNotIn('id', $keep)->get()
+        SiteRelease::where('club_id', $club->id)->whereIn('status', ['ready', 'failed'])->whereNotIn('id', $keep)->get()
             ->reject(fn (SiteRelease $old) => $old->isCurrent())
             ->each(function (SiteRelease $old) {
                 File::deleteDirectory($old->path());
@@ -128,7 +130,7 @@ class StaticSiteBuilder
     /**
      * @return int how many pages were written
      */
-    private function writePages(Club $club, string $dir): int
+    private function writePages(Club $club, string $dir, SiteRelease $release): int
     {
         $staticSite = self::flags($club);
 
@@ -141,6 +143,7 @@ class StaticSiteBuilder
             });
 
         $count = 0;
+        $release->update(['pages_total' => $targets->count(), 'page_count' => 0]);
 
         foreach ($targets as $sitePath => $outPath) {
             if (! $this->isSafePath($outPath)) {
@@ -155,7 +158,7 @@ class StaticSiteBuilder
 
             $html = $this->prerenderer->render($this->signedUrl($club, (string) $sitePath), $html);
             $this->writeFile($dir.'/'.ltrim($outPath.'/index.html', '/'), $this->rewrite($club, $html, $dir));
-            $count++;
+            $release->update(['page_count' => ++$count]);
         }
 
         // The not-found page: whatever the site shows for an address it doesn't have (the club's own choice, or the default).

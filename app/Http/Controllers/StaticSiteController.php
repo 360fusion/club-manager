@@ -42,9 +42,9 @@ class StaticSiteController extends Controller
     public function build(Request $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
-        BuildStaticSite::dispatch($club, $request->user());
+        $release = BuildStaticSite::request($club, $request->user());
 
-        return back()->with('success', 'Building a new version of the website. This takes a minute or two and shows below when it is ready.');
+        return back()->with('success', "Version {$release->id} is in the queue. You can follow it below until it is live.");
     }
 
     public function activate(string $clubSlug, int $releaseId, StaticSiteBuilder $builder): RedirectResponse
@@ -238,8 +238,16 @@ class StaticSiteController extends Controller
             'releases' => $releases->map(fn (SiteRelease $release) => [
                 'id' => $release->id,
                 'status' => $release->status,
+                'automatic' => $release->automatic,
+                'scheduled_for' => $release->scheduled_for?->toIso8601String(),
+                // How many websites (of every club) are due to build before this one.
+                'ahead' => $release->status === 'queued' && ! $release->scheduled_for?->isFuture()
+                    ? SiteRelease::where('id', '!=', $release->id)->where(fn ($query) => $query->where('status', 'building')
+                        ->orWhere(fn ($query) => $query->where('status', 'queued')->where('scheduled_for', '<', $release->scheduled_for)))->count()
+                    : null,
                 'is_current' => $release->status === 'ready' && $release->isCurrent(),
                 'page_count' => $release->page_count,
+                'pages_total' => $release->pages_total,
                 'file_count' => $release->file_count,
                 'bytes' => $release->bytes,
                 'error' => $release->error,

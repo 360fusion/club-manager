@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Website content changed (a page, article, event, redirect or the club's own settings): when the club's domain shows
- * the published files or a destination takes new versions automatically, a new version is built a couple of minutes later. BuildStaticSite is unique per club, so a burst
- * of edits makes one build, and it reads the content when it runs.
+ * the published files or a destination takes new versions automatically, a new version is built 30 minutes later. A club
+ * has one version waiting at most (BuildStaticSite::request), so a whole editing session makes one build, which reads the
+ * content when it runs. Someone who wants it live sooner presses Publish now.
  */
 class RebuildsStaticSite
 {
@@ -34,7 +35,7 @@ class RebuildsStaticSite
         $club = $model instanceof Club ? $model : Club::find($model->getAttribute('club_id'));
 
         if ($club && StaticSiteBuilder::keepsUpdated($club)) {
-            BuildStaticSite::dispatch($club, automatic: true)->delay(now()->addMinutes(2));
+            BuildStaticSite::request($club, automatic: true, at: now()->addMinutes(BuildStaticSite::AFTER_EDITS_MINUTES));
         }
     }
 }

@@ -44,7 +44,7 @@ final class HealthChecks
         if ($queue === 'database') {
             $oldest = DB::table('jobs')->whereNull('reserved_at')->min('available_at');
             $waiting = $oldest !== null && (time() - (int) $oldest) > 600;
-            $add('Queue worker', ! $waiting, $waiting ? 'A job has waited over 10 minutes: start or restart the worker (php artisan queue:work --queue=transactional,default,bulk)' : 'Nothing is waiting. The worker must run --queue=transactional,default,bulk');
+            $add('Queue worker', ! $waiting, $waiting ? 'A job has waited over 10 minutes: start or restart the workers (php artisan queue:work --queue=transactional,default,bulk, and a second one with --queue=sites)' : 'Nothing is waiting. One worker must run --queue=transactional,default,bulk and another --queue=sites (website builds and sends)');
         }
 
         $failed = DB::table('failed_jobs')->where('failed_at', '>=', now()->subDay())->count();

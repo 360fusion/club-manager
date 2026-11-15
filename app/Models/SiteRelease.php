@@ -10,17 +10,20 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * One built copy of a club's public website as plain files, kept in its own folder on the `sites` disk (storage/app/sites). The
- * club's `current` link points at the live one, so publishing or going back to an older version is one switch.
+ * club's `current` link points at the live one, so publishing or going back to an older version is one switch. Status goes
+ * queued → building → ready (or failed); see BuildStaticSite::request().
  */
 class SiteRelease extends Model
 {
     public const KEEP = 5;
 
-    protected $fillable = ['club_id', 'created_by', 'status', 'page_count', 'file_count', 'bytes', 'error', 'activated_at'];
+    protected $fillable = ['club_id', 'created_by', 'status', 'automatic', 'scheduled_for', 'page_count', 'pages_total', 'file_count', 'bytes', 'error', 'activated_at'];
 
     protected function casts(): array
     {
         return [
+            'automatic' => 'boolean',
+            'scheduled_for' => 'datetime',
             'activated_at' => 'datetime',
         ];
     }

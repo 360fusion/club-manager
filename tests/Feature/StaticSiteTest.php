@@ -74,6 +74,15 @@ class StaticSiteTest extends TestCase
         return app(StaticSiteBuilder::class)->build($this->club->fresh(), $this->admin);
     }
 
+    /** A version asked for and built by its queued job, as the worker would; null when an unchanged automatic one is dropped. */
+    private function buildQueued(bool $automatic, ?User $by = null): ?SiteRelease
+    {
+        $release = SiteRelease::create(['club_id' => $this->club->id, 'created_by' => $by?->id, 'status' => 'queued', 'automatic' => $automatic, 'scheduled_for' => now()]);
+        (new BuildStaticSite($release))->handle(app(StaticSiteBuilder::class));
+
+        return $release->fresh();
+    }
+
     private function file(SiteRelease $release, string $path): string
     {
         return (string) file_get_contents($release->path().'/'.$path);
@@ -454,7 +463,8 @@ class StaticSiteTest extends TestCase
         $this->actingAs($this->admin);
 
         $this->post(route('admin.pages.publish.build', ['clubSlug' => $this->club->slug]))->assertRedirect();
-        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->club->is($this->club));
+        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->release->club_id === $this->club->id && $job->queue === 'sites' && $job->delay === null);
+        SiteRelease::where('club_id', $this->club->id)->delete();
 
         $release = $this->build();
         $target = SiteDeployTarget::create(['club_id' => $this->club->id, 'type' => 'github', 'name' => 'Repo', 'config' => ['repository' => 'a/b', 'branch' => 'main', 'token' => 't']]);
@@ -477,11 +487,72 @@ class StaticSiteTest extends TestCase
 
         $this->club->update(['settings' => array_merge($this->club->settings ?? [], ['static_site_serve' => true])]);
         $page->update(['title' => 'Changed again']);
-        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->club->is($this->club) && $job->delay !== null);
+        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->release->club_id === $this->club->id && $job->delay !== null);
 
+        // Nightly: one version for the club, now.
+        SiteRelease::where('club_id', $this->club->id)->delete();
         Queue::fake();
         $this->artisan('app:rebuild-static-sites')->assertSuccessful();
+        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->delay === null);
         Queue::assertPushed(BuildStaticSite::class, 1);
+    }
+
+    public function test_edits_wait_until_editing_is_over_and_publish_now_takes_the_waiting_version_straight_away(): void
+    {
+        Queue::fake();
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], ['static_site_serve' => true])]);
+        SiteRelease::where('club_id', $this->club->id)->delete();
+        Queue::fake();
+        $page = Page::where('club_id', $this->club->id)->where('slug', 'history')->firstOrFail();
+        $waiting = fn () => SiteRelease::where('club_id', $this->club->id)->where('status', 'queued')->get();
+
+        // An editing session: one version waits, built 30 minutes after the last edit (moved in 5-minute steps or more).
+        $page->update(['title' => 'One']);
+        $this->travel(10)->minutes();
+        $page->update(['title' => 'Two']);
+        $this->travel(1)->minutes();
+        $page->update(['title' => 'Three']);
+        $this->assertCount(1, $waiting());
+        $release = $waiting()->first();
+        $this->assertTrue($release->automatic);
+        $this->assertEquals(now()->subMinute()->addMinutes(30)->startOfSecond(), $release->scheduled_for);
+        Queue::assertPushed(BuildStaticSite::class, 2);
+
+        // The first edit's job comes round early and leaves it for the later one.
+        (new BuildStaticSite($release))->handle(app(StaticSiteBuilder::class));
+        $this->assertSame('queued', $release->fresh()->status);
+
+        $this->actingAs($this->admin)->get(route('admin.pages.publish', ['clubSlug' => $this->club->slug]))
+            ->assertInertia(fn (Assert $inertia) => $inertia->where('publishing.releases.0.status', 'queued')->where('publishing.releases.0.automatic', true)->where('publishing.releases.0.ahead', null));
+
+        // Publish now: the same version becomes theirs and goes straight in the queue; pressing again adds nothing.
+        $this->post(route('admin.pages.publish.build', ['clubSlug' => $this->club->slug]))->assertRedirect();
+        $this->post(route('admin.pages.publish.build', ['clubSlug' => $this->club->slug]))->assertRedirect();
+        $this->assertCount(1, $waiting());
+        $release->refresh();
+        $this->assertFalse($release->automatic);
+        $this->assertSame($this->admin->id, $release->created_by);
+        Queue::assertPushed(BuildStaticSite::class, 3);
+
+        SiteRelease::create(['club_id' => Club::factory()->create()->id, 'status' => 'building']);
+        $this->get(route('admin.pages.publish', ['clubSlug' => $this->club->slug]))
+            ->assertInertia(fn (Assert $inertia) => $inertia->where('publishing.releases.0.ahead', 1));
+
+        (new BuildStaticSite($release))->handle(app(StaticSiteBuilder::class));
+        $release->refresh();
+        $this->assertSame('ready', $release->status);
+        $this->assertTrue($release->isCurrent());
+        $this->assertSame($release->pages_total, $release->page_count);
+        $this->assertGreaterThan(1, $release->page_count);
+
+        // A late copy of the job finds it built and does nothing; a job the worker gave up on doesn't stay "building".
+        (new BuildStaticSite($release))->handle(app(StaticSiteBuilder::class));
+        $this->assertSame(1, SiteRelease::where('club_id', $this->club->id)->count());
+
+        $stuck = SiteRelease::create(['club_id' => $this->club->id, 'status' => 'building']);
+        (new BuildStaticSite($stuck))->failed(new \RuntimeException('timed out'));
+        $this->assertSame('failed', $stuck->fresh()->status);
+        $this->assertTrue($release->fresh()->isCurrent());
     }
 
     public function test_a_destination_set_to_automatic_gets_each_new_version_and_an_unchanged_automatic_build_is_dropped(): void
@@ -491,7 +562,7 @@ class StaticSiteTest extends TestCase
         Queue::fake([DeployStaticSite::class]);
 
         // Nothing changed since the live version: thrown away, nothing sent.
-        (new BuildStaticSite($this->club->fresh(), automatic: true))->handle(app(StaticSiteBuilder::class));
+        $this->assertNull($this->buildQueued(automatic: true));
         $this->assertSame([$first->id], SiteRelease::where('club_id', $this->club->id)->pluck('id')->all());
         $this->assertTrue($first->isCurrent());
         Queue::assertNothingPushed();
@@ -499,10 +570,13 @@ class StaticSiteTest extends TestCase
         // An edit: the destination isn't the domain, but takes new versions, so the edit rebuilds and sends.
         Queue::fake([BuildStaticSite::class, DeployStaticSite::class]);
         Page::where('club_id', $this->club->id)->where('slug', 'history')->firstOrFail()->update(['title' => 'Our Long History']);
-        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->automatic);
+        $queued = SiteRelease::where('club_id', $this->club->id)->where('status', 'queued')->firstOrFail();
+        $this->assertTrue($queued->automatic);
 
-        (new BuildStaticSite($this->club->fresh(), automatic: true))->handle(app(StaticSiteBuilder::class));
-        $second = SiteRelease::where('club_id', $this->club->id)->latest('id')->firstOrFail();
+        $this->travel(BuildStaticSite::AFTER_EDITS_MINUTES + 1)->minutes();
+        (new BuildStaticSite($queued))->handle(app(StaticSiteBuilder::class));
+        $second = $queued->fresh();
+        $this->assertSame('ready', $second->status);
         $this->assertNotSame($first->id, $second->id);
         Queue::assertPushed(DeployStaticSite::class, fn ($job) => $job->deploy->site_release_id === $second->id && $job->deploy->site_deploy_target_id === $target->id);
     }
@@ -516,10 +590,10 @@ class StaticSiteTest extends TestCase
         Post::where('club_id', $this->club->id)->update(['status' => 'draft']);
 
         // A build someone pressed shows its error on the screen; only one that ran on its own sends an email.
-        (new BuildStaticSite($this->club->fresh(), $this->admin))->handle(app(StaticSiteBuilder::class));
+        $this->buildQueued(automatic: false, by: $this->admin);
         Mail::assertNothingQueued();
 
-        (new BuildStaticSite($this->club->fresh(), automatic: true))->handle(app(StaticSiteBuilder::class));
+        $this->buildQueued(automatic: true);
         Mail::assertQueued(LodgeClaimMail::class, fn ($mail) => $mail->hasTo($this->admin->email) && str_contains($mail->body, 'no public pages'));
         Mail::assertNotQueued(LodgeClaimMail::class, fn ($mail) => $mail->hasTo($member->email));
     }

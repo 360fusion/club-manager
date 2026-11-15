@@ -38,6 +38,6 @@ Artisan::command('app:rebuild-static-sites', function () {
     $sending = SiteDeployTarget::all()->filter(fn (SiteDeployTarget $target) => ! empty($target->config['auto_send']))->pluck('club_id');
 
     Club::where('settings->static_site_serve', true)->orWhereIn('id', $sending)
-        ->each(fn (Club $club) => BuildStaticSite::dispatch($club, automatic: true));
+        ->each(fn (Club $club) => BuildStaticSite::request($club, automatic: true));
 })->purpose('Queue a new version of every website served as static files or sent automatically');
 Schedule::command('app:rebuild-static-sites')->dailyAt('04:30');

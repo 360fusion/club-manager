@@ -22,7 +22,6 @@ const data = computed(() => props.publishing || { releases: [], targets: [], dep
 const base = computed(() => `/${props.club.slug}/admin/pages/publish`);
 const releases = computed(() => data.value.releases || []);
 const current = computed(() => releases.value.find((release) => release.is_current) || null);
-const building = computed(() => releases.value.some((release) => release.status === 'building'));
 
 const busy = ref(false);
 const post = (url, data = {}) => {
@@ -30,18 +29,8 @@ const post = (url, data = {}) => {
     router.post(url, data, { preserveScroll: true, onFinish: () => { busy.value = false; } });
 };
 
-// The build is queued before its version exists, so the screen keeps checking from the click until a newer version
-// shows up (or ten minutes pass, when the queue is clearly not running).
-const waitingAfter = ref(null);
-const buildNow = () => {
-    const after = { id: Math.max(0, ...releases.value.map((release) => release.id)), until: Date.now() + 600000 };
-    busy.value = true;
-    router.post(`${base.value}/build`, {}, {
-        preserveScroll: true,
-        onSuccess: () => { waitingAfter.value = after; },
-        onFinish: () => { busy.value = false; },
-    });
-};
+// Publish now queues a version at once (or starts the one waiting after recent edits), and the screen follows it.
+const buildNow = () => post(`${base.value}/build`);
 const makeLive = (release) => post(`${base.value}/releases/${release.id}/activate`);
 const setServing = (serve) => post(`${base.value}/serve`, { serve });
 const pushTo = (target) => post(`${base.value}/targets/${target.id}/deploy`);
@@ -52,16 +41,26 @@ const removeTarget = (target) => {
 const refresh = () => router.reload({ only: ['publishing'] });
 onMounted(() => { if (!props.publishing) refresh(); });
 
-// While a version is building or being sent, the screen checks every few seconds so the result shows up by itself.
-const awaitingBuild = computed(() => waitingAfter.value !== null && !releases.value.some((release) => release.id > waitingAfter.value.id));
-const working = computed(() => building.value || awaitingBuild.value || (data.value.deploys || []).some((deploy) => ['queued', 'running'].includes(deploy.status)));
-watch([awaitingBuild, () => props.publishing], () => {
-    if (waitingAfter.value && (!awaitingBuild.value || Date.now() > waitingAfter.value.until)) waitingAfter.value = null;
-});
+// The versions on their way to being live (waiting, then building), oldest first, and the sends of the newest one.
+const due = (release) => !release.scheduled_for || new Date(release.scheduled_for) <= new Date();
+const inProgress = computed(() => releases.value.filter((release) => ['queued', 'building'].includes(release.status)).reverse());
+const waitingNow = computed(() => inProgress.value.some((release) => release.status === 'queued' && !release.automatic));
+const autoTargets = computed(() => (data.value.targets || []).filter((target) => target.auto_send));
+const sending = computed(() => (data.value.deploys || []).filter((deploy) => ['queued', 'running'].includes(deploy.status)));
+const queueText = (release) => {
+    if (!due(release)) return `Waiting for editing to finish: builds at ${time(release.scheduled_for)} unless you publish now.`;
+    if (release.ahead > 0) return `In the queue, with ${release.ahead} ${release.ahead === 1 ? 'website' : 'websites'} building or waiting before it.`;
+    return 'Next in the queue.';
+};
+
+// While a version is waiting its turn, building or being sent, the screen checks every few seconds so each step shows
+// up by itself. A version waiting for editing to finish isn't checked on until it is due.
+const working = computed(() => inProgress.value.some(due) || sending.value.length > 0);
 const { start: startPolling, stop: stopPolling } = usePoll(4000, { only: ['publishing'] }, { autoStart: false });
 watch(working, (now) => (now ? startPolling() : stopPolling()), { immediate: true });
 
 const size = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+const time = (iso) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 const when = (iso) => (iso ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '');
 const statusVariant = { ready: 'success', done: 'success', building: 'info', queued: 'info', running: 'info', failed: 'danger' };
 
@@ -109,10 +108,38 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <Button :loading="busy" :disabled="building || awaitingBuild" @click="buildNow">Build a new version</Button>
+                <Button :loading="busy" :disabled="waitingNow" @click="buildNow">Publish now</Button>
                 <Button variant="secondary" @click="refresh">Refresh</Button>
-                <span v-if="building || awaitingBuild" class="text-sm text-slate-500 dark:text-slate-400">Building now. This takes a minute or two.</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">Builds a new version with your latest changes and makes it live{{ autoTargets.length ? ', then sends it to your automatic destinations' : '' }}.</span>
             </div>
+
+            <ol v-for="release in inProgress" :key="release.id" class="p-4 space-y-2 text-sm border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/30 rounded-2xl" :aria-label="`Version ${release.id} on its way to being live`">
+                <li class="font-semibold text-slate-900 dark:text-white">Version {{ release.id }}<span class="font-normal text-slate-500 dark:text-slate-400"> · {{ release.automatic ? 'after recent edits' : `asked for by ${release.created_by || 'an editor'}` }}</span></li>
+                <li class="flex items-start gap-2" :class="release.status === 'queued' ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">
+                    <Badge :variant="release.status === 'queued' ? 'info' : 'success'">{{ release.status === 'queued' ? 'Now' : 'Done' }}</Badge>
+                    <span>{{ release.status === 'queued' ? queueText(release) : 'Waited its turn in the queue.' }}</span>
+                    <Button v-if="release.status === 'queued' && release.automatic" size="sm" class="ml-auto" :disabled="busy" @click="buildNow">Publish now</Button>
+                </li>
+                <li class="flex items-start gap-2" :class="release.status === 'building' ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">
+                    <Badge :variant="release.status === 'building' ? 'info' : 'neutral'">{{ release.status === 'building' ? 'Now' : 'Next' }}</Badge>
+                    <span>{{ release.status === 'building' ? (!release.pages_total ? 'Building: getting the pages ready.' : release.page_count < release.pages_total ? `Building: ${release.page_count} of ${release.pages_total} pages done.` : `Building: all ${release.pages_total} pages done, now copying the files.`) : 'Build the pages.' }}</span>
+                </li>
+                <li class="flex items-start gap-2 text-slate-500 dark:text-slate-400">
+                    <Badge variant="neutral">Next</Badge>
+                    <span>Make it the live version{{ data.serving && data.domain ? ` on ${data.domain}` : '' }}.</span>
+                </li>
+                <li v-for="target in autoTargets" :key="target.id" class="flex items-start gap-2 text-slate-500 dark:text-slate-400">
+                    <Badge variant="neutral">Next</Badge>
+                    <span>Send it to {{ target.name }}.</span>
+                </li>
+            </ol>
+
+            <ul v-if="sending.length" class="p-4 space-y-2 text-sm border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/30 rounded-2xl">
+                <li v-for="deploy in sending" :key="deploy.id" class="flex items-start gap-2 text-slate-900 dark:text-white">
+                    <Badge variant="info">{{ deploy.status === 'running' ? 'Sending' : 'Waiting' }}</Badge>
+                    <span>Version {{ deploy.release_id }} {{ deploy.status === 'running' ? 'is being sent' : 'is waiting in the queue to be sent' }} to {{ deploy.target || 'a removed destination' }}.</span>
+                </li>
+            </ul>
 
             <div v-if="releases.length" class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
                 <table class="w-full text-left text-xs">
@@ -130,7 +157,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                             <td class="p-3 text-slate-700 dark:text-slate-200">
                                 <span class="font-semibold">{{ release.id }}</span>
                                 <Badge v-if="release.is_current" variant="success" class="ml-2">Live</Badge>
-                                <Badge v-else-if="release.status !== 'ready'" :variant="statusVariant[release.status]" class="ml-2">{{ release.status === 'building' ? 'Building' : 'Failed' }}</Badge>
+                                <Badge v-else-if="release.status !== 'ready'" :variant="statusVariant[release.status]" class="ml-2">{{ { building: 'Building', queued: 'Waiting' }[release.status] || 'Failed' }}</Badge>
                                 <p v-if="release.error" class="text-rose-600 dark:text-rose-400 mt-1">{{ release.error }}</p>
                             </td>
                             <td class="p-3 text-slate-500 dark:text-slate-400">{{ when(release.created_at) }}<template v-if="release.created_by"> by {{ release.created_by }}</template></td>
@@ -147,7 +174,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                     </tbody>
                 </table>
             </div>
-            <p v-else class="text-sm text-slate-500 dark:text-slate-400">No versions yet. Build one to get started.</p>
+            <p v-else class="text-sm text-slate-500 dark:text-slate-400">No versions yet. Press Publish now to build the first one.</p>
 
             <p class="text-xs text-slate-500 dark:text-slate-400">To put the zip on cPanel hosting yourself: open File Manager, go to public_html, upload the zip, then right-click it and choose Extract. Show hidden files to see the .htaccess file it includes.</p>
         </Card>
@@ -163,7 +190,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                     <Button v-if="!data.serving" variant="secondary" :disabled="busy || !current" @click="setServing(true)">Show the published version on my domain</Button>
                     <Button v-else variant="secondary" :disabled="busy" @click="setServing(false)">Show the website as I edit it</Button>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400">With the published version, a new version is built a few minutes after each change and again every night, so changes reach your domain shortly after you save them.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">With the published version, a new version is built 30 minutes after your last change and again every night. Press Publish now to put changes live straight away.</p>
             </template>
             <p v-else class="text-sm text-slate-500 dark:text-slate-400">Once your own domain is connected (in Website and SEO settings), it can show the published version from here.</p>
         </Card>
@@ -220,7 +247,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                 </template>
                 <label class="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
                     <input v-model="targetForm.auto_send" type="checkbox" class="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 accent-blue-600" />
-                    <span>Send each new version here automatically <span class="text-slate-500 dark:text-slate-400">(a new version is built a few minutes after each change to the website, and every night)</span></span>
+                    <span>Send each new version here automatically <span class="text-slate-500 dark:text-slate-400">(a new version is built 30 minutes after your last change to the website, every night, and whenever someone presses Publish now)</span></span>
                 </label>
                 <div class="flex flex-wrap gap-3">
                     <Button type="submit" :loading="targetForm.processing">Save</Button>
