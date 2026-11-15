@@ -168,8 +168,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/pages/publish', [StaticSiteController::class, 'show'])->name('admin.pages.publish');
     Route::post('/{clubSlug}/admin/pages/publish/build', [StaticSiteController::class, 'build'])->middleware('throttle:10,1,publish')->name('admin.pages.publish.build');
     Route::post('/{clubSlug}/admin/pages/publish/serve', [StaticSiteController::class, 'serve'])->name('admin.pages.publish.serve');
+    Route::post('/{clubSlug}/admin/pages/publish/address', [StaticSiteController::class, 'address'])->name('admin.pages.publish.address');
     Route::post('/{clubSlug}/admin/pages/publish/releases/{releaseId}/activate', [StaticSiteController::class, 'activate'])->whereNumber('releaseId')->name('admin.pages.publish.activate');
     Route::get('/{clubSlug}/admin/pages/publish/releases/{releaseId}/download', [StaticSiteController::class, 'download'])->whereNumber('releaseId')->middleware('throttle:10,1,publish')->name('admin.pages.publish.download');
+    Route::get('/{clubSlug}/admin/pages/publish/releases/{releaseId}/preview/{path?}', [StaticSiteController::class, 'preview'])->whereNumber('releaseId')->where('path', '.*')->name('admin.pages.publish.preview');
     Route::post('/{clubSlug}/admin/pages/publish/targets', [StaticSiteController::class, 'saveTarget'])->name('admin.pages.publish.targets.save');
     Route::delete('/{clubSlug}/admin/pages/publish/targets/{targetId}', [StaticSiteController::class, 'destroyTarget'])->whereNumber('targetId')->name('admin.pages.publish.targets.destroy');
     Route::post('/{clubSlug}/admin/pages/publish/targets/{targetId}/deploy', [StaticSiteController::class, 'deploy'])->whereNumber('targetId')->middleware('throttle:10,1,publish')->name('admin.pages.publish.targets.deploy');

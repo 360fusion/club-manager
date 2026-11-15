@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\Visibility;
 use App\Jobs\BuildStaticSite;
 use App\Jobs\DeployStaticSite;
+use App\Mail\LodgeClaimMail;
 use App\Models\Club;
 use App\Models\ClubRedirect;
 use App\Models\Page;
@@ -14,12 +15,16 @@ use App\Models\SiteDeployTarget;
 use App\Models\SiteRelease;
 use App\Models\User;
 use App\Services\StaticSite\FtpConnection;
+use App\Services\StaticSite\SftpConnection;
 use App\Services\StaticSite\SiteDeployer;
 use App\Services\StaticSite\StaticPagePrerenderer;
 use App\Services\StaticSite\StaticSiteBuilder;
+use App\Services\StaticSite\StaticSiteException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Vite;
@@ -98,6 +103,40 @@ class StaticSiteTest extends TestCase
         $this->assertStringContainsString('https://www.fraternity.example/history', $this->file($release, 'sitemap.xml'));
     }
 
+    public function test_a_build_carries_only_the_public_sites_code(): void
+    {
+        $release = $this->build();
+        $manifest = json_decode((string) file_get_contents(public_path('build/manifest.json')), true);
+
+        foreach (['resources/js/app.js', 'resources/js/Pages/Public/Site.vue'] as $needed) {
+            $this->assertFileExists($release->path().'/build/'.$manifest[$needed]['file']);
+        }
+        $this->assertFileDoesNotExist($release->path().'/build/'.$manifest['resources/js/Pages/Admin/PageList.vue']['file']);
+
+        // Every built file a page asks for is there.
+        preg_match_all('~"/build/([^"]+)"~', $this->file($release, 'index.html'), $matches);
+        $this->assertNotEmpty($matches[1]);
+        foreach ($matches[1] as $path) {
+            $this->assertFileExists($release->path().'/build/'.$path);
+        }
+    }
+
+    public function test_a_lodge_hosting_the_files_itself_sets_the_address_its_links_and_sitemap_use(): void
+    {
+        $this->club->update(['custom_domain' => null, 'domain_status' => 'pending']);
+
+        $this->actingAs($this->admin)->post("/{$this->club->slug}/admin/pages/publish/address", ['site_url' => 'http://lodge.example.org/'])
+            ->assertSessionHasErrors('site_url');
+        $this->actingAs($this->admin)->post("/{$this->club->slug}/admin/pages/publish/address", ['site_url' => 'https://Lodge.example.org/anything?x=1'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('https://lodge.example.org', $this->club->fresh()->settings['static_site_url']);
+
+        $release = $this->build();
+        $this->assertStringContainsString('<link rel="canonical" href="https://lodge.example.org/history">', $this->file($release, 'history/index.html'));
+        $this->assertStringContainsString('https://lodge.example.org/history', $this->file($release, 'sitemap.xml'));
+        $this->assertStringContainsString('Sitemap: https://lodge.example.org/sitemap.xml', $this->file($release, 'robots.txt'));
+    }
+
     public function test_nothing_a_visitor_could_not_see_goes_into_a_build(): void
     {
         $post = ['club_id' => $this->club->id, 'author_id' => $this->admin->id, 'content' => '<p>News</p>', 'status' => 'published', 'published_at' => now()->subDay()];
@@ -125,6 +164,9 @@ class StaticSiteTest extends TestCase
 
         $this->assertStringContainsString('Redirect 301 "/old-page"', $htaccess);
         $this->assertStringNotContainsString("\nRewriteRule", $htaccess);
+        // The security headers go with the files, and scripts can only come from the site and its analytics.
+        $this->assertStringContainsString('Header always set Content-Security-Policy "default-src \'self\'; script-src \'self\' \'unsafe-inline\' https://plausible.io', $htaccess);
+        $this->assertStringContainsString('Header always set X-Frame-Options "SAMEORIGIN"', $htaccess);
     }
 
     public function test_each_build_is_a_version_and_an_older_one_can_be_made_live_again(): void
@@ -140,6 +182,20 @@ class StaticSiteTest extends TestCase
 
         $this->assertTrue($first->fresh()->isCurrent());
         $this->assertDirectoryExists($second->path());
+    }
+
+    public function test_a_new_version_shares_its_unchanged_files_with_the_live_one(): void
+    {
+        $first = $this->build();
+        Page::where('slug', 'history')->update(['title' => 'Our Story']);
+        $second = $this->build();
+
+        $built = collect(File::allFiles($second->path().'/build'))->first();
+        $relative = 'build/'.$built->getRelativePathname();
+        $this->assertSame(fileinode($first->path().'/'.$relative), fileinode($second->path().'/'.$relative), 'unchanged code is one file on disk');
+        $this->assertNotSame(fileinode($first->path().'/history/index.html'), fileinode($second->path().'/history/index.html'));
+        $this->assertStringContainsString('Our Story', $this->file($second, 'history/index.html'));
+        $this->assertStringNotContainsString('Our Story', $this->file($first, 'history/index.html'));
     }
 
     public function test_only_the_newest_versions_are_kept(): void
@@ -163,6 +219,7 @@ class StaticSiteTest extends TestCase
         $response = $this->get('http://www.fraternity.example/history');
         $response->assertOk();
         $this->assertSame('STATIC COPY', $response->streamedContent());
+        $this->assertStringContainsString("script-src 'self'", (string) $response->headers->get('Content-Security-Policy'));
 
         // Not in the files: the app answers (a members-only page sends the visitor to sign in on the main address).
         $this->get('http://www.fraternity.example/members-area')->assertRedirect();
@@ -248,6 +305,91 @@ class StaticSiteTest extends TestCase
         $this->assertContains('delete /public_html/history/index.html', $ftp->log);
         $this->assertArrayHasKey('/public_html/keep-me.txt', $ftp->files);
         $this->assertLessThan($first->files_sent, $second->files_sent);
+    }
+
+    public function test_an_sftp_push_remembers_the_servers_key_and_stops_if_it_changes(): void
+    {
+        $sftp = new class extends SftpConnection
+        {
+            public string $key = 'SHA256:first';
+
+            public array $puts = [];
+
+            public function connect(string $host, int $port, string $username, string $password, ?string $knownKey): string
+            {
+                if ($knownKey && $knownKey !== $this->key) {
+                    throw new StaticSiteException('different server key');
+                }
+
+                return $this->key;
+            }
+
+            public function get(string $remotePath): ?string
+            {
+                return null;
+            }
+
+            public function put(string $remotePath, string $localPath): void
+            {
+                $this->puts[] = $remotePath;
+            }
+
+            public function delete(string $remotePath): void {}
+
+            public function close(): void {}
+        };
+        $this->app->instance(SftpConnection::class, $sftp);
+        $release = $this->build();
+        $target = SiteDeployTarget::create(['club_id' => $this->club->id, 'type' => 'sftp', 'name' => 'SSH', 'config' => ['host' => 'ssh.fraternity.example', 'port' => 22, 'username' => 'web', 'password' => 'secret', 'path' => 'www']]);
+        $push = function () use ($target, $release) {
+            $deploy = SiteDeploy::create(['club_id' => $this->club->id, 'site_deploy_target_id' => $target->id, 'site_release_id' => $release->id, 'status' => 'queued']);
+            app(SiteDeployer::class)->run($deploy);
+
+            return $deploy->fresh();
+        };
+
+        $this->assertSame('done', $push()->status);
+        $this->assertContains('/www/index.html', $sftp->puts);
+        $this->assertSame('SHA256:first', $target->fresh()->config['host_key']);
+
+        // Saving the destination again keeps the key; the server then answers with another one.
+        $this->actingAs($this->admin)->post("/{$this->club->slug}/admin/pages/publish/targets", ['id' => $target->id, 'type' => 'sftp', 'name' => 'SSH', 'host' => 'ssh.fraternity.example', 'port' => 22, 'username' => 'web', 'path' => 'www'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('SHA256:first', $target->fresh()->config['host_key']);
+        $this->assertSame('secret', $target->fresh()->config['password']);
+
+        $sftp->key = 'SHA256:other';
+        $failed = $push();
+        $this->assertSame('failed', $failed->status);
+        $this->assertSame('different server key', $failed->message);
+    }
+
+    public function test_a_cpanel_push_uploads_through_the_api_with_the_token(): void
+    {
+        $release = $this->build();
+        $refuse = false;
+        Http::fake(function (HttpRequest $request) use (&$refuse) {
+            return match (true) {
+                $refuse => Http::response('', 401),
+                str_contains($request->url(), 'get_file_content') => Http::response(['result' => ['status' => 0, 'errors' => ['No such file']]]),
+                default => Http::response(['result' => ['status' => 1, 'data' => ['succeeded' => 1, 'uploads' => [['status' => 1]]]]]),
+            };
+        });
+
+        // A public address written as numbers, so the test needs no DNS.
+        $target = SiteDeployTarget::create(['club_id' => $this->club->id, 'type' => 'cpanel', 'name' => 'cPanel', 'config' => ['host' => '8.8.8.8', 'port' => 2083, 'username' => 'lodge', 'token' => 'ABC123', 'path' => 'public_html']]);
+        $deploy = SiteDeploy::create(['club_id' => $this->club->id, 'site_deploy_target_id' => $target->id, 'site_release_id' => $release->id, 'status' => 'queued']);
+        app(SiteDeployer::class)->run($deploy);
+
+        $this->assertSame('done', $deploy->fresh()->status, (string) $deploy->fresh()->message);
+        Http::assertSent(fn (HttpRequest $request) => str_starts_with($request->url(), 'https://8.8.8.8:2083/execute/Fileman/upload_files?dir=public_html%2Fhistory')
+            && $request->hasHeader('Authorization', 'cpanel lodge:ABC123'));
+
+        // A refused token reads as such.
+        $refuse = true;
+        $refused = SiteDeploy::create(['club_id' => $this->club->id, 'site_deploy_target_id' => $target->id, 'site_release_id' => $release->id, 'status' => 'queued']);
+        app(SiteDeployer::class)->run($refused);
+        $this->assertSame('cPanel refused the username or API token.', $refused->fresh()->message);
     }
 
     public function test_a_github_push_makes_one_commit_with_only_the_changed_files(): void
@@ -340,6 +482,68 @@ class StaticSiteTest extends TestCase
         Queue::fake();
         $this->artisan('app:rebuild-static-sites')->assertSuccessful();
         Queue::assertPushed(BuildStaticSite::class, 1);
+    }
+
+    public function test_a_destination_set_to_automatic_gets_each_new_version_and_an_unchanged_automatic_build_is_dropped(): void
+    {
+        $first = $this->build();
+        $target = SiteDeployTarget::create(['club_id' => $this->club->id, 'type' => 'github', 'name' => 'Repo', 'config' => ['repository' => 'a/b', 'branch' => 'main', 'token' => 't', 'auto_send' => true]]);
+        Queue::fake([DeployStaticSite::class]);
+
+        // Nothing changed since the live version: thrown away, nothing sent.
+        (new BuildStaticSite($this->club->fresh(), automatic: true))->handle(app(StaticSiteBuilder::class));
+        $this->assertSame([$first->id], SiteRelease::where('club_id', $this->club->id)->pluck('id')->all());
+        $this->assertTrue($first->isCurrent());
+        Queue::assertNothingPushed();
+
+        // An edit: the destination isn't the domain, but takes new versions, so the edit rebuilds and sends.
+        Queue::fake([BuildStaticSite::class, DeployStaticSite::class]);
+        Page::where('club_id', $this->club->id)->where('slug', 'history')->firstOrFail()->update(['title' => 'Our Long History']);
+        Queue::assertPushed(BuildStaticSite::class, fn ($job) => $job->automatic);
+
+        (new BuildStaticSite($this->club->fresh(), automatic: true))->handle(app(StaticSiteBuilder::class));
+        $second = SiteRelease::where('club_id', $this->club->id)->latest('id')->firstOrFail();
+        $this->assertNotSame($first->id, $second->id);
+        Queue::assertPushed(DeployStaticSite::class, fn ($job) => $job->deploy->site_release_id === $second->id && $job->deploy->site_deploy_target_id === $target->id);
+    }
+
+    public function test_the_websites_editors_are_emailed_when_an_automatic_build_or_push_fails(): void
+    {
+        Mail::fake();
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+        Page::where('club_id', $this->club->id)->update(['is_published' => false]);
+        Post::where('club_id', $this->club->id)->update(['status' => 'draft']);
+
+        // A build someone pressed shows its error on the screen; only one that ran on its own sends an email.
+        (new BuildStaticSite($this->club->fresh(), $this->admin))->handle(app(StaticSiteBuilder::class));
+        Mail::assertNothingQueued();
+
+        (new BuildStaticSite($this->club->fresh(), automatic: true))->handle(app(StaticSiteBuilder::class));
+        Mail::assertQueued(LodgeClaimMail::class, fn ($mail) => $mail->hasTo($this->admin->email) && str_contains($mail->body, 'no public pages'));
+        Mail::assertNotQueued(LodgeClaimMail::class, fn ($mail) => $mail->hasTo($member->email));
+    }
+
+    public function test_a_version_can_be_previewed_under_the_publish_screen_before_it_goes_live(): void
+    {
+        $release = $this->build();
+        $prefix = "/{$this->club->slug}/admin/pages/publish/releases/{$release->id}/preview";
+
+        $page = $this->actingAs($this->admin)->get($prefix.'/history/');
+        $page->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $html = $page->getContent();
+        $this->assertStringContainsString('src="'.$prefix.'/build/', $html);
+        $this->assertStringContainsString('"staticSite":{"base":"'.str_replace('/', '\\/', $prefix).'"', $html);
+        $this->assertStringContainsString('href="'.$prefix.'/history"', $html, 'the canonical link to the domain points at the preview');
+        $this->assertStringNotContainsString($prefix.$prefix, $html);
+
+        $this->actingAs($this->admin)->get($prefix.'/no-such-page')->assertNotFound();
+        $this->actingAs($this->admin)->get($prefix.'/'.StaticSiteBuilder::MANIFEST)->assertNotFound();
+        $this->actingAs($this->admin)->get($prefix.'/..%2F..%2Fcurrent/index.html')->assertNotFound();
+
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+        $this->actingAs($member)->get($prefix.'/history/')->assertForbidden();
     }
 
     public function test_a_version_downloads_as_a_zip(): void

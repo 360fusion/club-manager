@@ -9,7 +9,7 @@ use FTP\Connection;
  * FTP; passive mode ignores the address the server hands back and reuses the one we connected to, so a hostile server
  * cannot point the data connection at another machine. Tests swap this class for a fake.
  */
-class FtpConnection
+class FtpConnection implements RemoteFiles
 {
     private ?Connection $ftp = null;
 
@@ -19,15 +19,8 @@ class FtpConnection
             throw new StaticSiteException('This server has no FTP support (the PHP ftp extension is missing).');
         }
 
-        // Only a public address: a lodge's settings must not be able to reach machines inside our own network.
-        $addresses = gethostbynamel($host) ?: [];
-        $public = fn (string $ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
-
-        if ($addresses === [] || in_array(false, array_map($public, $addresses), true)) {
-            throw new StaticSiteException("{$host} is not a public internet address.");
-        }
-
-        $ftp = $tls ? @ftp_ssl_connect($addresses[0], $port, 30) : @ftp_connect($addresses[0], $port, 30);
+        $address = self::publicAddress($host);
+        $ftp = $tls ? @ftp_ssl_connect($address, $port, 30) : @ftp_connect($address, $port, 30);
 
         if (! $ftp) {
             throw new StaticSiteException("Could not connect to {$host} on port {$port}.");
@@ -46,7 +39,22 @@ class FtpConnection
         $this->ftp = $ftp;
     }
 
-    /** A file's contents, or null when it isn't there. */
+    /**
+     * The address to connect to for a host a lodge typed in. Only a public one: a lodge's settings must not be able to
+     * reach machines inside our own network. Every connection kind connects to this address, not the name again.
+     */
+    public static function publicAddress(string $host): string
+    {
+        $addresses = gethostbynamel($host) ?: [];
+        $public = fn (string $ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+
+        if ($addresses === [] || in_array(false, array_map($public, $addresses), true)) {
+            throw new StaticSiteException("{$host} is not a public internet address.");
+        }
+
+        return $addresses[0];
+    }
+
     public function get(string $remotePath): ?string
     {
         $stream = fopen('php://temp', 'r+');

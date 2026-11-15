@@ -87,7 +87,7 @@ class IdentifyTenantByDomain
     }
 
     /** What a static website file is sent as; anything else in a release is never served. */
-    private const STATIC_TYPES = [
+    public const STATIC_TYPES = [
         'html' => 'text/html; charset=utf-8', 'css' => 'text/css; charset=utf-8', 'js' => 'text/javascript; charset=utf-8',
         'json' => 'application/json', 'xml' => 'application/xml; charset=utf-8', 'txt' => 'text/plain; charset=utf-8',
         'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp',
@@ -125,7 +125,7 @@ class IdentifyTenantByDomain
                     'Content-Type' => $type,
                     // Built files have hashed names and never change; pages and images are checked again each visit.
                     'Cache-Control' => str_contains($candidate, '/build/') ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate',
-                    'X-Content-Type-Options' => 'nosniff',
+                    ...StaticSiteBuilder::securityHeaders(),
                 ]);
             }
         }

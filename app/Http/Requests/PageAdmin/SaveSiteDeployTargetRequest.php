@@ -23,18 +23,19 @@ class SaveSiteDeployTargetRequest extends ClubRequest
             'id' => 'nullable|integer',
             'type' => ['required', Rule::in(SiteDeployTarget::TYPES)],
             'name' => 'required|string|max:120',
+            'auto_send' => 'boolean',
 
-            'host' => ['exclude_unless:type,ftps', 'required', 'string', 'max:255', 'regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i'],
-            'port' => 'exclude_unless:type,ftps|nullable|integer|between:1,65535',
-            'username' => 'exclude_unless:type,ftps|required|string|max:255',
-            'password' => ['exclude_unless:type,ftps', $isNew ? 'required' : 'nullable', 'string', 'max:255'],
-            'path' => ['exclude_unless:type,ftps', 'nullable', 'string', 'max:255', 'not_regex:/\.\./', 'regex:/^[A-Za-z0-9_\-.\/ ]*$/'],
+            'host' => ['exclude_unless:type,ftps,sftp,cpanel', 'required', 'string', 'max:255', 'regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i'],
+            'port' => 'exclude_unless:type,ftps,sftp,cpanel|nullable|integer|between:1,65535',
+            'username' => 'exclude_unless:type,ftps,sftp,cpanel|required|string|max:255',
+            'password' => ['exclude_unless:type,ftps,sftp', $isNew ? 'required' : 'nullable', 'string', 'max:255'],
+            'path' => ['exclude_unless:type,ftps,sftp,cpanel', 'nullable', 'string', 'max:255', 'not_regex:/\.\./', 'regex:/^[A-Za-z0-9_\-.\/ ]*$/'],
             'insecure' => 'exclude_unless:type,ftps|boolean',
 
             'repository' => ['exclude_unless:type,github', 'required', 'string', 'max:200', 'regex:/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/'],
             'branch' => ['exclude_unless:type,github', 'required', 'string', 'max:100', 'not_regex:/\.\./', 'regex:/^[A-Za-z0-9._\/-]+$/'],
             'cpanel_path' => ['exclude_unless:type,github', 'nullable', 'string', 'max:255', 'not_regex:/\.\./', 'regex:/^[A-Za-z0-9_\-.\/]*$/'],
-            'token' => ['exclude_unless:type,github', $isNew ? 'required' : 'nullable', 'string', 'max:255'],
+            'token' => ['exclude_unless:type,github,cpanel', $isNew ? 'required' : 'nullable', 'string', 'max:255'],
         ];
     }
 

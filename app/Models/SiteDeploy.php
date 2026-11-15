@@ -13,6 +13,14 @@ class SiteDeploy extends Model
     protected $fillable = ['club_id', 'site_deploy_target_id', 'site_release_id', 'user_id', 'status', 'files_sent', 'files_deleted', 'message'];
 
     /**
+     * @return BelongsTo<Club, $this>
+     */
+    public function club(): BelongsTo
+    {
+        return $this->belongsTo(Club::class);
+    }
+
+    /**
      * @return BelongsTo<SiteDeployTarget, $this>
      */
     public function target(): BelongsTo

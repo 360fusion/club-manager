@@ -2,6 +2,7 @@
 
 use App\Jobs\BuildStaticSite;
 use App\Models\Club;
+use App\Models\SiteDeployTarget;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -34,6 +35,9 @@ Schedule::command('accounts:purge-closed')->dailyAt('03:15')->withoutOverlapping
 // Rebuilds the published website of every club whose domain shows the files, so things that change with time
 // (events passing, articles scheduled to appear) reach it; edits themselves rebuild within minutes (RebuildsStaticSite).
 Artisan::command('app:rebuild-static-sites', function () {
-    Club::where('settings->static_site_serve', true)->each(fn (Club $club) => BuildStaticSite::dispatch($club));
-})->purpose('Queue a new version of every website served as static files');
+    $sending = SiteDeployTarget::all()->filter(fn (SiteDeployTarget $target) => ! empty($target->config['auto_send']))->pluck('club_id');
+
+    Club::where('settings->static_site_serve', true)->orWhereIn('id', $sending)
+        ->each(fn (Club $club) => BuildStaticSite::dispatch($club, automatic: true));
+})->purpose('Queue a new version of every website served as static files or sent automatically');
 Schedule::command('app:rebuild-static-sites')->dailyAt('04:30');

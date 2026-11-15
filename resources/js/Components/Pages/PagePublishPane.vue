@@ -2,8 +2,8 @@
 // The website builder's Publish screen: build the website as plain files (each build is a version that can be made
 // live again later), serve it on the lodge's domain, download it as a zip, and send it to an FTP(S) server or GitHub.
 // Everything is done on the server (StaticSiteController); this only shows the state and posts the actions.
-import { computed, onMounted, ref } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
+import { router, useForm, usePoll } from '@inertiajs/vue3';
 import Card from '@/Components/Ui/Card.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Badge from '@/Components/Ui/Badge.vue';
@@ -30,7 +30,18 @@ const post = (url, data = {}) => {
     router.post(url, data, { preserveScroll: true, onFinish: () => { busy.value = false; } });
 };
 
-const buildNow = () => post(`${base.value}/build`);
+// The build is queued before its version exists, so the screen keeps checking from the click until a newer version
+// shows up (or ten minutes pass, when the queue is clearly not running).
+const waitingAfter = ref(null);
+const buildNow = () => {
+    const after = { id: Math.max(0, ...releases.value.map((release) => release.id)), until: Date.now() + 600000 };
+    busy.value = true;
+    router.post(`${base.value}/build`, {}, {
+        preserveScroll: true,
+        onSuccess: () => { waitingAfter.value = after; },
+        onFinish: () => { busy.value = false; },
+    });
+};
 const makeLive = (release) => post(`${base.value}/releases/${release.id}/activate`);
 const setServing = (serve) => post(`${base.value}/serve`, { serve });
 const pushTo = (target) => post(`${base.value}/targets/${target.id}/deploy`);
@@ -41,17 +52,33 @@ const removeTarget = (target) => {
 const refresh = () => router.reload({ only: ['publishing'] });
 onMounted(() => { if (!props.publishing) refresh(); });
 
+// While a version is building or being sent, the screen checks every few seconds so the result shows up by itself.
+const awaitingBuild = computed(() => waitingAfter.value !== null && !releases.value.some((release) => release.id > waitingAfter.value.id));
+const working = computed(() => building.value || awaitingBuild.value || (data.value.deploys || []).some((deploy) => ['queued', 'running'].includes(deploy.status)));
+watch([awaitingBuild, () => props.publishing], () => {
+    if (waitingAfter.value && (!awaitingBuild.value || Date.now() > waitingAfter.value.until)) waitingAfter.value = null;
+});
+const { start: startPolling, stop: stopPolling } = usePoll(4000, { only: ['publishing'] }, { autoStart: false });
+watch(working, (now) => (now ? startPolling() : stopPolling()), { immediate: true });
+
 const size = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 const when = (iso) => (iso ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '');
 const statusVariant = { ready: 'success', done: 'success', building: 'info', queued: 'info', running: 'info', failed: 'danger' };
 
 // ---- destinations --------------------------------------------------------------------------------------------------
 const TYPE_OPTIONS = [
+    { value: 'cpanel', label: 'cPanel hosting (with an API token)' },
     { value: 'ftps', label: 'FTP server (cPanel and most web hosts)' },
+    { value: 'sftp', label: 'SFTP server (file transfer over SSH)' },
     { value: 'github', label: 'GitHub repository' },
 ];
-const blankTarget = () => ({ id: null, type: 'ftps', name: '', host: '', port: 21, username: '', password: '', path: 'public_html', insecure: false, repository: '', branch: 'main', cpanel_path: '', token: '' });
+const DEFAULT_PORTS = { cpanel: 2083, ftps: 21, sftp: 22 };
+const blankTarget = () => ({ id: null, type: 'cpanel', name: '', host: '', port: 2083, username: '', password: '', path: 'public_html', insecure: false, repository: '', branch: 'main', cpanel_path: '', token: '', auto_send: false });
 const targetForm = useForm(blankTarget());
+// A new destination's port follows its kind until someone types their own.
+watch(() => targetForm.type, (type, previous) => {
+    if (!targetForm.id && (!targetForm.port || targetForm.port === DEFAULT_PORTS[previous])) targetForm.port = DEFAULT_PORTS[type] || null;
+});
 const editing = ref(false);
 
 const startTarget = (target = null) => {
@@ -60,6 +87,16 @@ const startTarget = (target = null) => {
     targetForm.clearErrors();
     editing.value = true;
 };
+// Where the files live when the lodge hosts them itself (canonical links, link previews, sitemap).
+const addressForm = useForm({ site_url: '' });
+const addressShown = ref(false);
+const startAddress = () => {
+    addressForm.defaults({ site_url: data.value.site_url || '' });
+    addressForm.reset();
+    addressShown.value = true;
+};
+const saveAddress = () => addressForm.post(`${base.value}/address`, { preserveScroll: true, onSuccess: () => { addressShown.value = false; } });
+
 const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScroll: true, onSuccess: () => { editing.value = false; } });
 </script>
 
@@ -72,9 +109,9 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <Button :loading="busy" :disabled="building" @click="buildNow">Build a new version</Button>
+                <Button :loading="busy" :disabled="building || awaitingBuild" @click="buildNow">Build a new version</Button>
                 <Button variant="secondary" @click="refresh">Refresh</Button>
-                <span v-if="building" class="text-sm text-slate-500 dark:text-slate-400">Building now. This takes a minute or two.</span>
+                <span v-if="building || awaitingBuild" class="text-sm text-slate-500 dark:text-slate-400">Building now. This takes a minute or two.</span>
             </div>
 
             <div v-if="releases.length" class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -101,6 +138,7 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                             <td class="p-3 text-slate-500 dark:text-slate-400">{{ release.status === 'ready' ? size(release.bytes) : '' }}</td>
                             <td class="p-3">
                                 <div v-if="release.status === 'ready'" class="flex flex-wrap justify-end gap-2">
+                                    <a :href="`${base}/releases/${release.id}/preview/`" target="_blank" rel="noopener" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap">Preview</a>
                                     <Button v-if="!release.is_current" size="sm" variant="secondary" :disabled="busy" @click="makeLive(release)">Make live</Button>
                                     <a :href="`${base}/releases/${release.id}/download`" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap">Download zip</a>
                                 </div>
@@ -136,24 +174,40 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                 <Button v-if="!editing" size="sm" variant="secondary" @click="startTarget()">Add a destination</Button>
             </div>
 
+            <div class="text-sm text-slate-600 dark:text-slate-300">
+                <form v-if="addressShown" class="flex flex-wrap items-end gap-3" @submit.prevent="saveAddress">
+                    <Input v-model="addressForm.site_url" type="url" label="Your website's address" placeholder="https://www.yourlodge.org.uk" :error="addressForm.errors.site_url" class="flex-1 min-w-[16rem]" />
+                    <Button type="submit" :loading="addressForm.processing">Save</Button>
+                    <Button variant="ghost" @click="addressShown = false">Cancel</Button>
+                </form>
+                <p v-else>
+                    <template v-if="data.site_url">Built for <strong class="font-medium">{{ data.site_url }}</strong>.</template>
+                    <template v-else>Tell us your website's address so search engines and link previews show it, and the version includes a sitemap.</template>
+                    <button type="button" class="ml-1 font-medium text-blue-600 dark:text-blue-400 hover:underline" @click="startAddress">{{ data.site_url ? 'Change' : 'Set the address' }}</button>
+                </p>
+            </div>
+
             <form v-if="editing" class="space-y-4 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl" @submit.prevent="saveTarget">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select v-model="targetForm.type" label="Kind" :options="TYPE_OPTIONS" :disabled="!!targetForm.id" />
                     <Input v-model="targetForm.name" label="Name" placeholder="For example, Lodge web hosting" :error="targetForm.errors.name" />
                 </div>
-                <template v-if="targetForm.type === 'ftps'">
+                <template v-if="targetForm.type !== 'github'">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Input v-model="targetForm.host" label="Server" placeholder="ftp.yourlodge.org.uk" :error="targetForm.errors.host" class="sm:col-span-2" />
+                        <Input v-model="targetForm.host" label="Server" :placeholder="targetForm.type === 'cpanel' ? 'cpanel.yourhost.co.uk' : 'ftp.yourlodge.org.uk'" :error="targetForm.errors.host" class="sm:col-span-2" />
                         <Input v-model.number="targetForm.port" type="number" label="Port" :error="targetForm.errors.port" />
-                        <Input v-model="targetForm.username" label="FTP username" autocomplete="off" :error="targetForm.errors.username" />
-                        <Input v-model="targetForm.password" type="password" label="FTP password" autocomplete="new-password" :placeholder="targetForm.id ? 'Leave empty to keep the saved one' : ''" :error="targetForm.errors.password" />
+                        <Input v-model="targetForm.username" :label="targetForm.type === 'cpanel' ? 'cPanel username' : 'Username'" autocomplete="off" :error="targetForm.errors.username" />
+                        <Input v-if="targetForm.type === 'cpanel'" v-model="targetForm.token" type="password" label="API token" autocomplete="new-password" :placeholder="targetForm.id ? 'Leave empty to keep the saved one' : ''" :error="targetForm.errors.token" />
+                        <Input v-else v-model="targetForm.password" type="password" label="Password" autocomplete="new-password" :placeholder="targetForm.id ? 'Leave empty to keep the saved one' : ''" :error="targetForm.errors.password" />
                         <Input v-model="targetForm.path" label="Folder" placeholder="public_html" :error="targetForm.errors.path" />
                     </div>
-                    <label class="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <label v-if="targetForm.type === 'ftps'" class="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
                         <input v-model="targetForm.insecure" type="checkbox" class="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 accent-blue-600" />
                         <span>Use plain FTP <span class="text-slate-500 dark:text-slate-400">(sends the password unencrypted: only if your host has no FTP with TLS)</span></span>
                     </label>
-                    <Alert variant="info">In cPanel, open FTP Accounts and create an account whose directory is just your website's folder (public_html), then use that here. If the password ever leaked, it could only reach the website files.</Alert>
+                    <Alert v-if="targetForm.type === 'cpanel'" variant="info">In cPanel, open Security, then Manage API Tokens, and create a token (give it an expiry date if you like). The server is the address you open cPanel at, without "https://" or the port. Files removed from your website go to cPanel's trash, where you can restore them.</Alert>
+                    <Alert v-else-if="targetForm.type === 'ftps'" variant="info">In cPanel, open FTP Accounts and create an account whose directory is just your website's folder (public_html), then use that here. If the password ever leaked, it could only reach the website files.</Alert>
+                    <Alert v-else variant="info">Use the SSH or SFTP login your host gives you. The server's key is remembered on the first send, and later sends stop if it ever changes.</Alert>
                 </template>
                 <template v-else>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -164,6 +218,10 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
                     </div>
                     <Alert variant="info">On GitHub, create a fine-grained personal access token for just this repository with "Contents: read and write". Each push is one commit. cPanel's Git Version Control can then pull the repository into your site, or GitHub Pages can serve it.</Alert>
                 </template>
+                <label class="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input v-model="targetForm.auto_send" type="checkbox" class="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 accent-blue-600" />
+                    <span>Send each new version here automatically <span class="text-slate-500 dark:text-slate-400">(a new version is built a few minutes after each change to the website, and every night)</span></span>
+                </label>
                 <div class="flex flex-wrap gap-3">
                     <Button type="submit" :loading="targetForm.processing">Save</Button>
                     <Button variant="ghost" @click="editing = false">Cancel</Button>
@@ -173,10 +231,11 @@ const saveTarget = () => targetForm.post(`${base.value}/targets`, { preserveScro
             <ul v-if="data.targets?.length" class="divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl">
                 <li v-for="target in data.targets" :key="target.id" class="p-4 flex flex-wrap items-center justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ target.name }}</p>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ target.name }} <Badge v-if="target.auto_send" variant="info" class="ml-1">Automatic</Badge></p>
                         <p class="text-xs text-slate-500 dark:text-slate-400 font-mono break-all">
                             <template v-if="target.type === 'github'">github.com/{{ target.repository }} ({{ target.branch }})</template>
-                            <template v-else>{{ target.insecure ? 'ftp' : 'ftps' }}://{{ target.username }}@{{ target.host }}:{{ target.port }}/{{ target.path }}</template>
+                            <template v-else-if="target.type === 'cpanel'">cPanel: {{ target.username }}@{{ target.host }}:{{ target.port }}/{{ target.path }}</template>
+                            <template v-else>{{ target.type === 'sftp' ? 'sftp' : (target.insecure ? 'ftp' : 'ftps') }}://{{ target.username }}@{{ target.host }}:{{ target.port }}/{{ target.path }}</template>
                         </p>
                     </div>
                     <div class="flex flex-wrap gap-2">

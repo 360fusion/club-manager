@@ -52,7 +52,8 @@ const getSiteUrl = (urlPath) => {
         const rest = urlPath.slice(prefix.length);
         const path = rest.replace(/^\//, '').split(/[?#]/)[0];
         const needsServer = (staticSite.server_paths || []).includes(path.split('/')[0]) || (staticSite.server_pages || []).includes(path);
-        return needsServer ? `${staticSite.platform}${urlPath}` : (rest || '/');
+        // `base` is only set when an admin previews a version under the Publish screen's address.
+        return needsServer ? `${staticSite.platform}${urlPath}` : `${staticSite.base || ''}${rest || '/'}`;
     }
     if (inertiaPage.props.onClubDomain && (urlPath === prefix || urlPath.startsWith(`${prefix}/`))) return urlPath.slice(prefix.length) || '/';
     if (!props.previewTheme) return urlPath;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "79b27a9efcc32e399b9fac4676be38fe",
+    "content-hash": "f5f644361f78ce7e9bd3d1116204a2e8",
     "packages": [
         {
             "name": "360fusion/launchpad",

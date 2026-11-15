@@ -17,7 +17,7 @@ use Throwable;
  */
 class SiteDeployer
 {
-    public function __construct(private FtpConnection $ftp) {}
+    public function __construct(private FtpConnection $ftp, private SftpConnection $sftp, private CpanelConnection $cpanel) {}
 
     public function run(SiteDeploy $deploy): void
     {
@@ -33,7 +33,7 @@ class SiteDeployer
 
             [$sent, $deleted, $message] = $target->type === 'github'
                 ? $this->toGitHub($release, $target)
-                : $this->toFtp($release, $target);
+                : $this->toFiles($release, $target);
 
             $deploy->update(['status' => 'done', 'files_sent' => $sent, 'files_deleted' => $deleted, 'message' => $message]);
         } catch (Throwable $e) {
@@ -47,32 +47,49 @@ class SiteDeployer
     /**
      * @return array{0: int, 1: int, 2: string}
      */
-    private function toFtp(SiteRelease $release, SiteDeployTarget $target): array
+    private function toFiles(SiteRelease $release, SiteDeployTarget $target): array
     {
         $config = $target->config;
         $root = '/'.trim((string) ($config['path'] ?? ''), '/');
         $root = $root === '/' ? '' : $root;
-
-        $this->ftp->connect((string) $config['host'], (int) ($config['port'] ?? 21), empty($config['insecure']), (string) $config['username'], (string) $config['password']);
+        $files = $this->connect($target);
 
         try {
             $local = StaticSiteBuilder::manifest($release);
-            $remote = json_decode((string) $this->ftp->get($root.'/'.StaticSiteBuilder::MANIFEST), true) ?: [];
+            $remote = json_decode((string) $files->get($root.'/'.StaticSiteBuilder::MANIFEST), true) ?: [];
             [$changed, $removed] = $this->diff($local, is_array($remote) ? $remote : []);
 
             foreach ($changed as $path) {
-                $this->ftp->put($root.'/'.$path, $release->path().'/'.$path);
+                $files->put($root.'/'.$path, $release->path().'/'.$path);
             }
             foreach ($removed as $path) {
-                $this->ftp->delete($root.'/'.$path);
+                $files->delete($root.'/'.$path);
             }
             // Last, so an interrupted push is simply redone next time.
-            $this->ftp->put($root.'/'.StaticSiteBuilder::MANIFEST, $release->path().'/'.StaticSiteBuilder::MANIFEST);
+            $files->put($root.'/'.StaticSiteBuilder::MANIFEST, $release->path().'/'.StaticSiteBuilder::MANIFEST);
         } finally {
-            $this->ftp->close();
+            $files->close();
         }
 
         return [count($changed), count($removed), $changed === [] && $removed === [] ? 'Already up to date.' : 'Website updated.'];
+    }
+
+    private function connect(SiteDeployTarget $target): RemoteFiles
+    {
+        $config = $target->config;
+
+        return match ($target->type) {
+            'sftp' => tap($this->sftp, function (SftpConnection $sftp) use ($target, $config) {
+                $fingerprint = $sftp->connect((string) $config['host'], (int) ($config['port'] ?? 22), (string) $config['username'], (string) $config['password'], $config['host_key'] ?? null);
+
+                // Trusted from the first push on (the lodge chose this server); every later push must see the same key.
+                if (empty($config['host_key'])) {
+                    $target->update(['config' => [...$config, 'host_key' => $fingerprint]]);
+                }
+            }),
+            'cpanel' => tap($this->cpanel, fn (CpanelConnection $cpanel) => $cpanel->connect((string) $config['host'], (int) ($config['port'] ?? 2083), (string) $config['username'], (string) $config['token'])),
+            default => tap($this->ftp, fn (FtpConnection $ftp) => $ftp->connect((string) $config['host'], (int) ($config['port'] ?? 21), empty($config['insecure']), (string) $config['username'], (string) $config['password'])),
+        };
     }
 
     /**

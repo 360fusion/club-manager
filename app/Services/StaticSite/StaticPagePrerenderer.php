@@ -28,8 +28,9 @@ class StaticPagePrerenderer
 
             $html = $browsershot->bodyHtml();
 
-            // Only a page that still carries its data can start Vue on the static site.
-            if (! str_contains($html, 'data-page="app"')) {
+            // Only a page that still carries its data can start Vue on the static site, and only one drawn from the
+            // built code: a Vite dev server started during the build would leave its own addresses in the page.
+            if (! str_contains($html, 'data-page="app"') || str_contains($html, '/@vite/client')) {
                 return $fallbackHtml;
             }
 

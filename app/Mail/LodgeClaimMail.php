@@ -10,7 +10,8 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * A short email about a lodge claim, to the superadmins or to the person who made it.
+ * A short email with one button: about a lodge claim (to the superadmins or the person who made it), and about an
+ * automatic website build or push that failed (StaticSiteBuilder::tellWebsiteEditors).
  */
 class LodgeClaimMail extends Mailable implements ShouldQueue
 {
