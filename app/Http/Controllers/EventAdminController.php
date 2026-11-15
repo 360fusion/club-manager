@@ -31,8 +31,13 @@ class EventAdminController extends Controller
     {
         $club = $this->findClub($clubSlug);
         $events = Event::where('club_id', $club->id)
+            ->select('events.*')
             ->with(['ticketTiers', 'promos', 'menuItems'])
-            ->withCount('attendees')
+            // People holding a place, as placesTaken() counts them (the old attendees() relation reads the unused event_user table).
+            ->addSelect(['attendees_count' => EventAttendee::query()->selectRaw('count(*)')
+                ->join('event_registrations', 'event_registrations.id', '=', 'event_attendees.registration_id')
+                ->whereColumn('event_registrations.event_id', 'events.id')
+                ->whereIn('event_registrations.status', EventRegistration::HOLDING_PLACE)])
             ->orderByDesc('starts_at')
             ->orderByDesc('id')
             ->paginate(20)

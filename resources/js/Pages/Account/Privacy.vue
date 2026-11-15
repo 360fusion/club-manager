@@ -7,7 +7,7 @@ import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Input from '@/Components/Ui/Input.vue';
 
-const props = defineProps({
+defineProps({
   closureRequestedAt: { type: String, default: null },
   purgeDate: { type: String, default: null },
   waitDays: { type: Number, required: true },

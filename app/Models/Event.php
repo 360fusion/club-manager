@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -214,25 +213,5 @@ class Event extends Model
     public function scopePublished($query)
     {
         return $query->where('status', '!=', EventStatus::Draft->value);
-    }
-
-    /**
-     * @return BelongsToMany<User, $this>
-     */
-    public function attendees(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class)
-            ->withPivot([
-                'attendance_status',
-                'summons_sent_at',
-                'reminder_sent_at',
-                'attending_dining',
-                'menu_selections',
-                'dietary_requirements',
-                'payment_status',
-                'amount_paid',
-                'checked_in_at',
-            ])
-            ->withTimestamps();
     }
 }

@@ -70,6 +70,18 @@ class EventAdminFormTest extends TestCase
             ->assertInertia(fn ($page) => $page->has('events.data', 5));
     }
 
+    public function test_the_events_index_counts_people_holding_a_place(): void
+    {
+        $event = Event::create(['club_id' => $this->club->id, 'title' => 'Dinner', 'slug' => 'dinner', 'starts_at' => now()->addWeek(), 'status' => 'upcoming']);
+        $service = app(EventRegistrationService::class);
+        $service->register($event, $this->join('member'), ['attendees' => [['name' => 'Me'], ['name' => 'My Guest']]]);
+        $service->register($event, $this->join('member'), ['attendees' => [['name' => 'Second']]]);
+        $service->register($event, $this->join('member'), ['attendees' => [['name' => 'Not Going']], 'status' => 'not_attending']);
+
+        $this->actingAs($this->admin)->get(route('admin.events.index', ['clubSlug' => 'club-a']))
+            ->assertInertia(fn ($page) => $page->where('events.data.0.attendees_count', 3));
+    }
+
     private function store(array $extra = [])
     {
         return $this->actingAs($this->admin)->post(route('admin.events.store', ['clubSlug' => 'club-a']), $this->payload($extra));
