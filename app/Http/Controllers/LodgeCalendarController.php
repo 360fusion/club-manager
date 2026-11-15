@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lodge;
-use App\Models\LodgeSchedule;
 use App\Support\IcsCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Response;
@@ -24,7 +23,6 @@ class LodgeCalendarController extends Controller
         $note = 'Expected date from the lodge\'s published meeting pattern. Confirm with the lodge before you travel.';
 
         foreach ($lodge->schedules as $schedule) {
-            /** @var LodgeSchedule $schedule */
             foreach ($schedule->datesBetween($from, $to) as $date) {
                 $uid = 'lodge-'.$lodge->id.'-'.$date->toDateString();
                 $summary = $lodge->displayName().($lodge->isInstallationOn($date) ? ' installation meeting (expected)' : ' meeting (expected)');

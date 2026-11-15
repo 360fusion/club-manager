@@ -343,7 +343,7 @@ class AccountingReports
             'net_amount' => (float) $bill->net_amount,
             'vat_amount' => (float) $bill->vat_amount,
             'gross_amount' => (float) $bill->amount,
-        ]))->sortBy('date')->values();
+        ]))->sortBy('date')->values()->all();
 
         return [
             'enabled' => true,

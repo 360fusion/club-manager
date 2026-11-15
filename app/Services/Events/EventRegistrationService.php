@@ -24,7 +24,7 @@ use Illuminate\Validation\ValidationException;
  * Every booking goes through here, so capacity, the waitlist, guest limits and
  * meal and ticket choices are enforced in one place.
  *
- * @phpstan-type AttendeeInput array{name?: string, is_guest?: bool, ticket_tier_id?: int|null, attending_dining?: bool, starter_item_id?: int|null, main_item_id?: int|null, dessert_item_id?: int|null, dietary_requirements?: string|null}
+ * @phpstan-type AttendeeInput array{name?: string, email?: string|null, organisation?: string|null, is_guest?: bool, ticket_tier_id?: int|string|null, attending_dining?: bool, starter_item_id?: int|string|null, main_item_id?: int|string|null, dessert_item_id?: int|string|null, dietary_requirements?: string|null}
  */
 class EventRegistrationService
 {
@@ -446,7 +446,7 @@ class EventRegistrationService
     /**
      * Turn the submitted people into rows, checking every choice against this event.
      *
-     * @param  list<AttendeeInput>  $people
+     * @param  array<int, AttendeeInput>  $people
      * @return list<array<string, mixed>>
      */
     private function prepareAttendees(Event $event, ?User $user, string $status, array $people, string $bookerName, bool $ignoreGuestLimit = false): array

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -351,6 +352,27 @@ class MediaLibraryAdminTest extends TestCase
 
         $response->assertOk()
             ->assertJsonStructure(['usage_count', 'usages']);
+    }
+
+    public function test_asset_usage_finds_a_news_article_cover_image(): void
+    {
+        $file = UploadedFile::fake()->image('cover.png');
+        $media = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'images'])->json('media');
+
+        Post::create([
+            'club_id' => $this->club->id,
+            'author_id' => $this->user->id,
+            'title' => 'Ladies Night',
+            'slug' => 'ladies-night',
+            'content' => '<p>Body</p>',
+            'status' => 'published',
+            'cover_image_url' => '/storage/'.$media['id'].'/'.$media['file_name'],
+        ]);
+
+        $this->actingAs($this->user)
+            ->getJson("/{$this->club->slug}/admin/media/{$media['id']}/usage")
+            ->assertOk()
+            ->assertJsonFragment(['type' => 'Cover Image', 'title' => 'Ladies Night']);
     }
 
     public function test_admin_can_crop_image_and_create_variant(): void

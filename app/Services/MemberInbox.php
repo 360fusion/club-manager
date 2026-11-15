@@ -66,7 +66,7 @@ class MemberInbox
             ->map(function (Meeting $meeting) use ($scope) {
                 $club = $scope->clubFor($meeting->club_id);
 
-                return $this->item('meeting_rsvp', 2, 'Reply to '.$meeting->title, $club, ($meeting->meeting_date->format('j M Y') ?? '').($meeting->rsvp_cutoff_at ? ' · replies close '.$meeting->rsvp_cutoff_at->format('j M') : ''), $meeting->rsvp_cutoff_at ?? $meeting->meeting_date, [
+                return $this->item('meeting_rsvp', 2, 'Reply to '.$meeting->title, $club, $meeting->meeting_date->format('j M Y').($meeting->rsvp_cutoff_at ? ' · replies close '.$meeting->rsvp_cutoff_at->format('j M') : ''), $meeting->rsvp_cutoff_at ?? $meeting->meeting_date, [
                     'type' => 'meeting', 'id' => $meeting->id, 'slug' => $club->slug,
                 ]);
             })->values();
@@ -92,7 +92,7 @@ class MemberInbox
             $meeting = $rsvp->meeting;
             $club = $scope->clubFor($meeting->club_id);
 
-            return $this->item('dining_payment', 2, 'Pay for dining at '.$meeting->title, $club, Currencies::format((float) $meeting->dining_cost_member, $club).' · '.($meeting->meeting_date->format('j M Y') ?? ''), $meeting->meeting_date, null, route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false));
+            return $this->item('dining_payment', 2, 'Pay for dining at '.$meeting->title, $club, Currencies::format((float) $meeting->dining_cost_member, $club).' · '.$meeting->meeting_date->format('j M Y'), $meeting->meeting_date, null, route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false));
         })->values();
     }
 

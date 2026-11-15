@@ -229,21 +229,4 @@ class CommitteeNotesParserService
     {
         return $this->syncExtractedEntities($meeting, $rawNotes);
     }
-
-    private function findMemberByName(string $nameQuery, $clubMembers): ?User
-    {
-        $clean = strtolower(trim($nameQuery));
-        if (empty($clean)) {
-            return null;
-        }
-
-        // Exact match
-        $found = $clubMembers->first(fn ($u) => strtolower($u->name) === $clean);
-        if ($found) {
-            return $found;
-        }
-
-        // Substring match
-        return $clubMembers->first(fn ($u) => str_contains(strtolower($u->name), $clean));
-    }
 }

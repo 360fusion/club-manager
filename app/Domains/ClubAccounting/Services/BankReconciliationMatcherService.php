@@ -17,7 +17,7 @@ use App\Models\Invoice;
 use App\Services\AccountingService;
 use App\Services\Events\EventPaymentService;
 use App\Support\Currencies;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class BankReconciliationMatcherService
@@ -190,7 +190,7 @@ class BankReconciliationMatcherService
                         'target_title' => "{$member->formatted_rank_name} — Invoice {$sub->invoice_reference}",
                         'target_amount' => $duesAmount,
                         'confidence_score' => $score,
-                        'confidence_level' => $score >= 90 ? 'high' : ($score >= 60 ? 'medium' : 'low'),
+                        'confidence_level' => $score >= 90 ? 'high' : 'medium',
                         'match_reason' => $reason,
                         'record' => $sub,
                     ];
@@ -241,7 +241,7 @@ class BankReconciliationMatcherService
                         'target_title' => "Invoice {$invoice->invoice_number} — {$invoice->title}",
                         'target_amount' => $invAmount,
                         'confidence_score' => $score,
-                        'confidence_level' => $score >= 90 ? 'high' : ($score >= 60 ? 'medium' : 'low'),
+                        'confidence_level' => $score >= 90 ? 'high' : 'medium',
                         'match_reason' => $reason,
                         'record' => $invoice,
                     ];
@@ -327,7 +327,7 @@ class BankReconciliationMatcherService
                         'target_title' => "Vendor: {$bill->vendor_name} (Bill: {$bill->bill_number})",
                         'target_amount' => $billAmount,
                         'confidence_score' => $score,
-                        'confidence_level' => $score >= 90 ? 'high' : ($score >= 60 ? 'medium' : 'low'),
+                        'confidence_level' => $score >= 90 ? 'high' : 'medium',
                         'match_reason' => $reason,
                         'record' => $bill,
                     ];
@@ -454,7 +454,7 @@ class BankReconciliationMatcherService
                 ->where('source_id', $transaction->id)
                 ->exists();
 
-            if ($bankAcc && $offsetAcc && ! $alreadyPosted && ! $ledgerAlreadyPosted) {
+            if ($bankAcc && ! $alreadyPosted && ! $ledgerAlreadyPosted) {
                 $absAmount = abs($amount);
                 $txDate = Carbon::parse($transaction->transaction_date)->format('Y-m-d');
                 if ($amount > 0) {

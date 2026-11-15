@@ -138,6 +138,9 @@ trait HandlesCandidateActions
 
     public function saveOutcome(CandidateTransitionService $service): void
     {
+        // outcomeType is a public property, so a tampered update could hold anything.
+        abort_unless(in_array($this->outcomeType, ['reject', 'close', 'hold', 'reopen'], true), 404);
+
         $candidate = $this->candidateFor((int) $this->candidateId);
 
         $this->validate([

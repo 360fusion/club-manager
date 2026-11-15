@@ -110,11 +110,11 @@ class PublicSiteController extends Controller
 
         $post = $club->posts()->with('author')->published()->where('slug', $postSlug)->orderByRaw($newestFirst)->first();
 
-        abort_unless($post, 404);
+        abort_unless($post !== null, 404);
 
         if (! $club->posts()->published()->visibleTo($viewer)->whereKey($post->id)->exists()) {
             // A members-only article: a visitor is sent to log in, a signed-in non-member just gets the not-found page.
-            abort_if($viewer, 404);
+            abort_if($viewer !== null, 404);
 
             return ClubDomain::membersOnlyRedirect(request(), 'That article is for members only.');
         }

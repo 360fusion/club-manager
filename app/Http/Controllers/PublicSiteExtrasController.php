@@ -35,7 +35,7 @@ class PublicSiteExtrasController extends Controller
 
         /** @var Media|null $media */
         $media = $club->media()->where('collection_name', 'page_downloads')->find($mediaId);
-        abort_unless($media, 404);
+        abort_unless($media !== null, 404);
 
         $found = null;
 
@@ -57,7 +57,7 @@ class PublicSiteExtrasController extends Controller
             }
         }
 
-        abort_unless($found, 404);
+        abort_unless($found !== null, 404);
 
         if ($found['restricted'] && ! ClubAccess::isActiveMember(Auth::user(), $club)) {
             return ClubDomain::membersOnlyRedirect(request(), 'That document is for members only.');

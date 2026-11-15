@@ -40,6 +40,9 @@ class MemberSubscription extends Model
         ];
     }
 
+    /**
+     * @return Attribute<float, never>
+     */
     protected function balanceDue(): Attribute
     {
         return Attribute::make(

@@ -329,8 +329,8 @@ class EventOnlinePayment
             return false;
         }
 
-        $method = $this->options($registration)->map->method->first(fn (ClubPaymentMethod $m) => $m->type === ClubPaymentMethod::PAYPAL && $m->id === $registration->payment_method_id)
-            ?? $this->options($registration)->map->method->first(fn (ClubPaymentMethod $m) => $m->type === ClubPaymentMethod::PAYPAL);
+        $method = $this->options($registration)->pluck('method')->first(fn (ClubPaymentMethod $m) => $m->type === ClubPaymentMethod::PAYPAL && $m->id === $registration->payment_method_id)
+            ?? $this->options($registration)->pluck('method')->first(fn (ClubPaymentMethod $m) => $m->type === ClubPaymentMethod::PAYPAL);
 
         if (! $method) {
             return false;

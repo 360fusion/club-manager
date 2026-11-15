@@ -7,5 +7,5 @@ export const router = { visit() {}, get() {}, post() {}, put() {}, delete() {}, 
 export const useForm = (data = {}) => reactive({ ...data, errors: {}, processing: false, post() {}, put() {}, patch() {}, delete() {}, reset() {}, clearErrors() {}, transform() { return this; }, setError() {}, isDirty: false });
 export const createInertiaApp = () => {};
 export const useRemember = (v) => v;
-export const usePoll = () => {};
+export const usePoll = () => ({ start() {}, stop() {} });
 export default {};

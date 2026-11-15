@@ -384,12 +384,12 @@ class Member extends Model
      * or they are not on it.
      *
      * @param  Collection<int, AnnualOfficerAssignment>|null  $assignments  null when the club has no confirmed roster
-     * @return list<string>
+     * @return list<string|LodgeOffice>
      */
     private function officesFrom(?Collection $assignments): array
     {
         if ($assignments === null || $assignments->isEmpty()) {
-            return $this->current_office ? [$this->current_office] : [];
+            return [$this->current_office];
         }
 
         return $assignments->map(fn ($a) => $a->lodge_office)->filter()->values()->all();

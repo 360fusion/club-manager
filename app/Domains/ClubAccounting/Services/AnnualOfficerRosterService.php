@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Meeting;
+use App\Support\Months;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -80,8 +81,7 @@ class AnnualOfficerRosterService
                 throw new InvalidArgumentException("Invalid Masonic Year. End year ({$endYear}) must be consecutive to start year ({$startYear}).");
             }
 
-            $installationMonthName = $club->settings['installation_month'] ?? 'October';
-            $monthNum = (int) date('m', strtotime("1 {$installationMonthName} 2026")) ?: 10;
+            $monthNum = Months::number($club->settings['installation_month'] ?? null) ?? 10;
 
             $startDate = Carbon::createFromDate($startYear, $monthNum, 1)->startOfDay();
             $endDate = (clone $startDate)->addYear()->subDay()->endOfDay();

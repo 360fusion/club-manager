@@ -46,6 +46,9 @@ class CharityCollection extends Model
         ];
     }
 
+    /**
+     * @return Attribute<float, never>
+     */
     protected function totalAmount(): Attribute
     {
         return Attribute::make(
@@ -53,6 +56,9 @@ class CharityCollection extends Model
         );
     }
 
+    /**
+     * @return Attribute<float, never>
+     */
     protected function calculatedGiftAid(): Attribute
     {
         return Attribute::make(
@@ -67,6 +73,9 @@ class CharityCollection extends Model
         );
     }
 
+    /**
+     * @return Attribute<string, never>
+     */
     protected function donorDisplayName(): Attribute
     {
         return Attribute::make(

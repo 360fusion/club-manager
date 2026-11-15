@@ -147,7 +147,7 @@ class MeetingDiningController extends Controller
 
         $user = $this->rsvpUser($club, $meeting, (int) $validated['user_id']);
         abort_if($user === null, 404);
-        $surname = $user ? strtoupper(last(explode(' ', $user->name))) : 'MEMBER';
+        $surname = strtoupper(last(explode(' ', $user->name)));
         $defaultRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
 
         $updateData = [

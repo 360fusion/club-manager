@@ -54,7 +54,7 @@ class ClubCommitteeMeeting extends Model
 
     public function isPast(): bool
     {
-        return $this->meeting_date && $this->meeting_date->isPast();
+        return $this->meeting_date->isPast();
     }
 
     public function displayStatusLabel(): string

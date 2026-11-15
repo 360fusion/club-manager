@@ -92,7 +92,7 @@ class CharityAdminController extends Controller
             ->get()
             ->map(fn ($m) => [
                 'id' => $m->id,
-                'label' => ($m->title ? "Meeting #{$m->meeting_number} — {$m->title}" : "Meeting #{$m->meeting_number}").($m->meeting_date ? ' ('.$m->meeting_date->format('d M Y').')' : ''),
+                'label' => ($m->title ? "Meeting #{$m->meeting_number} — {$m->title}" : "Meeting #{$m->meeting_number}").' ('.$m->meeting_date->format('d M Y').')',
             ]);
 
         $totalGrantsDisbursed = (float) CharityGrant::where('club_id', $club->id)

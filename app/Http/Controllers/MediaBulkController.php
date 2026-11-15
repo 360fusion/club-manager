@@ -130,7 +130,7 @@ class MediaBulkController extends Controller
         // Check if used in News Articles / Posts
         $posts = Post::where('club_id', $club->id)->get();
         foreach ($posts as $post) {
-            if ($post->cover_image && (str_contains($post->cover_image, $filename) || $post->cover_image === $url)) {
+            if ($post->cover_image_url && (str_contains($post->cover_image_url, $filename) || $post->cover_image_url === $url)) {
                 $usages[] = [
                     'type' => 'Cover Image',
                     'title' => $post->title,

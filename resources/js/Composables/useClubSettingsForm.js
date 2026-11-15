@@ -1,0 +1,140 @@
+import { useForm } from '@inertiajs/vue3';
+
+/**
+ * The club settings page's one form: every tab edits a part of it and the page saves it with "Save changes".
+ * `props` are the page's props (club, settings, currencies).
+ */
+export function useClubSettingsForm(props) {
+    return useForm({
+      name: props.club.name || '',
+      province_id: props.club.province_id || '',
+      masonic_hall_id: props.club.masonic_hall_id || '',
+      lodge_number: props.club.lodge_number || props.settings.lodge_number || '',
+      lodge_status: props.settings.lodge_status || 'Normal',
+      installed_masters: props.settings.installed_masters || 'No',
+      ritual: props.settings.ritual || '-',
+      consecration_date: props.settings.consecration_date || '',
+      constitution_date: props.settings.constitution_date || '',
+      subscription_month: props.settings.subscription_month || 'April',
+      installation_month: props.settings.installation_month || 'April',
+      provincial_ar_month: props.settings.provincial_ar_month || 'March',
+      meeting_formula: props.settings.meeting_formula || '',
+      tagline: props.settings.tagline || '',
+      logo_url: props.club.logo_url || '',
+      primary_color: props.settings.primary_color || '#0369a1',
+      sidebar_theme: props.settings.sidebar_theme || 'dark_slate',
+      currency: props.settings.currency || props.currencies?.[0]?.code || 'GBP',
+      timezone: props.settings.timezone || 'Europe/London',
+      storage_quota_mb: props.settings.storage_quota_mb ?? null,
+      contact_email: props.settings.contact_email || '',
+      phone: props.settings.phone || '',
+      address: props.settings.address || '',
+      address_line_1: props.settings.address_line_1 || '',
+      address_line_2: props.settings.address_line_2 || '',
+      city: props.settings.city || '',
+      county: props.settings.county || '',
+      postcode: props.settings.postcode || '',
+      country: props.settings.country || 'United Kingdom',
+      social_facebook: props.settings.social_facebook || '',
+      social_instagram: props.settings.social_instagram || '',
+      social_twitter: props.settings.social_twitter || '',
+      registration_mode: props.settings.registration_mode || 'open',
+      summons_visibility: props.settings.summons_visibility || 'members',
+      member_prefix: props.settings.member_prefix || '',
+      default_role: props.settings.default_role || 'member',
+      invite_expiration_days: props.settings.invite_expiration_days ?? 14,
+      invite_reminder_days: props.settings.invite_reminder_days ?? 7,
+      grand_ranks: (props.settings.grand_ranks || []).map((r) => ({ ...r })),
+      provincial_ranks: (props.settings.provincial_ranks || []).map((r) => ({ ...r })),
+      membership_year_start: props.settings.membership_year_start || '',
+      enable_member_ranks: props.settings.enable_member_ranks ?? true,
+      member_ranks: props.settings.member_ranks || [
+        'Worshipful Master (WM)',
+        'Senior Warden (SW)',
+        'Junior Warden (JW)',
+        'Chaplain (Chap)',
+        'Treasurer (Treas)',
+        'Secretary (Sec)',
+        'Director of Ceremonies (DC)',
+        'Almoner (Alm)',
+        'Charity Steward (ChStwd)',
+        'Membership Officer (MO)',
+        'Mentor (Mentor)',
+        'Senior Deacon (SD)',
+        'Junior Deacon (JD)',
+        'Asst Dir of Ceremonies (ADC)',
+        'Organist (Org)',
+        'Assistant Secretary (ASec)',
+        'Inner Guard (IG)',
+        'Steward (Stwd)',
+        'Tyler (Tyler)',
+        'Immediate Past Master (IPM)',
+        'Royal Arch Representative (Royal Arch Rep)',
+        'Mentoring & Members Co-ordinator (MenCo-ord)',
+      ],
+      provincial_name: props.settings.provincial_name || '',
+      provincial_grand_master: props.settings.provincial_grand_master || '',
+      deputy_provincial_grand_master: props.settings.deputy_provincial_grand_master || '',
+      assistant_provincial_grand_masters: props.settings.assistant_provincial_grand_masters || '',
+      officers_year_label: props.settings.officers_year_label || '',
+      officers_roster: props.settings.officers_roster || [],
+      custom_domain: props.club.custom_domain || '',
+      enabled_modules: props.settings.enabled_modules || [],
+      permission_matrix: props.settings.permission_matrix || {},
+
+      // Subscriptions & Dues
+      dues_grace_period_days: props.settings.dues_grace_period_days ?? 14,
+      auto_invoice_days_before: props.settings.auto_invoice_days_before ?? 7,
+      tax_registration_number: props.settings.tax_registration_number || '',
+      receipt_footer_notes: props.settings.receipt_footer_notes || '',
+
+      // Accounting & ERP Configuration
+      fiscal_year_start_month: props.settings.fiscal_year_start_month || 'January',
+      accounting_method: props.settings.accounting_method || 'accrual',
+      lock_accounting_date: props.settings.lock_accounting_date || '',
+      standard_vat_rate: props.settings.standard_vat_rate ?? 20.0,
+      invoice_prefix: props.settings.invoice_prefix || 'INV-2026-',
+      invoice_due_terms: props.settings.invoice_due_terms || 'Net 14',
+      default_ar_account_code: props.settings.default_ar_account_code || '1200',
+      default_revenue_account_code: props.settings.default_revenue_account_code || '4000',
+      bill_prefix: props.settings.bill_prefix || 'BILL-2026-',
+      default_ap_account_code: props.settings.default_ap_account_code || '2000',
+      default_expense_account_code: props.settings.default_expense_account_code || '5000',
+      require_bill_approval: props.settings.require_bill_approval ?? false,
+      default_bank_account_code: props.settings.default_bank_account_code || '1000',
+      bank_sort_code: props.settings.bank_sort_code || '',
+      bank_account_number: props.settings.bank_account_number || '',
+      enforce_balanced_journals: props.settings.enforce_balanced_journals ?? true,
+
+      // Events & Check-Ins
+      event_rsvp_cutoff_hours: props.settings.event_rsvp_cutoff_hours ?? 24,
+      max_guests_per_member: props.settings.max_guests_per_member ?? 2,
+      qr_code_expiry_minutes: props.settings.qr_code_expiry_minutes ?? 60,
+      notify_event_reminders: props.settings.notify_event_reminders ?? true,
+
+      // Dining & Catering
+      dining_rsvp_cutoff_hours: props.settings.dining_rsvp_cutoff_hours ?? 48,
+      require_dietary_allergens: props.settings.require_dietary_allergens ?? true,
+      allow_guest_meals: props.settings.allow_guest_meals ?? true,
+
+      // Newsletters & Communications
+      email_from_name: props.settings.email_from_name || props.club.name,
+      email_reply_to: props.settings.email_reply_to || '',
+      email_footer_address: props.settings.email_footer_address || '',
+      notify_dues_overdue: props.settings.notify_dues_overdue ?? true,
+
+      // Website Builder & SEO
+      seo_title_suffix: props.settings.seo_title_suffix || `| ${props.club.name}`,
+      seo_meta_description: props.settings.seo_meta_description || '',
+
+      // Equipment & Pitch Bookings
+      booking_window_days: props.settings.booking_window_days ?? 14,
+      max_booking_hours: props.settings.max_booking_hours ?? 4,
+      require_coach_approval_equipment: props.settings.require_coach_approval_equipment ?? true,
+
+      // Athletic Performance & Erg Log
+      leaderboard_visibility: props.settings.leaderboard_visibility || 'public',
+      default_distance_unit: props.settings.default_distance_unit || 'meters',
+      require_score_verification: props.settings.require_score_verification ?? false,
+    });
+}

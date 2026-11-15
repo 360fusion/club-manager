@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
@@ -42,7 +43,7 @@ class ReconciliationScreenData
                 'reference' => $tx->reference,
                 'amount' => (float) $tx->amount,
                 'formatted_amount' => Currencies::format((float) $tx->amount, $club),
-                'status' => $tx->status->value ?? (string) $tx->status,
+                'status' => $tx->status->value,
                 'suggested_matches' => array_map(function ($m) {
                     return [
                         'match_type' => $m['match_type'],
@@ -72,7 +73,7 @@ class ReconciliationScreenData
                 'reference' => $tx->reference,
                 'amount' => (float) $tx->amount,
                 'formatted_amount' => Currencies::format((float) $tx->amount, $club),
-                'status' => $tx->status->value ?? (string) $tx->status,
+                'status' => $tx->status->value,
                 'updated_at' => $tx->updated_at->format('d M Y H:i'),
             ]);
 
@@ -119,10 +120,10 @@ class ReconciliationScreenData
                 'spent' => $tx->amount < 0 ? Currencies::format(abs((float) $tx->amount), $club) : '',
                 'received' => $tx->amount > 0 ? Currencies::format((float) $tx->amount, $club) : '',
                 'source' => 'Bank Feed',
-                'status' => match (strtolower($tx->status->value ?? (string) $tx->status)) {
-                    'matched', 'reconciled' => 'Reconciled',
-                    'ignored' => 'Deleted',
-                    default => 'Unreconciled',
+                'status' => match ($tx->status) {
+                    BankTransactionStatus::Matched => 'Reconciled',
+                    BankTransactionStatus::Ignored => 'Deleted',
+                    BankTransactionStatus::Unmatched => 'Unreconciled',
                 },
             ]);
 

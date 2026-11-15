@@ -19,18 +19,6 @@ parameters:
 			path: app/Casts/SanitizedHtmlBlocks.php
 
 		-
-			message: '#^Match expression does not handle remaining value\: string$#'
-			identifier: match.unhandled
-			count: 1
-			path: app/Domains/ClubAccounting/Livewire/Candidates/CandidateDetail.php
-
-		-
-			message: '#^Match expression does not handle remaining value\: string$#'
-			identifier: match.unhandled
-			count: 1
-			path: app/Domains/ClubAccounting/Livewire/Candidates/CandidatePipeline.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
@@ -55,82 +43,16 @@ parameters:
 			path: app/Domains/ClubAccounting/Livewire/Members/MemberImportPage.php
 
 		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/ClubAccounting/Livewire/Subscriptions/SubscriptionIndex.php
-
-		-
-			message: '#^Left side of && is always true\.$#'
-			identifier: booleanAnd.leftAlwaysTrue
-			count: 1
-			path: app/Domains/ClubAccounting/Models/ClubCommitteeMeeting.php
-
-		-
-			message: '#^Method App\\Domains\\ClubAccounting\\Models\\Member\:\:officesFrom\(\) should return list\<string\> but returns array\<int, App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/ClubAccounting/Models/Member.php
-
-		-
-			message: '#^Method App\\Domains\\ClubAccounting\\Models\\Member\:\:officesFrom\(\) should return list\<string\> but returns array\{App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domains/ClubAccounting/Models/Member.php
-
-		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
-			count: 1
-			path: app/Domains/ClubAccounting/Models/Member.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>invitation_token" in empty\(\) is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Domains/ClubAccounting/Models/Member.php
 
 		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
-			count: 1
-			path: app/Domains/ClubAccounting/Services/AnnualOfficerRosterService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>office" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Domains/ClubAccounting/Services/AnnualOfficerRosterService.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
-
-		-
-			message: '#^Comparison operation "\>\=" between 60\|75 and 60 is always true\.$#'
-			identifier: greaterOrEqual.alwaysTrue
-			count: 2
-			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
-
-		-
-			message: '#^Comparison operation "\>\=" between 60\|75\|85 and 60 is always true\.$#'
-			identifier: greaterOrEqual.alwaysTrue
-			count: 1
-			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
-
-		-
-			message: '#^Parameter \#5 \$receivedAt of method App\\Services\\Events\\EventPaymentService\:\:markPaid\(\) expects Illuminate\\Support\\Carbon\|null, Carbon\\Carbon given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
-
-		-
-			message: '#^Right side of && is always true\.$#'
-			identifier: booleanAnd.rightAlwaysTrue
-			count: 1
-			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
 
 		-
 			message: '#^Offset 1 on array\{list\<string\>, list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
@@ -143,12 +65,6 @@ parameters:
 			identifier: arrayFilter.same
 			count: 1
 			path: app/Domains/ClubAccounting/Services/BankStatementParserService.php
-
-		-
-			message: '#^Method App\\Domains\\ClubAccounting\\Services\\Governance\\CommitteeNotesParserService\:\:findMemberByName\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: app/Domains/ClubAccounting/Services/Governance/CommitteeNotesParserService.php
 
 		-
 			message: '#^Right side of && is always true\.$#'
@@ -217,33 +133,9 @@ parameters:
 			path: app/Domains/ClubAccounting/Services/ReliefChestExportService.php
 
 		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$calculated_gift_aid\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$donor_display_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$total_amount\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
-
-		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 2
-			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\ClubAccounting\\Models\\CharityCollection\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
 			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
 
 		-
@@ -313,32 +205,8 @@ parameters:
 			path: app/Http/Controllers/AttendanceController.php
 
 		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$donor_display_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/CharityAdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$total_amount\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/CharityAdminController.php
-
-		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
-			count: 1
-			path: app/Http/Controllers/CharityAdminController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\ClubAccounting\\Models\\CharityCollection\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/CharityAdminController.php
-
-		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Http/Controllers/CharityAdminController.php
 
@@ -397,18 +265,6 @@ parameters:
 			path: app/Http/Controllers/LegacyClubUrlController.php
 
 		-
-			message: '#^Variable \$schedule in PHPDoc tag @var does not match any variable in the foreach loop\: \$date$#'
-			identifier: varTag.differentVariable
-			count: 1
-			path: app/Http/Controllers/LodgeCalendarController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Post\:\:\$cover_image\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/MediaBulkController.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Club\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 1
@@ -463,12 +319,6 @@ parameters:
 			path: app/Http/Controllers/MeetingBusinessController.php
 
 		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
-			count: 1
-			path: app/Http/Controllers/MeetingDiningController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
@@ -479,12 +329,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/MemberHomeController.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/MemberListController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Lodge\:\:\$pivot\.$#'
@@ -679,34 +523,10 @@ parameters:
 			path: app/Http/Controllers/PostAdminController.php
 
 		-
-			message: '#^Parameter \#1 \$boolean of function abort_if expects bool, App\\Models\\User\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/PublicSiteController.php
-
-		-
-			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Post\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/PublicSiteController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
 			path: app/Http/Controllers/PublicSiteController.php
-
-		-
-			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Media\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/PublicSiteExtrasController.php
-
-		-
-			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, array\<string, bool\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/PublicSiteExtrasController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Club\:\:\$pivot\.$#'
@@ -787,12 +607,6 @@ parameters:
 			path: app/Models/SignatureRequest.php
 
 		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 3
-			path: app/Notifications/ClubNotification.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -809,12 +623,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Providers/AppServiceProvider.php
-
-		-
-			message: '#^Method App\\Services\\AccountingReports\:\:getVatReturnData\(\) should return array\{enabled\: bool, quarter_label\: string, quarter_start\: string, quarter_end\: string, output_vat\: float, input_vat\: float, net_vat_due\: float, net_sales\: float, \.\.\.\} but returns array\{enabled\: true, quarter_label\: non\-falsy\-string, quarter_start\: non\-falsy\-string, quarter_end\: non\-falsy\-string, output_vat\: float, input_vat\: float, net_vat_due\: float, net_sales\: float, \.\.\.\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/AccountingReports.php
 
 		-
 			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
@@ -865,18 +673,6 @@ parameters:
 			path: app/Services/Events/EventDetailsSync.php
 
 		-
-			message: '#^Access to protected property Illuminate\\Support\\HigherOrderCollectionProxy\<string, App\\Models\\EventPaymentMethod, Illuminate\\Support\\Collection\<int, App\\Models\\EventPaymentMethod\>\>\:\:\$method\.$#'
-			identifier: property.protected
-			count: 2
-			path: app/Services/Events/EventOnlinePayment.php
-
-		-
-			message: '#^Cannot call method first\(\) on TMethod of string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Services/Events/EventOnlinePayment.php
-
-		-
 			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -891,30 +687,6 @@ parameters:
 		-
 			message: '#^Method App\\Services\\Events\\EventRegistrationService\:\:dueAt\(\) should return Illuminate\\Support\\Carbon\|null but returns Carbon\\Carbon\.$#'
 			identifier: return.type
-			count: 1
-			path: app/Services/Events/EventRegistrationService.php
-
-		-
-			message: '#^Offset ''email'' on array\{name\?\: string, is_guest\?\: bool, ticket_tier_id\?\: int\|null, attending_dining\?\: bool, starter_item_id\?\: int\|null, main_item_id\?\: int\|null, dessert_item_id\?\: int\|null, dietary_requirements\?\: string\|null\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Services/Events/EventRegistrationService.php
-
-		-
-			message: '#^Offset ''organisation'' on array\{name\?\: string, is_guest\?\: bool, ticket_tier_id\?\: int\|null, attending_dining\?\: bool, starter_item_id\?\: int\|null, main_item_id\?\: int\|null, dessert_item_id\?\: int\|null, dietary_requirements\?\: string\|null\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Services/Events/EventRegistrationService.php
-
-		-
-			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\{name\?\: string, is_guest\?\: bool, ticket_tier_id\?\: int\|null, attending_dining\?\: bool, starter_item_id\?\: int\|null, main_item_id\?\: int\|null, dessert_item_id\?\: int\|null, dietary_requirements\?\: string\|null\}\>\) of array_values is already a list, call has no effect\.$#'
-			identifier: arrayValues.list
-			count: 1
-			path: app/Services/Events/EventRegistrationService.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between int and '''' will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
 			count: 1
 			path: app/Services/Events/EventRegistrationService.php
 
@@ -947,18 +719,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Services/MemberCalendar.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/MemberInbox.php
-
-		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 2
-			path: app/Services/MemberInbox.php
 
 		-
 			message: '#^Method App\\Services\\MemberInbox\:\:pendingApprovals\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, non\-empty\-array\<string, mixed\>\>\.$#'
@@ -995,24 +755,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: app/Services/Payment/StripePaymentGateway.php
-
-		-
-			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/ReconciliationScreenData.php
-
-		-
-			message: '#^Cannot cast App\\Domains\\ClubAccounting\\Enums\\BankTransactionStatus to string\.$#'
-			identifier: cast.string
-			count: 3
-			path: app/Services/ReconciliationScreenData.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\ClubAccounting\\Models\\BankTransaction\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: app/Services/ReconciliationScreenData.php
 
 		-
 			message: '#^Access to an undefined property App\\Contracts\\Signable&Illuminate\\Database\\Eloquent\\Model\:\:\$updated_at\.$#'
