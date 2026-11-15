@@ -433,31 +433,7 @@ parameters:
 			path: app/Http/Controllers/NewsletterAdminController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\User\:\:\$home_club_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/NewsletterTypeAdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\User\:\:\$rank\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/NewsletterTypeAdminController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\NewsletterSubscription\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/NewsletterTypeAdminController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/NewsletterTypeAdminController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>home_club_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/NewsletterTypeAdminController.php
@@ -472,12 +448,6 @@ parameters:
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
-			path: app/Http/Controllers/NewsletterTypeAdminController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>rank" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
 			path: app/Http/Controllers/NewsletterTypeAdminController.php
 
 		-

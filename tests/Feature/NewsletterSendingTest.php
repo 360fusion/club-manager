@@ -327,4 +327,21 @@ class NewsletterSendingTest extends TestCase
         $digest->update(['digest_frequency' => 'monthly']);
         $this->assertFalse($service->isDue($digest, $friday), 'monthly digests wait about four weeks');
     }
+
+    public function test_the_subscriber_list_shows_a_members_rank_and_home_lodge_from_their_membership(): void
+    {
+        $member = $this->join($this->club, 'member');
+        $this->club->users()->updateExistingPivot($member->id, ['rank' => 'WBro', 'home_club_name' => 'Lodge of Industry', 'home_club_number' => '48']);
+        $this->subscriber($this->general, $member->email, userId: $member->id);
+        $this->subscriber($this->general, 'visitor@example.test');
+
+        $this->actingAs($this->admin)->get(route('admin.newsletters.subscribers', ['clubSlug' => $this->club->slug]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('subscriptions', function ($subscriptions) use ($member) {
+                $byEmail = collect($subscriptions)->keyBy('email');
+
+                return [$byEmail[$member->email]['rank'], $byEmail[$member->email]['home_club_name'], $byEmail[$member->email]['home_club_number'], $byEmail['visitor@example.test']['rank']]
+                    === ['WBro', 'Lodge of Industry', '48', ''];
+            }));
+    }
 }

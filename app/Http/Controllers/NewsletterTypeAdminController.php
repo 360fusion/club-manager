@@ -7,6 +7,7 @@ use App\Http\Requests\NewsletterTypeAdmin\UpdateSubscriberStatusRequest;
 use App\Models\Club;
 use App\Models\NewsletterSubscription;
 use App\Models\NewsletterType;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -178,8 +179,16 @@ class NewsletterTypeAdminController extends Controller
         $subscriptions = NewsletterSubscription::where('club_id', $club->id)
             ->with(['newsletterType', 'user'])
             ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($sub) {
+            ->get();
+
+        // A member's rank and home lodge live on their membership of this club, not on their account.
+        $memberships = $club->users()->whereIn('users.id', $subscriptions->pluck('user_id')->filter()->unique())->get()
+            ->mapWithKeys(fn (User $member) => [$member->id => $member->pivot]);
+
+        $subscriptions = $subscriptions
+            ->map(function ($sub) use ($memberships) {
+                $membership = $memberships->get($sub->user_id);
+
                 return [
                     'id' => $sub->id,
                     'newsletter_type_id' => $sub->newsletter_type_id,
@@ -188,9 +197,9 @@ class NewsletterTypeAdminController extends Controller
                     'type_icon' => $sub->newsletterType?->icon ?? '✉️',
                     'name' => $sub->name ?: ($sub->user?->name ?? 'External Subscriber'),
                     'email' => $sub->email,
-                    'rank' => $sub->rank ?: ($sub->user?->rank ?? ''),
-                    'home_club_name' => $sub->home_club_name ?: ($sub->user?->home_club_name ?? ''),
-                    'home_club_number' => $sub->home_club_number ?: '',
+                    'rank' => $sub->rank ?: ($membership->rank ?? ''),
+                    'home_club_name' => $sub->home_club_name ?: ($membership->home_club_name ?? ''),
+                    'home_club_number' => $sub->home_club_number ?: ($membership->home_club_number ?? ''),
                     'is_internal_member' => (bool) $sub->user_id,
                     'status' => $sub->status,
                     'subscribed_at' => $sub->subscribed_at?->format('j M Y') ?? $sub->created_at->format('j M Y'),
