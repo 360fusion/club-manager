@@ -26,10 +26,13 @@ class MemberCalendarController extends Controller
         $from = $month->startOfMonth()->startOfWeek();
         $to = $month->endOfMonth()->endOfWeek();
 
+        // Meetings and events hold the lodge's wall-clock time; the browser needs the real moment to show it. Followed
+        // lodges' expected dates are already in UK time.
+        $moment = fn (array $item, \DateTimeInterface $time) => $item['type'] === 'lodge' ? $time : ($scope->clubFor($item['club']['id'])?->atLocalTime($time) ?? $time);
         $items = $this->calendar->items($scope, $from, $to)->map(fn (array $item) => [
             ...$item,
-            'start' => $item['start']->toIso8601String(),
-            'end' => $item['end']->toIso8601String(),
+            'start' => CarbonImmutable::instance($moment($item, $item['start']))->toIso8601String(),
+            'end' => CarbonImmutable::instance($moment($item, $item['end']))->toIso8601String(),
         ]);
 
         $user = $scope->user;
@@ -73,11 +76,13 @@ class MemberCalendarController extends Controller
                 continue;
             }
 
+            // Meetings and events hold the lodge's wall-clock time; the feed needs the real moment.
+            $club = $scope->clubFor($item['club']['id']);
             $ics->add(
                 $item['key'],
                 $item['club']['name'].': '.$item['title'].(! empty($item['installation']) ? ' (Installation)' : ''),
-                $item['start'],
-                $item['end'],
+                $club?->atLocalTime($item['start']) ?? $item['start'],
+                $club?->atLocalTime($item['end']) ?? $item['end'],
                 $item['where'],
                 null,
                 url($item['url']),

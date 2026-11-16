@@ -74,9 +74,10 @@ class PayPalGateway
     /**
      * Refund some or all of a PayPal payment.
      */
-    public function refund(ClubPaymentMethod $method, string $captureId, float $amount, string $currency): string
+    public function refund(ClubPaymentMethod $method, string $captureId, float $amount, string $currency, ?string $idempotencyKey = null): string
     {
-        $response = $this->send($method, fn (PendingRequest $http) => $http->post('/v2/payments/captures/'.rawurlencode($captureId).'/refund', [
+        // PayPal-Request-Id makes a repeated request return the first refund instead of refunding again.
+        $response = $this->send($method, fn (PendingRequest $http) => $http->withHeaders($idempotencyKey ? ['PayPal-Request-Id' => $idempotencyKey] : [])->post('/v2/payments/captures/'.rawurlencode($captureId).'/refund', [
             'amount' => ['currency_code' => strtoupper($currency), 'value' => $this->amount($amount)],
         ]), 'PayPal could not refund this payment.', 'amount');
 

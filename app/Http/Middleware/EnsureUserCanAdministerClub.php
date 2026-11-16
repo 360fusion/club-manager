@@ -53,7 +53,7 @@ class EnsureUserCanAdministerClub
             return $next($request);
         }
 
-        if ($user->is_super_admin) {
+        if ($user->actsAsSuperAdmin()) {
             return $next($request);
         }
 

@@ -2,7 +2,6 @@
 
 namespace App\Domains\ClubAccounting\Services;
 
-use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use Exception;
@@ -16,7 +15,7 @@ class StripeSyncService
     public function testConnection(string $secretKey): array
     {
         try {
-            $response = Http::withToken(trim($secretKey))
+            $response = Http::timeout(30)->withToken(trim($secretKey))
                 ->get('https://api.stripe.com/v1/balance');
 
             if ($response->failed()) {
@@ -58,7 +57,7 @@ class StripeSyncService
             $params['created[lte]'] = strtotime($endDate.' 23:59:59');
         }
 
-        $response = Http::withToken($secretKey)
+        $response = Http::timeout(30)->withToken($secretKey)
             ->get('https://api.stripe.com/v1/balance_transactions', $params);
 
         if ($response->failed()) {
@@ -102,17 +101,7 @@ class StripeSyncService
 
             $runningBalance += $net;
 
-            BankTransaction::create([
-                'club_id' => $bankAccount->club_id,
-                'bank_account_id' => $bankAccount->id,
-                'transaction_date' => $date,
-                'description' => $description,
-                'amount' => $net,
-                'reference' => $txId,
-                'payee_payer' => 'Stripe Customer',
-                'status' => BankTransactionStatus::Unmatched->value,
-                'balance_after' => $runningBalance,
-            ]);
+            BankTransaction::recordFromGateway($bankAccount, 'stripe', (string) $txId, $date, $description, (float) $net, $runningBalance);
 
             $syncedCount++;
         }

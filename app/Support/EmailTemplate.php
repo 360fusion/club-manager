@@ -45,7 +45,7 @@ class EmailTemplate
         }
 
         $subject = self::replace($template->subject, array_map(fn ($v) => (string) $v, $text));
-        $body = self::replace($template->body_html, array_map(fn ($v) => e((string) $v), $text) + $html);
+        $body = self::replace(EmailTemplateSanitizer::placeholdersOnlyAsWholeLinks($template->body_html), array_map(fn ($v) => e((string) $v), $text) + $html);
 
         return ['subject' => trim(str_replace(["\r", "\n"], ' ', $subject)), 'body' => $body];
     }

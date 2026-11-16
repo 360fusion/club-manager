@@ -2,6 +2,8 @@
 
 namespace App\Services\Lodges;
 
+use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Models\Club;
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
@@ -120,7 +122,7 @@ class LodgeClaimService
                 'settings' => array_filter(['installation_month' => Months::name($lodge->installation_month)]),
             ]);
 
-            $club->users()->attach($claim->user_id, ['role' => 'owner', 'status' => 'active']);
+            $club->users()->attach($claim->user_id, ['role' => ClubRole::Owner->value, 'status' => ClubMemberStatus::Active->value]);
             $this->copyMeetingPattern($lodge, $club);
             $this->finishApproval($claim, $lodge, $club, $admin, 'approved', $note);
 
@@ -146,7 +148,7 @@ class LodgeClaimService
             }
 
             if ($makeClaimantAdmin && ! $club->users()->whereKey($claim->user_id)->exists()) {
-                $club->users()->attach($claim->user_id, ['role' => 'admin', 'status' => 'active']);
+                $club->users()->attach($claim->user_id, ['role' => ClubRole::Admin->value, 'status' => ClubMemberStatus::Active->value]);
             }
 
             $this->finishApproval($claim, $lodge, $club, $admin, 'linked', $note);

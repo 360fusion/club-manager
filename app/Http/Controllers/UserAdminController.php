@@ -67,9 +67,9 @@ class UserAdminController extends Controller
         }
         if ($filters['q'] !== '') {
             $like = '%'.$filters['q'].'%';
-            $query->where(fn ($q) => $q->where('users.name', 'like', $like)
-                ->orWhere('users.email', 'like', $like)
-                ->orWhere('club_user.member_number', 'like', $like)
+            $query->where(fn ($q) => $q->whereLike('users.name', $like)
+                ->orWhereLike('users.email', $like)
+                ->orWhereLike('club_user.member_number', $like)
                 ->orWhereRaw("'MEM-' || users.id like ?", [$like]));
         }
 
@@ -240,7 +240,7 @@ class UserAdminController extends Controller
 
         $validated = $request->validated();
 
-        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], null), 403, 'Only a club owner can grant the owner role.');
+        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], null), 403, 'Your role cannot give this role.');
 
         $email = strtolower($validated['email']);
 

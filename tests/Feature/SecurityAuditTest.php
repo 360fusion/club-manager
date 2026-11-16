@@ -257,7 +257,7 @@ class SecurityAuditTest extends TestCase
         $saved = $this->a->fresh()->settings['permission_matrix'];
         $this->assertArrayNotHasKey('manage_settings', $saved);
         $this->assertArrayNotHasKey('made_up', $saved);
-        $this->assertSame(['owner', 'admin', 'treasurer'], $saved['manage_members']['roles']);
+        $this->assertSame(['owner', 'admin'], $saved['manage_members']['roles'], 'an admin cannot add the treasurer to the roll');
 
         $this->actingAs($this->owner)->put($url, ['permission_matrix' => ['manage_settings' => ['roles' => ['owner', 'admin', 'treasurer']]]]);
         $this->assertSame(['owner', 'admin', 'treasurer'], $this->a->fresh()->settings['permission_matrix']['manage_settings']['roles']);

@@ -16,7 +16,7 @@ class SuperAdminAuditLogController extends Controller
     {
         $actions = SuperAdminAction::with('actor:id,name,email')
             ->when($request->filled('actor'), fn ($q) => $q->where('actor_id', (int) $request->input('actor')))
-            ->when($request->filled('search'), fn ($q) => $q->where('action', 'like', '%'.str_replace(['%', '_'], ['\%', '\_'], (string) $request->input('search')).'%'))
+            ->when($request->filled('search'), fn ($q) => $q->whereLike('action', '%'.str_replace(['%', '_'], ['\%', '\_'], (string) $request->input('search')).'%'))
             ->latest('id')
             ->paginate(50)
             ->withQueryString()

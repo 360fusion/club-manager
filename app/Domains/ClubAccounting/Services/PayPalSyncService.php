@@ -2,7 +2,6 @@
 
 namespace App\Domains\ClubAccounting\Services;
 
-use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use Exception;
@@ -27,7 +26,7 @@ class PayPalSyncService
     {
         $baseUrl = $this->getBaseUrl($environment);
 
-        $response = Http::asForm()
+        $response = Http::timeout(30)->asForm()
             ->withBasicAuth($clientId, $clientSecret)
             ->post("{$baseUrl}/v1/oauth2/token", [
                 'grant_type' => 'client_credentials',
@@ -88,7 +87,7 @@ class PayPalSyncService
 
         $end = $endDate ? date('Y-m-d\TH:i:s\Z', strtotime($endDate.' 23:59:59')) : date('Y-m-d\TH:i:s\Z');
 
-        $response = Http::withToken($accessToken)
+        $response = Http::timeout(30)->withToken($accessToken)
             ->get("{$baseUrl}/v1/reporting/transactions", [
                 'start_date' => $start,
                 'end_date' => $end,
@@ -139,17 +138,7 @@ class PayPalSyncService
 
             $runningBalance += $net;
 
-            BankTransaction::create([
-                'club_id' => $bankAccount->club_id,
-                'bank_account_id' => $bankAccount->id,
-                'transaction_date' => $date,
-                'description' => "PayPal Payment from {$payerName}",
-                'amount' => $net,
-                'reference' => $txId,
-                'payee_payer' => $payerName,
-                'status' => BankTransactionStatus::Unmatched->value,
-                'balance_after' => $runningBalance,
-            ]);
+            BankTransaction::recordFromGateway($bankAccount, 'paypal', (string) $txId, $date, "PayPal Payment from {$payerName}", (float) $net, $runningBalance);
 
             $syncedCount++;
         }

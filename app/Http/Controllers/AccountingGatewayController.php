@@ -32,7 +32,7 @@ class AccountingGatewayController extends Controller
 
         $existingCodes = Account::where('club_id', $club->id)
             ->where('type', 'asset')
-            ->where('code', 'like', '10%')
+            ->whereLike('code', '10%')
             ->pluck('code')
             ->toArray();
 
@@ -93,7 +93,7 @@ class AccountingGatewayController extends Controller
 
         $existingCodes = Account::where('club_id', $club->id)
             ->where('type', 'asset')
-            ->where('code', 'like', '10%')
+            ->whereLike('code', '10%')
             ->pluck('code')
             ->toArray();
 
@@ -188,7 +188,7 @@ class AccountingGatewayController extends Controller
 
         $existingCodes = Account::where('club_id', $club->id)
             ->where('type', 'asset')
-            ->where('code', 'like', '10%')
+            ->whereLike('code', '10%')
             ->pluck('code')
             ->toArray();
 
@@ -262,7 +262,7 @@ class AccountingGatewayController extends Controller
 
         $existingCodes = Account::where('club_id', $club->id)
             ->where('type', 'asset')
-            ->where('code', 'like', '10%')
+            ->whereLike('code', '10%')
             ->pluck('code')
             ->toArray();
 
@@ -337,7 +337,7 @@ class AccountingGatewayController extends Controller
 
         $existingCodes = Account::where('club_id', $club->id)
             ->where('type', 'asset')
-            ->where('code', 'like', '10%')
+            ->whereLike('code', '10%')
             ->pluck('code')
             ->toArray();
 

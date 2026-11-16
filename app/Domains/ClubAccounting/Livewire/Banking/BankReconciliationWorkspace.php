@@ -183,22 +183,22 @@ class BankReconciliationWorkspace extends Component
                 $subQuery = MemberSubscription::where('club_id', $club->id)->unpaid()->with('member');
                 if (! empty($this->manualSearch)) {
                     $term = '%'.trim($this->manualSearch).'%';
-                    $subQuery->whereHas('member', fn ($q) => $q->where('first_name', 'like', $term)->orWhere('last_name', 'like', $term));
+                    $subQuery->whereHas('member', fn ($q) => $q->whereLike('first_name', $term)->orWhereLike('last_name', $term));
                 }
                 $manualCandidates = $subQuery->take(15)->get();
             } elseif ($this->manualAllocationType === 'supplier_bill') {
                 $billQuery = Bill::where('club_id', $club->id)->where('status', DocumentStatus::Unpaid->value);
                 if (! empty($this->manualSearch)) {
                     $term = '%'.trim($this->manualSearch).'%';
-                    $billQuery->where(fn ($q) => $q->where('vendor_name', 'like', $term)->orWhere('bill_number', 'like', $term));
+                    $billQuery->where(fn ($q) => $q->whereLike('vendor_name', $term)->orWhereLike('bill_number', $term));
                 }
                 $manualCandidates = $billQuery->take(15)->get();
             } elseif ($this->manualAllocationType === 'invoice') {
                 $invoiceQuery = Invoice::where('club_id', $club->id)->where('status', DocumentStatus::Unpaid->value)->with('user');
                 if (! empty($this->manualSearch)) {
                     $term = '%'.trim($this->manualSearch).'%';
-                    $invoiceQuery->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('invoice_number', 'like', $term)
-                        ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', $term)));
+                    $invoiceQuery->where(fn ($q) => $q->whereLike('title', $term)->orWhereLike('invoice_number', $term)
+                        ->orWhereHas('user', fn ($uq) => $uq->whereLike('name', $term)));
                 }
                 $manualCandidates = $invoiceQuery->take(15)->get();
             }

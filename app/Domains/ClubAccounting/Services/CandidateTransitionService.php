@@ -246,7 +246,7 @@ class CandidateTransitionService
             throw new InvalidArgumentException('Only a rejected or closed enquiry can be reopened.');
         }
 
-        if (! $actor->is_super_admin && ! in_array(ClubAccess::role($actor, $candidate->club), ['owner', 'admin'], true)) {
+        if (! $actor->actsAsSuperAdmin() && ! in_array(ClubAccess::role($actor, $candidate->club), ['owner', 'admin'], true)) {
             throw new InvalidArgumentException('Only an owner or admin can reopen an enquiry.');
         }
 

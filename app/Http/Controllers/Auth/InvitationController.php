@@ -124,6 +124,7 @@ class InvitationController extends Controller
         }
 
         Auth::login($user);
+        request()->session()->regenerate();
 
         return redirect()->route('member.dashboard', ['slug' => $club->slug])
             ->with('success', "Welcome to {$club->name}! Your access has been confirmed.");

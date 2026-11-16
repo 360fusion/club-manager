@@ -76,7 +76,7 @@ class MemberProfileController extends Controller
         $club = $this->findClub($slug);
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
-        abort_if($memberPivot === null && ! $user?->is_super_admin, 403, 'You are not a member of this club.');
+        abort_if($memberPivot === null && ! $user?->actsAsSuperAdmin(), 403, 'You are not a member of this club.');
 
         $accMember = $user ? Member::where('club_id', $club->id)->where('user_id', $user->id)->first() : null;
 

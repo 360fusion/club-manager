@@ -142,8 +142,12 @@ class EventPaymentService
             $connected = $method?->usesConnect() ? $method->club->platformAccount : null;
             $viaStripe = $method?->type === ClubPaymentMethod::CARD && $registration->stripe_payment_intent && ($connected !== null || $method->hasStripeKeys());
 
+            // The same refund asked for again (say, after something below failed and this was rolled back) reuses the
+            // key, so the provider returns the first refund instead of paying the money back twice.
+            $idempotencyKey = 'refund-'.$registration->id.'-'.number_format((float) $registration->amount_refunded, 2, '.', '').'-'.number_format($amount, 2, '.', '');
+
             if ($viaStripe) {
-                app(StripeGateway::class)->refund($method, $registration->stripe_payment_intent, (int) round($amount * 100), $connected?->stripe_account_id);
+                app(StripeGateway::class)->refund($method, $registration->stripe_payment_intent, (int) round($amount * 100), $connected?->stripe_account_id, $idempotencyKey);
 
                 if ($connected) {
                     PlatformPayment::where('payment_intent', $registration->stripe_payment_intent)->increment('refunded', $amount);
@@ -153,7 +157,7 @@ class EventPaymentService
             $viaPayPal = ! $viaStripe && $registration->paypal_capture_id && $method?->type === ClubPaymentMethod::PAYPAL && $method->isReadyForPayPal();
 
             if ($viaPayPal) {
-                app(PayPalGateway::class)->refund($method, $registration->paypal_capture_id, $amount, $registration->event->club->currencyCode());
+                app(PayPalGateway::class)->refund($method, $registration->paypal_capture_id, $amount, $registration->event->club->currencyCode(), $idempotencyKey);
             }
 
             $registration->amount_refunded = round((float) $registration->amount_refunded + $amount, 2);

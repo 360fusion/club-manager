@@ -224,10 +224,10 @@ class Candidate extends Model implements Signable
         $term = '%'.trim($term).'%';
 
         return $query->where(function (Builder $q) use ($term) {
-            $q->where('first_name', 'like', $term)
-                ->orWhere('last_name', 'like', $term)
-                ->orWhere('email', 'like', $term)
-                ->orWhere('occupation', 'like', $term);
+            $q->whereLike('first_name', $term)
+                ->orWhereLike('last_name', $term)
+                ->orWhereLike('email', $term)
+                ->orWhereLike('occupation', $term);
         });
     }
 }

@@ -50,6 +50,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Whether this user may use platform-wide access right now: a superadmin who has two-factor sign-in turned on
+     * (local, test and e2e databases are exempt). Without it, a stolen superadmin password alone would open every
+     * lodge's books and members, not just the superadmin area. Use this for access; `is_super_admin` is only the flag.
+     */
+    public function actsAsSuperAdmin(): bool
+    {
+        return $this->is_super_admin && ($this->two_factor_confirmed_at !== null || app()->environment(['local', 'testing', 'e2e']));
+    }
+
+    /**
      * @return BelongsToMany<Club, $this, ClubUser>
      */
     public function clubs(): BelongsToMany

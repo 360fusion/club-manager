@@ -315,7 +315,9 @@ class NewsletterSendingTest extends TestCase
 
         $this->assertTrue($service->isDue($digest, $friday));
         $this->assertFalse($service->isDue($digest, Carbon::parse('2026-09-24 09:30')), 'wrong day');
-        $this->assertFalse($service->isDue($digest, Carbon::parse('2026-09-25 10:05')), 'wrong hour');
+        $this->assertFalse($service->isDue($digest, Carbon::parse('2026-09-25 07:30')), 'before the hour (08:30 in UK summer time)');
+        $this->assertTrue($service->isDue($digest, Carbon::parse('2026-09-25 08:05')), '09:05 UK summer time is the chosen hour');
+        $this->assertTrue($service->isDue($digest, Carbon::parse('2026-09-25 14:05')), 'a missed hourly run still sends it later that day');
         $this->assertFalse($service->isDue($this->general, $friday), 'not an automated digest');
 
         Newsletter::create(['club_id' => $this->club->id, 'newsletter_type_id' => $digest->id, 'subject' => 'Last', 'content' => '<p>x</p>', 'status' => 'sent', 'sent_at' => $friday->copy()->subDays(3)]);

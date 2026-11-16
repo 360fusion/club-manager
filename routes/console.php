@@ -12,14 +12,14 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Needs the server's scheduler running (a cron entry that runs `php artisan schedule:run` every minute).
-Schedule::command('app:send-event-payment-reminders')->dailyAt('09:00');
+Schedule::command('app:send-event-payment-reminders')->dailyAt('09:00')->withoutOverlapping();
 // Reminds people whose account invitation is still unanswered, once, after the number of days each club sets.
 // Deletes uploaded member spreadsheets that were never imported, and old import records (personal data).
-Schedule::command('app:prune-member-imports')->dailyAt('03:30');
+Schedule::command('app:prune-member-imports')->dailyAt('03:30')->withoutOverlapping();
 // Deletes files that have been in the Trash bin for 30 days and keeps only the newest 5 versions of a replaced file.
-Schedule::command('app:prune-media')->dailyAt('03:45');
+Schedule::command('app:prune-media')->dailyAt('03:45')->withoutOverlapping();
 // Trims each lodge's website page history to its own limits (newest N versions per page, and an age limit).
-Schedule::command('app:prune-page-revisions')->dailyAt('04:00');
+Schedule::command('app:prune-page-revisions')->dailyAt('04:00')->withoutOverlapping();
 Schedule::command('app:send-invitation-reminders')->dailyAt('10:00')->withoutOverlapping();
 // Sends each club's automated digest when its channel's day and hour come round.
 Schedule::command('app:send-weekly-digest --scheduled')->hourly()->withoutOverlapping();
@@ -40,4 +40,4 @@ Artisan::command('app:rebuild-static-sites', function () {
     Club::where('settings->static_site_serve', true)->orWhereIn('id', $sending)
         ->each(fn (Club $club) => BuildStaticSite::request($club, automatic: true));
 })->purpose('Queue a new version of every website served as static files or sent automatically');
-Schedule::command('app:rebuild-static-sites')->dailyAt('04:30');
+Schedule::command('app:rebuild-static-sites')->dailyAt('04:30')->withoutOverlapping();

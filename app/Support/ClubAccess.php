@@ -29,7 +29,7 @@ final class ClubAccess
 
     public static function isActiveMember(?User $user, Club $club): bool
     {
-        return $user !== null && ($user->is_super_admin || self::role($user, $club) !== null);
+        return $user !== null && ($user->actsAsSuperAdmin() || self::role($user, $club) !== null);
     }
 
     /**
@@ -41,7 +41,7 @@ final class ClubAccess
             return false;
         }
 
-        return $user->is_super_admin || ClubPermissions::allows($club, self::role($user, $club), $capability);
+        return $user->actsAsSuperAdmin() || ClubPermissions::allows($club, self::role($user, $club), $capability);
     }
 
     public static function authorize(?User $user, Club $club, string $capability): void
@@ -53,11 +53,13 @@ final class ClubAccess
      * Whether the actor may set a member to $newRole, given the member's current role.
      * Only an owner may grant, change or remove the owner role, and the last owner stays.
      * Only an owner/admin/treasurer may grant or revoke the examiner role, since it
-     * grants read access to the club's full accounting records.
+     * grants read access to the club's full accounting records. Only an owner or admin
+     * may grant the admin role or change an admin's role, and nobody below admin may
+     * change their own role (pass $targetUserId), so a Secretary cannot promote themselves.
      */
-    public static function canAssignRole(User $actor, Club $club, string $newRole, ?string $targetCurrentRole): bool
+    public static function canAssignRole(User $actor, Club $club, string $newRole, ?string $targetCurrentRole, ?int $targetUserId = null): bool
     {
-        if ($actor->is_super_admin) {
+        if ($actor->actsAsSuperAdmin()) {
             return true;
         }
 
@@ -73,6 +75,14 @@ final class ClubAccess
             return false;
         }
 
+        if ($actorRole !== ClubRole::Admin->value) {
+            $touchesAdmin = in_array(ClubRole::Admin->value, [$newRole, $targetCurrentRole], true);
+
+            if ($touchesAdmin || ($targetUserId !== null && $targetUserId === $actor->id)) {
+                return false;
+            }
+        }
+
         return $actorRole !== null && $newRole !== ClubRole::Owner->value && $targetCurrentRole !== ClubRole::Owner->value;
     }
 
@@ -81,6 +91,6 @@ final class ClubAccess
      */
     public static function canExportAllData(?User $user, Club $club): bool
     {
-        return $user !== null && ($user->is_super_admin || self::role($user, $club) === ClubRole::Owner->value);
+        return $user !== null && ($user->actsAsSuperAdmin() || self::role($user, $club) === ClubRole::Owner->value);
     }
 }

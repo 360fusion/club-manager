@@ -26,7 +26,8 @@ class SendEventPaymentRemindersCommand extends Command
             ->where('due_at', '<=', now()->addDays((int) $this->option('days')))
             ->where(fn ($q) => $q->whereNull('reminder_sent_at')->orWhere('reminder_sent_at', '<=', now()->subDays(7)))
             ->whereHas('event', fn ($q) => $q->where('starts_at', '>', now())->whereNotIn('status', ['cancelled', 'completed', 'draft']))
-            ->orderBy('id')
+            // By id, not by page: each reminder changes reminder_sent_at, which the filter reads, so pages would shift.
+            ->lazyById()
             ->each(function (EventRegistration $registration) use (&$sent) {
                 if ($registration->balanceDue() <= 0) {
                     return;

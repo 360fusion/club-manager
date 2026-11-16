@@ -50,7 +50,7 @@ class VisitorSummons
             return false;
         }
 
-        if ($viewer->is_super_admin || ClubAccess::isActiveMember($viewer, $club)) {
+        if ($viewer->actsAsSuperAdmin() || ClubAccess::isActiveMember($viewer, $club)) {
             return true;
         }
 

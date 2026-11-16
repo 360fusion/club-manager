@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SuperAdminLodgeCorrection\ApplyRequest;
 use App\Models\LodgeCorrection;
+use App\Models\MasonicHall;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,7 +36,23 @@ class ProvinceLodgeCorrectionController extends SuperAdminLodgeCorrectionControl
     {
         $provinceIds = $request->user()->administeredProvinces()->pluck('provinces.id');
 
-        return LodgeCorrection::whereHas('lodge', fn (Builder $lodge) => $lodge->whereIn('province_id', $provinceIds));
+        // A lodge with its own club account keeps its own listing, so its suggestions are not the province's to decide.
+        return LodgeCorrection::whereHas('lodge', fn (Builder $lodge) => $lodge->whereIn('province_id', $provinceIds)->whereNull('club_id'));
+    }
+
+    /**
+     * As the superadmin's apply, but a hall can only be one in the provinces this admin looks after.
+     */
+    public function apply(ApplyRequest $request, int $id): RedirectResponse
+    {
+        $hallId = $request->validated()['values']['masonic_hall_id'] ?? null;
+
+        if ($hallId !== null && in_array('masonic_hall_id', $request->validated()['fields'], true)) {
+            $provinceIds = $request->user()->administeredProvinces()->pluck('provinces.id');
+            abort_unless(MasonicHall::whereKey($hallId)->whereIn('province_id', $provinceIds)->exists(), 422, 'That hall is not in a province you look after.');
+        }
+
+        return parent::apply($request, $id);
     }
 
     protected function screen(): array

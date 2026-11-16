@@ -10,6 +10,7 @@ use App\Support\Months;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -435,6 +436,25 @@ class Club extends Model implements HasMedia
     public function inviteReminderDays(): int
     {
         return max(0, (int) ($this->settings['invite_reminder_days'] ?? 7));
+    }
+
+    /**
+     * The lodge's own timezone (settings.timezone), else UK time.
+     */
+    public function timezone(): string
+    {
+        $zone = $this->settings['timezone'] ?? null;
+
+        return is_string($zone) && in_array($zone, \DateTimeZone::listIdentifiers(), true) ? $zone : 'Europe/London';
+    }
+
+    /**
+     * Meeting and event times are stored as the lodge's wall-clock time ("19:00") in an app that runs on UTC. This
+     * reads that wall clock in the lodge's timezone, for anything that needs the real moment (a calendar feed).
+     */
+    public function atLocalTime(\DateTimeInterface $wallClock): CarbonImmutable
+    {
+        return CarbonImmutable::parse($wallClock->format('Y-m-d H:i:s'), $this->timezone());
     }
 
     /**

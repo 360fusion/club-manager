@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Club;
 use App\Models\Lodge;
 use App\Models\LodgeCorrection;
+use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -108,6 +109,21 @@ class ProvinceAdminTest extends TestCase
 
         $this->assertSame('24', $this->otherLodge->fresh()->number);
         $this->assertTrue($correction->fresh()->isOpen());
+    }
+
+    public function test_a_provincial_admin_cannot_apply_a_fix_to_a_lodge_with_its_own_club_or_pick_another_provinces_hall(): void
+    {
+        $managed = Lodge::factory()->create(['province_id' => $this->durham->id, 'number' => '49', 'club_id' => Club::factory()->create()->id]);
+        $this->actingAs($this->provincialAdmin)
+            ->post(route('members.lodges.fixes.apply', $this->correction($managed)->id), ['fields' => ['number'], 'values' => ['number' => '4900']])
+            ->assertNotFound();
+        $this->assertSame('49', $managed->fresh()->number);
+
+        $otherHall = MasonicHall::create(['name' => 'Far Hall', 'slug' => 'far-hall', 'province_id' => $this->otherLodge->province_id]);
+        $this->actingAs($this->provincialAdmin)
+            ->post(route('members.lodges.fixes.apply', $this->correction($this->durhamLodge)->id), ['fields' => ['masonic_hall_id'], 'values' => ['masonic_hall_id' => $otherHall->id]])
+            ->assertStatus(422);
+        $this->assertNotSame($otherHall->id, $this->durhamLodge->fresh()->masonic_hall_id);
     }
 
     public function test_someone_who_looks_after_no_province_is_refused_before_the_form_is_checked(): void

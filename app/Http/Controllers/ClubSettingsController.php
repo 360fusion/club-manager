@@ -8,6 +8,7 @@ use App\Models\MasonicHall;
 use App\Services\ClubSettingsScreenData;
 use App\Support\ClubAccess;
 use App\Support\ClubDomain;
+use App\Support\ClubPermissions;
 use App\Support\MasonicRanks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ class ClubSettingsController extends Controller
         if (! empty($validated['currency'])) {
             $validated['currency'] = strtoupper($validated['currency']);
 
-            if ($validated['currency'] !== $club->currencyCode() && $club->currencyIsLocked() && ! $request->user()->is_super_admin) {
+            if ($validated['currency'] !== $club->currencyCode() && $club->currencyIsLocked() && ! $request->user()->actsAsSuperAdmin()) {
                 throw ValidationException::withMessages(['currency' => 'This club already has financial records, so its currency can no longer be changed. Contact support if it was set by mistake.']);
             }
         }
@@ -67,7 +68,7 @@ class ClubSettingsController extends Controller
         }
 
         // Storage quota is a platform-level limit; only super admins may change it.
-        if (array_key_exists('storage_quota_mb', $validated) && ! $request->user()->is_super_admin) {
+        if (array_key_exists('storage_quota_mb', $validated) && ! $request->user()->actsAsSuperAdmin()) {
             unset($validated['storage_quota_mb']);
         }
 
@@ -136,7 +137,7 @@ class ClubSettingsController extends Controller
         $current = $club->settings['permission_matrix'] ?? [];
         $current = is_array($current) ? $current : [];
         $user = $request->user();
-        $isOwner = $user->is_super_admin || ClubAccess::role($user, $club) === 'owner';
+        $isOwner = $user->actsAsSuperAdmin() || ClubAccess::role($user, $club) === 'owner';
         $known = array_keys(self::defaultPermissionMatrix());
         $clean = [];
 
@@ -151,6 +152,13 @@ class ClubSettingsController extends Controller
 
             if (isset($current['manage_settings'])) {
                 $clean['manage_settings'] = $current['manage_settings'];
+            }
+
+            // Below the owner, roles can only be taken away: adding one back (say, after the owner removed admins from
+            // billing) is the owner's decision, so nobody can widen their own access from this screen.
+            $effective = ClubPermissions::matrixFor($club);
+            foreach ($clean as $capability => $override) {
+                $clean[$capability]['roles'] = array_values(array_intersect($override['roles'], $effective[$capability]['roles'] ?? []));
             }
         }
 

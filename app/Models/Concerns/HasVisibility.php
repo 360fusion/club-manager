@@ -27,7 +27,7 @@ trait HasVisibility
      */
     public function scopeVisibleTo(Builder $query, ?User $viewer): Builder
     {
-        if ($viewer?->is_super_admin) {
+        if ($viewer?->actsAsSuperAdmin()) {
             return $query;
         }
 

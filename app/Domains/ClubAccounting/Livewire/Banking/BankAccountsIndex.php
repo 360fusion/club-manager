@@ -62,7 +62,7 @@ class BankAccountsIndex extends Component
         // 1. Generate unique nominal code for Chart of Accounts (e.g. 1010, 1020, 1030)
         $existingCodes = Account::where('club_id', $club->id)
             ->where('type', 'asset')
-            ->where('code', 'like', '10%')
+            ->whereLike('code', '10%')
             ->pluck('code')
             ->toArray();
 
@@ -115,7 +115,7 @@ class BankAccountsIndex extends Component
     {
         $club = $this->getClub();
         $bankAccounts = BankAccount::where('club_id', $club->id)
-            ->with(['account', 'transactions'])
+            ->with('account')
             ->orderBy('is_active', 'desc')
             ->orderBy('id', 'asc')
             ->get();

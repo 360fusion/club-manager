@@ -2,7 +2,6 @@
 
 namespace App\Domains\ClubAccounting\Services;
 
-use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use Exception;
@@ -16,7 +15,7 @@ class SumUpSyncService
     public function testConnection(string $apiKey): array
     {
         try {
-            $response = Http::withToken(trim($apiKey))
+            $response = Http::timeout(30)->withToken(trim($apiKey))
                 ->get('https://api.sumup.com/v0.1/me');
 
             if ($response->failed()) {
@@ -52,7 +51,7 @@ class SumUpSyncService
         $start = $startDate ? date('Y-m-d', strtotime($startDate)) : date('Y-m-d', strtotime('-30 days'));
         $end = $endDate ? date('Y-m-d', strtotime($endDate)) : date('Y-m-d');
 
-        $response = Http::withToken($apiKey)
+        $response = Http::timeout(30)->withToken($apiKey)
             ->get('https://api.sumup.com/v0.1/me/financials/transactions', [
                 'start_date' => $start,
                 'end_date' => $end,
@@ -98,17 +97,7 @@ class SumUpSyncService
 
             $runningBalance += $net;
 
-            BankTransaction::create([
-                'club_id' => $bankAccount->club_id,
-                'bank_account_id' => $bankAccount->id,
-                'transaction_date' => $date,
-                'description' => $desc,
-                'amount' => $net,
-                'reference' => $txId,
-                'payee_payer' => 'SumUp Customer',
-                'status' => BankTransactionStatus::Unmatched->value,
-                'balance_after' => $runningBalance,
-            ]);
+            BankTransaction::recordFromGateway($bankAccount, 'sumup', (string) $txId, $date, $desc, (float) $net, $runningBalance);
 
             $syncedCount++;
         }

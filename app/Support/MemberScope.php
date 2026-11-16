@@ -37,7 +37,7 @@ final class MemberScope
         }
 
         $club = $memberClubs->firstWhere('slug', $slug)
-            ?? ($user->is_super_admin ? Club::where('slug', $slug)->with('clubType')->first() : null);
+            ?? ($user->actsAsSuperAdmin() ? Club::where('slug', $slug)->with('clubType')->first() : null);
 
         abort_if($club === null, 404);
 

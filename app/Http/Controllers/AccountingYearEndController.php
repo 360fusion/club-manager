@@ -41,7 +41,7 @@ class AccountingYearEndController extends Controller
     {
         $club = $this->findClub($clubSlug);
 
-        if (! $request->user()->is_super_admin) {
+        if (! $request->user()->actsAsSuperAdmin()) {
             abort(403, 'Only a platform super admin can reopen a closed financial year.');
         }
 

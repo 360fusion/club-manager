@@ -138,6 +138,18 @@ class PublicCalendarTest extends TestCase
         $this->assertStringNotContainsString('Members supper', $body);
     }
 
+    public function test_the_feed_gives_the_lodges_wall_clock_time_in_summer_and_winter(): void
+    {
+        $this->travelTo('2027-03-01 12:00:00');
+        $this->event('Summer dinner', start: CarbonImmutable::parse('2027-07-01 19:00:00', 'UTC'));
+        $this->event('Winter dinner', start: CarbonImmutable::parse('2027-12-02 19:00:00', 'UTC'));
+
+        $body = $this->get(route('public.site.calendar_feed', ['clubSlug' => $this->club->slug]))->assertOk()->getContent();
+
+        $this->assertStringContainsString('DTSTART:20270701T180000Z', $body, '19:00 in British Summer Time is 18:00 UTC');
+        $this->assertStringContainsString('DTSTART:20271202T190000Z', $body);
+    }
+
     public function test_draft_events_no_longer_appear_in_the_upcoming_events_list(): void
     {
         $this->event('Open evening');

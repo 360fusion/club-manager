@@ -24,6 +24,8 @@ class CpanelConnection implements RemoteFiles
             ->withHeaders(['Authorization' => "cpanel {$username}:{$token}"])
             ->withOptions(['curl' => [CURLOPT_RESOLVE => ["{$host}:{$port}:{$address}"]]])
             ->acceptJson()
+            // A redirect would send the request to an address that was never checked (an internal one, say).
+            ->withoutRedirecting()
             ->timeout(60);
     }
 

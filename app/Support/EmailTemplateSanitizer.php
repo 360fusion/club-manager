@@ -19,7 +19,29 @@ class EmailTemplateSanitizer
         $swapped = preg_replace('/href\s*=\s*(["\'])\s*\{\{\s*(\w+)\s*\}\}\s*\1/i', 'href="https://placeholder.invalid/$2"', $html) ?? $html;
         $clean = self::sanitizer()->sanitize($swapped);
 
-        return preg_replace('#https://placeholder\.invalid/(\w+)#', '{{$1}}', $clean) ?? $clean;
+        $restored = preg_replace('#https://placeholder\.invalid/(\w+)#', '{{$1}}', $clean) ?? $clean;
+
+        return self::placeholdersOnlyAsWholeLinks($restored);
+    }
+
+    /**
+     * A placeholder inside an attribute is only kept when it is a link's whole address. Anywhere else (part of an
+     * image or link address, a style) it could hand a private link, such as an invitation or signing link, to
+     * another site when the email is opened, so it is removed. Also applied when a stored template is filled in.
+     */
+    public static function placeholdersOnlyAsWholeLinks(string $html): string
+    {
+        return preg_replace_callback('/(\s[\w:-]+)\s*=\s*(["\'])(.*?)\2/s', function (array $match): string {
+            if (! str_contains($match[3], '{{')) {
+                return $match[0];
+            }
+
+            if (strtolower(trim($match[1])) === 'href' && preg_match('/^\s*\{\{\s*\w+\s*\}\}\s*$/', $match[3])) {
+                return $match[0];
+            }
+
+            return $match[1].'='.$match[2].preg_replace('/\{\{\s*\w+\s*\}\}/', '', $match[3]).$match[2];
+        }, $html) ?? $html;
     }
 
     private static function sanitizer(): HtmlSanitizer

@@ -110,19 +110,19 @@ class MediaAdminController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('file_name', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
+                $q->whereLike('file_name', "%{$search}%")
+                    ->orWhereLike('name', "%{$search}%");
             });
         }
 
         if ($type === 'image') {
-            $query->where('mime_type', 'like', 'image/%');
+            $query->whereLike('mime_type', 'image/%');
         } elseif ($type === 'document') {
             $query->where('mime_type', 'not like', 'image/%');
         }
 
         if ($extension && $extension !== 'all') {
-            $query->where('file_name', 'like', "%.{$extension}");
+            $query->whereLike('file_name', "%.{$extension}");
         }
 
         if ($date && $date !== 'all') {

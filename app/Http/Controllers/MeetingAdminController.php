@@ -11,6 +11,7 @@ use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\RecurringRule;
+use App\Models\User;
 use App\Support\ImageDownscaler;
 use App\Support\OfficersYear;
 use Illuminate\Http\JsonResponse;
@@ -100,7 +101,8 @@ class MeetingAdminController extends Controller
                 'status' => 'draft',
                 'officers_year_label' => OfficersYear::label(now(), $club->settings['installation_month'] ?? null),
             ]),
-            'members' => $club->users,
+            // Only what the officer dropdowns show, not every member's contact details.
+            'members' => $club->users()->get(['users.id', 'users.name'])->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name, 'pivot' => ['rank' => $user->pivot->rank]]),
             'lodgeOfficers' => $this->currentOfficers($club),
         ]);
     }
@@ -131,7 +133,7 @@ class MeetingAdminController extends Controller
         return Inertia::render('Admin/Meetings/Form', [
             'club' => $club,
             'meeting' => $meeting,
-            'members' => $club->users()->select('users.id', 'users.name', 'users.email')->get(),
+            'members' => $club->users()->get(['users.id', 'users.name'])->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name, 'pivot' => ['rank' => $user->pivot->rank]]),
             'charityGrants' => $charityGrants,
             'lodgeOfficers' => $this->currentOfficers($club),
         ]);

@@ -105,7 +105,8 @@ class CommitteePackCompilerService
             ->setPaper('a4', 'portrait')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
+                // The pack is built only from our own data; nothing in it should make the PDF engine fetch an address.
+                'isRemoteEnabled' => false,
                 'defaultFont' => 'sans-serif',
             ]);
 

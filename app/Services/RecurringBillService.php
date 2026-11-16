@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\RecurringBillTemplate;
 use App\Models\Club;
 use Carbon\Carbon;
@@ -47,6 +46,12 @@ class RecurringBillService
         foreach ($query->get() as $template) {
             try {
                 DB::transaction(function () use ($template, &$createdCount, &$totalBilled) {
+                    // Re-read under a lock: a manual "generate now" running with the 06:00 job must not bill twice.
+                    $template = RecurringBillTemplate::whereKey($template->id)->lockForUpdate()->first();
+                    if (! $template || ! $template->is_active || $template->next_run_date->isAfter(now()->startOfDay())) {
+                        return;
+                    }
+
                     $templateClub = $template->club;
 
                     $this->accountingService->createVendorBill($templateClub, [
@@ -62,7 +67,7 @@ class RecurringBillService
                     $createdCount++;
                     $totalBilled += (float) $template->amount;
                 });
-            } catch (LedgerRuleException $e) {
+            } catch (\Throwable $e) {
                 // One lodge's closed year or bad template must not stop everyone else's bills; it is tried again next run.
                 Log::warning("Recurring bill template {$template->id} skipped: {$e->getMessage()}");
             }

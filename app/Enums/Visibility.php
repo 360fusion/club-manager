@@ -64,7 +64,7 @@ enum Visibility: string
             return false;
         }
 
-        if ($viewer->is_super_admin) {
+        if ($viewer->actsAsSuperAdmin()) {
             return true;
         }
 

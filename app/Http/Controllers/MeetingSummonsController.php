@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
+use App\Enums\ClubMemberStatus;
 use App\Http\Requests\MeetingAdmin\GenerateSeasonRequest;
 use App\Models\Meeting;
 use App\Models\RecurringRule;
@@ -33,7 +34,7 @@ class MeetingSummonsController extends Controller
             ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
             ->firstOrFail();
 
-        $members = $club->users()->wherePivot('role', '!=', 'visitor')->get();
+        $members = $club->users()->wherePivot('role', '!=', 'visitor')->wherePivot('status', ClubMemberStatus::Active->value)->get();
         // No stand-ins: a summons must not name someone else as Secretary or Master when the lodge has not said who they are.
         $secretaryUser = ($secretary = Member::summonsSecretary($club)) ? (object) $secretary : null;
         $worshipfulMaster = Member::holdingOffice($club, LodgeOffice::WorshipfulMaster);

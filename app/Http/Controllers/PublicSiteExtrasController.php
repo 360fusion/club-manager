@@ -90,8 +90,8 @@ class PublicSiteExtrasController extends Controller
             ->orderBy('starts_at')->get();
 
         foreach ($events as $event) {
-            $start = CarbonImmutable::instance($event->starts_at);
-            $end = $event->ends_at ? CarbonImmutable::instance($event->ends_at) : $start->addHours(2);
+            $start = $club->atLocalTime($event->starts_at);
+            $end = $event->ends_at ? $club->atLocalTime($event->ends_at) : $start->addHours(2);
             $ics->add('event-'.$event->id, $event->title, $start, $end->lt($start) ? $start->addHours(2) : $end, $event->formatted_location ?: null, null, route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug]));
         }
 

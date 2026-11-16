@@ -18,8 +18,8 @@ class MemberMentionSearchService
         return $club->users()
             ->when($cleanQuery !== '', function ($q) use ($cleanQuery) {
                 $q->where(function ($sub) use ($cleanQuery) {
-                    $sub->where('name', 'like', "%{$cleanQuery}%")
-                        ->orWhere('email', 'like', "%{$cleanQuery}%");
+                    $sub->whereLike('name', "%{$cleanQuery}%")
+                        ->orWhereLike('email', "%{$cleanQuery}%");
                 });
             })
             ->select('users.id', 'users.name', 'users.email')

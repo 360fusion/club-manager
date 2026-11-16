@@ -282,9 +282,9 @@ class SubscriptionIndex extends Component
         if (! empty($this->search)) {
             $term = '%'.trim($this->search).'%';
             $query->whereHas('member', function ($q) use ($term) {
-                $q->where('first_name', 'like', $term)
-                    ->orWhere('last_name', 'like', $term)
-                    ->orWhere('email', 'like', $term);
+                $q->whereLike('first_name', $term)
+                    ->orWhereLike('last_name', $term)
+                    ->orWhereLike('email', $term);
             });
         }
 
@@ -292,7 +292,8 @@ class SubscriptionIndex extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        $subscriptions = $query->paginate(20);
+        // A fixed order, or PostgreSQL may show a row on two pages and skip another.
+        $subscriptions = $query->orderBy('id')->paginate(20);
 
         // Aggregate Metrics for Selected Year
         $yearSubscriptions = MemberSubscription::where('club_id', $club->id)->year($this->selectedYear)->get();

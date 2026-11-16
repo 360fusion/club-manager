@@ -448,8 +448,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/committee/{meetingId}/minutes', LiveMinuteTaker::class)->name('admin.committee.minutes');
     Route::get('/{clubSlug}/admin/committee/{meetingId}/pack-pdf', [CommitteePackController::class, 'pdf'])->name('admin.committee.pack.pdf');
     Route::get('/committee/meetings/{meetingId}/pack-pdf', [CommitteePackController::class, 'pdf'])->name('committee.pack.pdf');
+    // Old links: only followed for a meeting of one of the signed-in person's own clubs, so an id says nothing about another lodge.
     Route::get('/committee/meetings/{meetingId}/minutes', function ($meetingId) {
-        $meeting = ClubCommitteeMeeting::with('club')->findOrFail($meetingId);
+        $meeting = ClubCommitteeMeeting::with('club')->whereIn('club_id', auth()->user()->activeClubIds())->findOrFail($meetingId);
 
         return redirect()->route('admin.committee.minutes', [
             'clubSlug' => $meeting->club->slug,
@@ -457,7 +458,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('committee.minutes');
     Route::get('/committee/meetings/{meetingId}', function ($meetingId) {
-        $meeting = ClubCommitteeMeeting::with('club')->findOrFail($meetingId);
+        $meeting = ClubCommitteeMeeting::with('club')->whereIn('club_id', auth()->user()->activeClubIds())->findOrFail($meetingId);
 
         return redirect()->route('admin.committee.workspace', [
             'clubSlug' => $meeting->club->slug,

@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Models\BankAccount;
+use App\Domains\ClubAccounting\Models\DirectDebitMandate;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -101,5 +103,19 @@ class GoCardlessWebhookSecurityTest extends TestCase
         );
 
         $response->assertSuccessful();
+    }
+
+    public function test_a_signed_webhook_cannot_change_another_clubs_mandate(): void
+    {
+        $secret = 'shhh';
+        $this->bankAccount($secret);
+        $other = Club::create(['club_type_id' => $this->club->club_type_id, 'name' => 'Other Lodge', 'slug' => 'other-lodge']);
+        $mandate = DirectDebitMandate::create(['club_id' => $other->id, 'user_id' => User::factory()->create()->id, 'gocardless_mandate_id' => 'MD123', 'status' => 'pending_submission']);
+
+        $body = json_encode($this->payload());
+        $this->call('POST', "/webhooks/gocardless/{$this->club->id}", [], [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_WEBHOOK_SIGNATURE' => hash_hmac('sha256', $body, $secret), 'HTTP_ACCEPT' => 'application/json'], $body)
+            ->assertSuccessful();
+
+        $this->assertSame('pending_submission', $mandate->fresh()->status);
     }
 }

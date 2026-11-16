@@ -45,7 +45,7 @@ class StoreMeetingRequest extends ClubRequest
             'fraternal_visits_text' => 'nullable|string|max:10000',
             'officers_year_label' => 'nullable|string|max:255',
             'officers_roster' => 'nullable|array|max:100',
-            'front_page_logo' => 'nullable|string|max:1000',
+            'front_page_logo' => 'nullable|url:http,https|max:1000',
             'front_page_logo_file' => UploadRules::image(5120),
             'front_page_title' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',

@@ -57,15 +57,20 @@ class WeeklyUpdateDigestService
      */
     public function isDue(NewsletterType $type, Carbon $now): bool
     {
-        if (! $type->is_automated_digest || strtolower($now->format('l')) !== strtolower((string) $type->digest_send_day)) {
+        // The day and hour are the lodge's own clock (UK time unless it set another), not the server's UTC.
+        $local = $now->copy()->setTimezone($type->club?->timezone() ?? 'Europe/London');
+
+        if (! $type->is_automated_digest || strtolower($local->format('l')) !== strtolower((string) $type->digest_send_day)) {
             return false;
         }
 
-        if ((int) substr((string) $type->digest_send_time, 0, 2) !== (int) $now->format('H')) {
+        // From the chosen hour onwards that day, so a missed hourly run (the scheduler was down) still sends it later.
+        if ((int) $local->format('H') < (int) substr((string) $type->digest_send_time, 0, 2)) {
             return false;
         }
 
-        $last = Newsletter::where('newsletter_type_id', $type->id)->where('status', 'sent')->max('sent_at');
+        // One still going out counts too, so a later hourly run that day does not start a second copy.
+        $last = Newsletter::where('newsletter_type_id', $type->id)->whereIn('status', ['sending', 'sent'])->max('sent_at');
         $minimumDays = match ($type->digest_frequency) {
             'biweekly' => 13,
             'monthly' => 27,
@@ -267,7 +272,7 @@ class WeeklyUpdateDigestService
             ->where(function ($q) {
                 $q->where('slug', 'weekly-digest')
                     ->orWhere('is_automated_digest', true)
-                    ->orWhere('name', 'LIKE', '%Digest%');
+                    ->orWhereLike('name', '%Digest%');
             })
             ->first();
 

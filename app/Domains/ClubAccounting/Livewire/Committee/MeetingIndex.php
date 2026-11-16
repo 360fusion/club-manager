@@ -234,7 +234,7 @@ class MeetingIndex extends Component
             ->when(! in_array($this->statusFilter, ['all', 'scheduled', 'draft', 'past']), function ($q) {
                 $q->where('status', $this->statusFilter);
             })
-            ->when(! empty($this->search), fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
+            ->when(! empty($this->search), fn ($q) => $q->whereLike('title', "%{$this->search}%"))
             ->orderByDesc('meeting_date')
             ->with(['chair', 'secretary', 'attendees', 'agendaItems', 'tasks'])
             ->get();

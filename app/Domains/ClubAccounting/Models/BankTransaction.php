@@ -30,6 +30,25 @@ class BankTransaction extends Model
         'status',
     ];
 
+    /**
+     * A line fetched from a payment provider (Stripe, SumUp, PayPal, GoCardless) rather than read from a statement file.
+     * The provider's own id is the reference and, with the provider, the duplicate check.
+     */
+    public static function recordFromGateway(BankAccount $account, string $provider, string $externalId, string $date, string $description, float $amount, ?float $balanceAfter): self
+    {
+        return self::create([
+            'club_id' => $account->club_id,
+            'bank_account_id' => $account->id,
+            'transaction_date' => $date,
+            'raw_description' => $description,
+            'reference' => $externalId,
+            'amount' => round($amount, 2),
+            'balance_after' => $balanceAfter === null ? null : round($balanceAfter, 2),
+            'transaction_hash' => hash('sha256', $provider.'|'.$account->id.'|'.$externalId),
+            'status' => BankTransactionStatus::Unmatched->value,
+        ]);
+    }
+
     protected function casts(): array
     {
         return [
@@ -102,9 +121,9 @@ class BankTransaction extends Model
         $search = '%'.trim($term).'%';
 
         return $query->where(function (Builder $q) use ($search) {
-            $q->where('raw_description', 'like', $search)
-                ->orWhere('reference', 'like', $search)
-                ->orWhere('transaction_hash', 'like', $search);
+            $q->whereLike('raw_description', $search)
+                ->orWhereLike('reference', $search)
+                ->orWhereLike('transaction_hash', $search);
         });
     }
 }

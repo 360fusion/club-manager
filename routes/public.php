@@ -135,7 +135,8 @@ if (app()->isLocal()) {
 Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe.club');
 Route::get('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribeForm'])->middleware('throttle:60,1')->name('newsletters.unsubscribe.form');
 Route::post('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribe'])->middleware('throttle:60,1')->name('newsletters.unsubscribe');
-Route::post('/webhooks/paypal/{clubId}', [PayPalWebhookController::class, 'handle'])->name('webhooks.paypal.club');
+// Each notification makes a call to PayPal to verify it, so a flood of fake ones is capped.
+Route::post('/webhooks/paypal/{clubId}', [PayPalWebhookController::class, 'handle'])->middleware('throttle:120,1')->name('webhooks.paypal.club');
 Route::post('/webhooks/stripe-platform', [PlatformStripeWebhookController::class, 'handleWebhook'])->name('webhooks.stripe.platform');
 Route::post('/webhooks/stripe-connect', [StripeConnectWebhookController::class, 'handle'])->name('webhooks.stripe.connect');
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])

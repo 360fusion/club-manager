@@ -228,7 +228,7 @@ class EventPayPalPaymentTest extends TestCase
         $this->actingAs($this->member)->get(route('member.events.paypal_return', ['slug' => 'club-a', 'id' => $this->event->id]).'?token=ORDER-1');
         $this->assertSame('paid', $registration->fresh()->payment_status);
 
-        $this->mock(PayPalGateway::class, fn (MockInterface $mock) => $mock->shouldReceive('refund')->once()->with(\Mockery::any(), 'CAP-1', 96.0, 'GBP')->andReturn('REF-1'));
+        $this->mock(PayPalGateway::class, fn (MockInterface $mock) => $mock->shouldReceive('refund')->once()->with(\Mockery::any(), 'CAP-1', 96.0, 'GBP', \Mockery::type('string'))->andReturn('REF-1'));
         app(EventPaymentService::class)->refund($registration->fresh(), $this->member, 'Cannot attend');
 
         $this->assertSame('refunded', $registration->fresh()->payment_status);

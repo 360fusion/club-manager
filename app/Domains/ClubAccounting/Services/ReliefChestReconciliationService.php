@@ -223,9 +223,9 @@ class ReliefChestReconciliationService
         } elseif (! empty($filters['person_search'])) {
             $pSearch = strtolower($filters['person_search']);
             $query->where(function ($q) use ($pSearch) {
-                $q->where('donor_name', 'like', "%{$pSearch}%")
-                    ->orWhereHas('donor', fn ($dq) => $dq->where('first_name', 'like', "%{$pSearch}%")->orWhere('last_name', 'like', "%{$pSearch}%"))
-                    ->orWhereHas('countedBy', fn ($cq) => $cq->where('first_name', 'like', "%{$pSearch}%")->orWhere('last_name', 'like', "%{$pSearch}%"));
+                $q->whereLike('donor_name', "%{$pSearch}%")
+                    ->orWhereHas('donor', fn ($dq) => $dq->whereLike('first_name', "%{$pSearch}%")->orWhereLike('last_name', "%{$pSearch}%"))
+                    ->orWhereHas('countedBy', fn ($cq) => $cq->whereLike('first_name', "%{$pSearch}%")->orWhereLike('last_name', "%{$pSearch}%"));
             });
         }
 
@@ -244,10 +244,10 @@ class ReliefChestReconciliationService
         if (! empty($filters['search'])) {
             $search = strtolower($filters['search']);
             $query->where(function ($q) use ($search) {
-                $q->where('notes', 'like', "%{$search}%")
-                    ->orWhere('collection_type', 'like', "%{$search}%")
-                    ->orWhere('donor_name', 'like', "%{$search}%")
-                    ->orWhereHas('bankTransaction', fn ($bq) => $bq->where('raw_description', 'like', "%{$search}%")->orWhere('reference', 'like', "%{$search}%"));
+                $q->whereLike('notes', "%{$search}%")
+                    ->orWhereLike('collection_type', "%{$search}%")
+                    ->orWhereLike('donor_name', "%{$search}%")
+                    ->orWhereHas('bankTransaction', fn ($bq) => $bq->whereLike('raw_description', "%{$search}%")->orWhereLike('reference', "%{$search}%"));
             });
         }
 

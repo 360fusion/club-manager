@@ -314,10 +314,37 @@ class PlatformPaymentsTest extends TestCase
         $registration->update(['stripe_session_id' => 'cs_1']);
         $this->connectWebhook('checkout.session.completed', $this->paidSession($registration));
 
-        $this->mock(StripeGateway::class, fn (MockInterface $mock) => $mock->shouldReceive('refund')->once()->with(\Mockery::any(), 'pi_1', 2500, 'acct_123')->andReturn('re_1'));
+        $this->mock(StripeGateway::class, fn (MockInterface $mock) => $mock->shouldReceive('refund')->once()->with(\Mockery::any(), 'pi_1', 2500, 'acct_123', \Mockery::type('string'))->andReturn('re_1'));
         app(EventPaymentService::class)->refund($registration->fresh(), $this->admin, 'Cannot attend', 25.0);
 
         $this->assertSame('25.00', PlatformPayment::sole()->refunded);
+    }
+
+    public function test_a_refund_asked_for_again_after_a_failure_reuses_its_key_but_a_second_refund_does_not(): void
+    {
+        $this->account();
+        $registration = $this->book();
+        $registration->update(['stripe_session_id' => 'cs_1']);
+        $this->connectWebhook('checkout.session.completed', $this->paidSession($registration));
+        $keys = [];
+        $this->mock(StripeGateway::class, function (MockInterface $mock) use (&$keys) {
+            $mock->shouldReceive('refund')->andReturnUsing(function (...$args) use (&$keys) {
+                $keys[] = $args[4];
+
+                return 're_'.count($keys);
+            });
+        });
+        $service = app(EventPaymentService::class);
+
+        // The first attempt reaches Stripe; then our side fails, the transaction is rolled back and nothing is recorded.
+        $service->refund($registration->fresh(), $this->admin, 'Cannot attend', 10.0);
+        $registration->forceFill(['amount_refunded' => 0, 'payment_status' => 'paid'])->save();
+
+        $service->refund($registration->fresh(), $this->admin, 'Cannot attend', 10.0);
+        $service->refund($registration->fresh(), $this->admin, 'Second part', 10.0);
+
+        $this->assertSame($keys[0], $keys[1], 'the retry is the same refund to Stripe');
+        $this->assertNotSame($keys[1], $keys[2], 'a further part refund is a new one');
     }
 
     public function test_the_card_options_settings_keep_the_mode_and_drop_pasted_keys_when_connected(): void

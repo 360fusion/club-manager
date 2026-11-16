@@ -204,12 +204,12 @@ class Member extends Model
         $term = '%'.trim($search).'%';
 
         return $query->where(function (Builder $q) use ($term) {
-            $q->where('first_name', 'like', $term)
-                ->orWhere('last_name', 'like', $term)
-                ->orWhere('email', 'like', $term)
-                ->orWhere('grand_lodge_number', 'like', $term)
-                ->orWhere('provincial_rank', 'like', $term)
-                ->orWhere('grand_rank', 'like', $term);
+            $q->whereLike('first_name', $term)
+                ->orWhereLike('last_name', $term)
+                ->orWhereLike('email', $term)
+                ->orWhereLike('grand_lodge_number', $term)
+                ->orWhereLike('provincial_rank', $term)
+                ->orWhereLike('grand_rank', $term);
         });
     }
 

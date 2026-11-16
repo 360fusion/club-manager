@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
+use App\Enums\ClubMemberStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Support\ClubAccess;
@@ -33,7 +34,7 @@ class MemberMeetingController extends Controller
             ->firstOrFail();
         abort_if($meeting->status !== 'published' && ! ClubAccess::can($user, $club, 'manage_meetings'), 404);
 
-        $members = $club->users()->wherePivot('role', '!=', 'visitor')->get()->map(function ($u) {
+        $members = $club->users()->wherePivot('role', '!=', 'visitor')->wherePivot('status', ClubMemberStatus::Active->value)->get()->map(function ($u) {
             return [
                 'id' => $u->id,
                 'name' => $u->name,

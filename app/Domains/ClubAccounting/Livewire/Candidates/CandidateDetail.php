@@ -175,7 +175,7 @@ class CandidateDetail extends Component
         $club = $this->getClub();
         $candidate = $this->candidateFor((int) $this->candidateId);
 
-        if (! auth()->user()->is_super_admin && ! in_array(ClubAccess::role(auth()->user(), $club), ['owner', 'admin'], true)) {
+        if (! auth()->user()->actsAsSuperAdmin() && ! in_array(ClubAccess::role(auth()->user(), $club), ['owner', 'admin'], true)) {
             session()->flash('error', 'Only an owner or admin can delete a candidate.');
 
             return null;
@@ -226,7 +226,7 @@ class CandidateDetail extends Component
             'activeMembers' => Member::where('club_id', $club->id)->active()->orderBy('last_name')->get(),
             'owners' => $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->orderBy('users.name')->get(['users.id', 'users.name']),
             'reasons' => $this->outcomeReasons(),
-            'canReopen' => auth()->user()->is_super_admin || in_array(ClubAccess::role(auth()->user(), $club), ['owner', 'admin'], true),
+            'canReopen' => auth()->user()->actsAsSuperAdmin() || in_array(ClubAccess::role(auth()->user(), $club), ['owner', 'admin'], true),
         ])->layout('components.layouts.app', [
             'title' => $candidate->full_name.' — '.$club->name,
             'club' => $club,

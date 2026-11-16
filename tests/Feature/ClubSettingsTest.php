@@ -83,23 +83,17 @@ class ClubSettingsTest extends TestCase
         $this->assertEquals('#0369a1', $this->club->settings['primary_color']);
     }
 
-    public function test_admin_can_update_role_permissions_matrix(): void
+    public function test_an_admin_can_take_roles_away_but_not_add_them(): void
     {
-        $payload = [
-            'permission_matrix' => [
-                'manage_members' => [
-                    'roles' => ['owner', 'admin', 'treasurer'],
-                ],
-            ],
-        ];
+        $update = fn (array $roles) => $this->actingAs($this->adminUser)
+            ->put(route('admin.settings.update', ['clubSlug' => $this->club->slug]), ['permission_matrix' => ['manage_billing' => ['roles' => $roles]]])
+            ->assertRedirect();
 
-        $response = $this->actingAs($this->adminUser)
-            ->put(route('admin.settings.update', ['clubSlug' => $this->club->slug]), $payload);
+        $update(['owner', 'admin']);
+        $this->assertEquals(['owner', 'admin'], $this->club->fresh()->settings['permission_matrix']['manage_billing']['roles'], 'taking the treasurer off billing is allowed');
 
-        $response->assertRedirect();
-
-        $this->club->refresh();
-        $this->assertEquals(['owner', 'admin', 'treasurer'], $this->club->settings['permission_matrix']['manage_members']['roles']);
+        $update(['owner', 'admin', 'treasurer', 'coach']);
+        $this->assertEquals(['owner', 'admin'], $this->club->fresh()->settings['permission_matrix']['manage_billing']['roles'], 'adding roles back is the owner\'s decision');
     }
 
     public function test_super_admin_can_set_the_storage_quota(): void

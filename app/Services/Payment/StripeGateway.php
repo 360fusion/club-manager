@@ -38,13 +38,17 @@ class StripeGateway
     /**
      * Refund some or all of a card payment. Amounts are in the smallest currency unit.
      */
-    public function refund(ClubPaymentMethod $method, string $paymentIntent, int $amountMinor, ?string $connectedAccount = null): string
+    /**
+     * The idempotency key makes a repeated request (after our side failed to record the first) return the same refund
+     * instead of refunding again.
+     */
+    public function refund(ClubPaymentMethod $method, string $paymentIntent, int $amountMinor, ?string $connectedAccount = null, ?string $idempotencyKey = null): string
     {
         try {
             // On a connected account the platform's commission is returned in proportion to what is refunded.
             $refund = $this->client($method, $connectedAccount)->refunds->create(
                 ['payment_intent' => $paymentIntent, 'amount' => $amountMinor] + ($connectedAccount ? ['refund_application_fee' => true] : []),
-                $connectedAccount ? ['stripe_account' => $connectedAccount] : [],
+                ($connectedAccount ? ['stripe_account' => $connectedAccount] : []) + ($idempotencyKey ? ['idempotency_key' => $idempotencyKey] : []),
             );
         } catch (ApiErrorException $e) {
             Log::warning('Stripe refund failed', ['club' => $method->club_id, 'error' => $e->getMessage()]);

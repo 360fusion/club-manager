@@ -101,29 +101,35 @@ class AccountingAdminController extends Controller
 
         // Bank Accounts Assembly
         $bankAccountsQuery = BankAccount::where('club_id', $club->id)
-            ->with(['account', 'transactions'])
+            ->with('account')
             ->orderBy('is_active', 'desc')
             ->orderBy('id', 'asc')
             ->get();
 
-        $bankAccounts = $bankAccountsQuery->map(fn ($b) => [
-            'id' => $b->id,
-            'bank_name' => $b->bank_name,
-            'account_name' => $b->account_name,
-            'account_type' => $b->account_type,
-            'formatted_account_type' => $b->formatted_account_type,
-            'account_number' => $b->account_number,
-            'sort_code' => $b->sort_code,
-            'currency' => $b->currency,
-            'opening_balance' => (float) $b->opening_balance,
-            'statement_balance' => $b->statement_balance,
-            'formatted_statement_balance' => Currencies::format($b->statement_balance, $club),
-            'ledger_balance' => $b->ledger_balance,
-            'formatted_ledger_balance' => Currencies::format($b->ledger_balance, $club),
-            'unreconciled_count' => $b->unreconciled_count,
-            'is_active' => $b->is_active,
-            'account_code' => $b->account?->code ?? '1000',
-        ]);
+        // Each balance is a query, so each is worked out once per account.
+        $bankAccounts = $bankAccountsQuery->map(function ($b) use ($club) {
+            $statement = $b->statement_balance;
+            $ledger = $b->ledger_balance;
+
+            return [
+                'id' => $b->id,
+                'bank_name' => $b->bank_name,
+                'account_name' => $b->account_name,
+                'account_type' => $b->account_type,
+                'formatted_account_type' => $b->formatted_account_type,
+                'account_number' => $b->account_number,
+                'sort_code' => $b->sort_code,
+                'currency' => $b->currency,
+                'opening_balance' => (float) $b->opening_balance,
+                'statement_balance' => $statement,
+                'formatted_statement_balance' => Currencies::format($statement, $club),
+                'ledger_balance' => $ledger,
+                'formatted_ledger_balance' => Currencies::format($ledger, $club),
+                'unreconciled_count' => $b->unreconciled_count,
+                'is_active' => $b->is_active,
+                'account_code' => $b->account?->code ?? '1000',
+            ];
+        });
 
         $fixedAssets = FixedAsset::where('club_id', $club->id)
             ->orderByDesc('purchase_date')

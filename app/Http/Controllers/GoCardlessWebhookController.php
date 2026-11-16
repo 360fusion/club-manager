@@ -53,7 +53,7 @@ class GoCardlessWebhookController extends Controller
             if ($resourceType === 'mandates') {
                 $mandateId = $event['links']['mandate'] ?? null;
                 if ($mandateId) {
-                    $mandate = DirectDebitMandate::where('gocardless_mandate_id', $mandateId)->first();
+                    $mandate = DirectDebitMandate::where('club_id', $clubId)->where('gocardless_mandate_id', $mandateId)->first();
                     if ($mandate) {
                         if ($action === 'active') {
                             $mandate->update(['status' => 'active']);

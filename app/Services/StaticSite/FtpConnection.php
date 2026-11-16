@@ -46,7 +46,7 @@ class FtpConnection implements RemoteFiles
     public static function publicAddress(string $host): string
     {
         $addresses = gethostbynamel($host) ?: [];
-        $public = fn (string $ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+        $public = fn (string $ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE | FILTER_FLAG_GLOBAL_RANGE) !== false;
 
         if ($addresses === [] || in_array(false, array_map($public, $addresses), true)) {
             throw new StaticSiteException("{$host} is not a public internet address.");

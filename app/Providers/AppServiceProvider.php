@@ -18,6 +18,7 @@ use App\Models\PaddleSubscription;
 use App\Models\PaddleSubscriptionItem;
 use App\Support\Currencies;
 use App\Support\ReservedClubSlugs;
+use App\Support\SafeFileAdder;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\DevCommands;
@@ -34,6 +35,7 @@ use Laravel\Paddle\Cashier;
 use Laravel\Pennant\Feature;
 use Launchpad\Launchpad;
 use Livewire\Livewire;
+use Spatie\MediaLibrary\MediaCollections\FileAdder;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,6 +52,9 @@ class AppServiceProvider extends ServiceProvider
         // /webhooks/stripe/{club}, so neither package's routes are used.
         \Laravel\Cashier\Cashier::ignoreRoutes();
         Cashier::ignoreRoutes();
+
+        // Uploaded files keep an extension that matches their content (see SafeFileAdder).
+        $this->app->bind(FileAdder::class, SafeFileAdder::class);
     }
 
     /**

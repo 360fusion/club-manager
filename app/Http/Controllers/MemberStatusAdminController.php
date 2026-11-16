@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Http\Requests\UserAdmin\UpdateCommitteeRoleRequest;
 use App\Http\Requests\UserAdmin\UpdateRankRequest;
 use App\Http\Requests\UserAdmin\UpdateRoleRequest;
@@ -27,7 +28,7 @@ class MemberStatusAdminController extends Controller
         $validated = $request->validated();
 
         $targetRole = $club->users()->where('users.id', $userId)->firstOrFail()->pivot->role;
-        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], $targetRole), 403, 'Only a club owner can grant or change the owner role.');
+        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], $targetRole, $userId), 403, 'Your role cannot give this role, change this member\'s role or change your own.');
 
         $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
 
@@ -130,17 +131,24 @@ class MemberStatusAdminController extends Controller
     }
 
     /**
-     * Only an owner (or a platform super admin) may suspend or remove a club owner.
+     * Only an owner (or a platform super admin) may suspend or remove a club owner, and only an owner or admin may
+     * suspend or remove an admin, so a role with the membership roll cannot lock its admins out.
      */
     private function guardOwner(Club $club, int $userId): void
     {
         $actor = request()->user();
         $targetRole = $club->users()->where('users.id', $userId)->first()?->pivot->role;
+        $actorRole = ClubAccess::role($actor, $club);
 
         abort_if(
-            $targetRole === 'owner' && ! $actor->is_super_admin && ClubAccess::role($actor, $club) !== 'owner',
+            $targetRole === ClubRole::Owner->value && ! $actor->actsAsSuperAdmin() && $actorRole !== ClubRole::Owner->value,
             403,
             'Only a club owner can change or remove another owner.',
+        );
+        abort_if(
+            $targetRole === ClubRole::Admin->value && ! $actor->actsAsSuperAdmin() && ! in_array($actorRole, [ClubRole::Owner->value, ClubRole::Admin->value], true),
+            403,
+            'Only an owner or admin can change or remove an admin.',
         );
     }
 }

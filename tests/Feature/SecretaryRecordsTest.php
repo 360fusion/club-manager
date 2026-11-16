@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Club;
 use App\Models\User;
+use App\Support\ClubAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -62,5 +63,40 @@ class SecretaryRecordsTest extends TestCase
             ->assertRedirect();
 
         $this->assertModelMissing($member);
+    }
+
+    public function test_the_secretary_cannot_promote_themselves_or_touch_an_admin(): void
+    {
+        $admin = User::factory()->create();
+        $this->club->users()->attach($admin->id, ['role' => 'admin', 'status' => 'active']);
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+        $role = fn (User $user, string $to) => $this->actingAs($this->secretary)->post(route('admin.users.role.update', [$this->club->slug, $user->id]), ['role' => $to]);
+
+        $role($this->secretary, 'admin')->assertForbidden();
+        $role($this->secretary, 'treasurer')->assertForbidden();
+        $role($member, 'admin')->assertForbidden();
+        $role($admin, 'member')->assertForbidden();
+        $this->actingAs($this->secretary)->post(route('admin.users.status.update', [$this->club->slug, $admin->id]), ['status' => 'past'])->assertForbidden();
+
+        $this->assertSame('coach', $this->club->users()->find($this->secretary->id)->pivot->role);
+        $this->assertSame('admin', $this->club->users()->find($admin->id)->pivot->role);
+        $this->assertSame('active', $this->club->users()->find($admin->id)->pivot->status);
+
+        $role($member, 'treasurer')->assertRedirect();
+        $this->assertSame('treasurer', $this->club->users()->find($member->id)->pivot->role, 'giving a member an ordinary staff role still works');
+    }
+
+    public function test_superadmin_access_to_a_lodge_needs_two_factor_sign_in_on_a_real_server(): void
+    {
+        $superadmin = User::factory()->create(['two_factor_confirmed_at' => null]);
+        $superadmin->forceFill(['is_super_admin' => true])->save();
+        $this->app['env'] = 'production';
+
+        $this->assertFalse($superadmin->actsAsSuperAdmin());
+        $this->assertFalse(ClubAccess::can($superadmin, $this->club, 'manage_billing'));
+
+        $superadmin->forceFill(['two_factor_confirmed_at' => now()])->save();
+        $this->assertTrue(ClubAccess::can($superadmin->fresh(), $this->club, 'manage_billing'));
     }
 }

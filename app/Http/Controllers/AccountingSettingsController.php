@@ -81,7 +81,7 @@ class AccountingSettingsController extends Controller
         $current = $club->vatSettings();
         $isChangingLockedSetting = $validated['scheme'] !== $current['scheme'] || $validated['enabled'] !== $current['enabled'];
 
-        if ($isChangingLockedSetting && $club->vatSettingsAreLocked() && ! $request->user()->is_super_admin) {
+        if ($isChangingLockedSetting && $club->vatSettingsAreLocked() && ! $request->user()->actsAsSuperAdmin()) {
             return redirect()->back()->withErrors([
                 'scheme' => 'This club already has VAT-inclusive transactions on its books, so the VAT scheme cannot be changed. Contact support if this needs to change.',
             ]);

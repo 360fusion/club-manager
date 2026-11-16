@@ -17,7 +17,7 @@ class ClubShortLinkController extends Controller
         $club = $this->findClub($slug);
         $user = $request->user();
 
-        $isMember = $user && ($user->is_super_admin || $user->clubs()->where('clubs.id', $club->id)->exists());
+        $isMember = $user && ($user->actsAsSuperAdmin() || $user->clubs()->where('clubs.id', $club->id)->exists());
 
         return redirect()->route($isMember ? 'member.dashboard' : 'public.site', $isMember ? ['slug' => $club->slug] : ['clubSlug' => $club->slug]);
     }

@@ -44,7 +44,7 @@ class NewsletterAdminController extends Controller
         ];
 
         $query = Newsletter::where('club_id', $club->id)
-            ->when($filters['q'] !== '', fn ($q) => $q->where(fn ($w) => $w->where('subject', 'like', '%'.$filters['q'].'%')->orWhere('content', 'like', '%'.$filters['q'].'%')))
+            ->when($filters['q'] !== '', fn ($q) => $q->where(fn ($w) => $w->whereLike('subject', '%'.$filters['q'].'%')->orWhereLike('content', '%'.$filters['q'].'%')))
             ->when($filters['type'] !== 'all', fn ($q) => $q->where('newsletter_type_id', (int) $filters['type']))
             ->when(in_array($filters['status'], ['sent', 'draft'], true), fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['role'] !== 'all', fn ($q) => $q->whereJsonContains('target_roles', $filters['role']))

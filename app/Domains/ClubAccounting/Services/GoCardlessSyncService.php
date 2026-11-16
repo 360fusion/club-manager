@@ -2,7 +2,6 @@
 
 namespace App\Domains\ClubAccounting\Services;
 
-use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use Exception;
@@ -27,7 +26,7 @@ class GoCardlessSyncService
     {
         try {
             $baseUrl = $this->getBaseUrl($environment);
-            $response = Http::withHeaders([
+            $response = Http::timeout(30)->withHeaders([
                 'GoCardless-Version' => '2015-07-06',
             ])->withToken(trim($accessToken))
                 ->get("{$baseUrl}/creditors");
@@ -79,7 +78,7 @@ class GoCardlessSyncService
             $params['created_at[lte]'] = date('Y-m-d\TH:i:s\Z', strtotime($endDate.' 23:59:59'));
         }
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(30)->withHeaders([
             'GoCardless-Version' => '2015-07-06',
         ])->withToken($accessToken)
             ->get("{$baseUrl}/payments", $params);
@@ -123,17 +122,7 @@ class GoCardlessSyncService
 
             $runningBalance += $amount;
 
-            BankTransaction::create([
-                'club_id' => $bankAccount->club_id,
-                'bank_account_id' => $bankAccount->id,
-                'transaction_date' => $chargeDate,
-                'description' => $description,
-                'amount' => $amount,
-                'reference' => $paymentId,
-                'payee_payer' => 'GoCardless Customer',
-                'status' => BankTransactionStatus::Unmatched->value,
-                'balance_after' => $runningBalance,
-            ]);
+            BankTransaction::recordFromGateway($bankAccount, 'gocardless', (string) $paymentId, $chargeDate, $description, (float) $amount, $runningBalance);
 
             $syncedCount++;
         }

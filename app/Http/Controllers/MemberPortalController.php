@@ -35,7 +35,7 @@ class MemberPortalController extends Controller
         $isPending = $memberPivot && $memberPivot->status === 'pending';
 
         // The club root is the member area. Everyone else, and past members, see the public website.
-        if (($memberPivot === null || ! in_array($memberPivot->status, ['active', 'pending'], true)) && ! $user?->is_super_admin) {
+        if (($memberPivot === null || ! in_array($memberPivot->status, ['active', 'pending'], true)) && ! $user?->actsAsSuperAdmin()) {
             return redirect()->route('public.site', ['clubSlug' => $club->slug]);
         }
 
@@ -148,7 +148,7 @@ class MemberPortalController extends Controller
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
         // Summonses and bookings are for active members only, like the other member pages.
-        if (($memberPivot === null || $memberPivot->status !== 'active') && ! $user?->is_super_admin) {
+        if (($memberPivot === null || $memberPivot->status !== 'active') && ! $user?->actsAsSuperAdmin()) {
             return redirect()->route('public.site', ['clubSlug' => $club->slug]);
         }
 
@@ -238,7 +238,7 @@ class MemberPortalController extends Controller
         return Inertia::render('Member/PostShow', [
             'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'memberRole' => $memberPivot->role ?? 'member',
-            'isMember' => $memberPivot !== null || (bool) $user?->is_super_admin,
+            'isMember' => $memberPivot !== null || (bool) $user?->actsAsSuperAdmin(),
             'lodgeSlug' => $club->lodge?->slug,
             'post' => [
                 'id' => $post->id,

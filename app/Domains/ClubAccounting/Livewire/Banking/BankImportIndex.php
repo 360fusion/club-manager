@@ -27,6 +27,8 @@ class BankImportIndex extends Component
     // File Upload & Preview State
     public $statementFile;
 
+    // Parsed on the server from the uploaded file; locked so the rows imported are the rows the file holds.
+    #[Locked]
     public ?array $previewBundle = null;
 
     public bool $showPreviewModal = false;

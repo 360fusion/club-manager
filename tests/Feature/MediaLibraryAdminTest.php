@@ -42,6 +42,17 @@ class MediaLibraryAdminTest extends TestCase
         $this->makeClubAdmin($this->user, $this->club);
     }
 
+    public function test_a_file_whose_name_would_be_served_as_a_page_is_stored_under_its_real_type(): void
+    {
+        // Real uploads are typed by their content (the upload rule accepts this as text); test fakes are typed by name, so add it directly.
+        $path = tempnam(sys_get_temp_dir(), 'upl');
+        file_put_contents($path, str_repeat("Lodge notes for the year.\n", 200).'<img src=x onerror=alert(document.domain)>');
+
+        $media = $this->club->addMedia($path)->usingFileName('notes.xhtml')->toMediaCollection('general');
+
+        $this->assertSame('notes.txt', $media->file_name);
+    }
+
     public function test_admin_can_upload_file_to_media_library_folder(): void
     {
         $file = UploadedFile::fake()->image('club-logo.png', 400, 400);

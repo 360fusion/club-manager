@@ -179,7 +179,7 @@ class AccountingService
         }
 
         $entryYear = $club->financialYearFor($data['entry_date'] ?? now());
-        if ($club->financialYearIsClosed($entryYear) && ! (auth()->user()?->is_super_admin)) {
+        if ($club->financialYearIsClosed($entryYear) && ! (auth()->user()?->actsAsSuperAdmin())) {
             throw new LedgerRuleException("The books for {$entryYear} are closed. Reopen the financial year before posting to it.");
         }
 
@@ -232,7 +232,7 @@ class AccountingService
 
         $existingYear = $club->financialYearFor($entry->entry_date);
         $newYear = $club->financialYearFor($data['entry_date'] ?? $entry->entry_date);
-        if ((! (auth()->user()?->is_super_admin)) && ($club->financialYearIsClosed($existingYear) || $club->financialYearIsClosed($newYear))) {
+        if ((! (auth()->user()?->actsAsSuperAdmin())) && ($club->financialYearIsClosed($existingYear) || $club->financialYearIsClosed($newYear))) {
             throw new LedgerRuleException("The books for {$existingYear} are closed. Reopen the financial year before editing this entry.");
         }
 
@@ -368,7 +368,7 @@ class AccountingService
         $entry = JournalEntry::where('club_id', $club->id)->where('source_type', $sourceType)->where('source_id', $documentId)
             ->where('status', '!=', DocumentStatus::Void->value)->orderBy('entry_date')->first();
 
-        if ($entry === null || auth()->user()?->is_super_admin) {
+        if ($entry === null || auth()->user()?->actsAsSuperAdmin()) {
             return null;
         }
 
@@ -674,7 +674,8 @@ class AccountingService
             Club::whereKey($club->id)->lockForUpdate()->first();
 
             $retainedEarningsAcc = $this->getAccount($club, '3000');
-            $asOfDate = $asOfDate ?: date('Y-01-01');
+            // With no date given, the first day of the lodge's current financial year (not 1 January).
+            $asOfDate = $asOfDate ?: $club->financialYearRange($club->financialYearFor(now()))[0]->toDateString();
 
             $isDebitAccount = in_array($account->type, ['asset', 'expense']);
 
