@@ -8,7 +8,7 @@
         @foreach ($memberships as $membership)
             <li>
                 <strong>{{ $membership->workspace->labelFor(auth()->user()) }}</strong>
-                <span class="lp-muted">({{ $membership->role->label() }}{{ $membership->workspace->isPersonal() ? ', personal' : '' }})</span>
+                <span class="lp-muted">({{ $membership->roleLabel() }}{{ $membership->workspace->isPersonal() ? ', personal' : '' }})</span>
                 <a href="{{ route('workspace.members', $membership->workspace->slug) }}">Team</a>
                 @if ($membership->can(\Launchpad\Workspaces\Ability::ManageWorkspace))<a href="{{ route('workspace.settings', $membership->workspace->slug) }}">Settings</a>@endif
                 @if ($membership->can(\Launchpad\Workspaces\Ability::ManageBilling) && Route::has('workspace.billing'))<a href="{{ route('workspace.billing', $membership->workspace->slug) }}">Billing</a>@endif

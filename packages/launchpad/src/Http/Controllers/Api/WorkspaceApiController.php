@@ -24,8 +24,8 @@ class WorkspaceApiController extends Controller
 
     public function members(CurrentWorkspace $current): JsonResponse
     {
-        $members = Membership::where('workspace_id', $current->workspace->id)->with('user')->orderBy('id')->get()
-            ->map(fn (Membership $m) => ['name' => $m->user->name, 'email' => $m->user->email, 'role' => $m->role->value]);
+        $members = Membership::where('workspace_id', $current->workspace->id)->with('user', 'customRole')->orderBy('id')->get()
+            ->map(fn (Membership $m) => ['name' => $m->user->name, 'email' => $m->user->email, 'role' => $m->role->value, 'custom_role' => $m->customRole?->name]);
 
         return response()->json(['data' => $members]);
     }

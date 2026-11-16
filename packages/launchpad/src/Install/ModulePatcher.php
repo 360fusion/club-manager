@@ -9,7 +9,7 @@ namespace Launchpad\Install;
 final class ModulePatcher
 {
     /** Everything that belongs to a team; the Getting started card counts a team's setup */
-    private const TEAMS = ['workspaces', 'billing', 'api', 'webhooks', 'files', 'sso', 'scim', 'sync', 'mcp', 'onboarding'];
+    private const TEAMS = ['workspaces', 'billing', 'api', 'webhooks', 'files', 'media', 'sso', 'scim', 'sync', 'mcp', 'onboarding'];
 
     /** The modules each preset turns off */
     public const PRESETS = [

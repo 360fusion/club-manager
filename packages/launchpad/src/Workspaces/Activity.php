@@ -13,6 +13,7 @@ use Launchpad\Admin\Impersonation;
 use Launchpad\Billing\Entitlements;
 use Launchpad\Models\ApiToken;
 use Launchpad\Models\Invitation;
+use Launchpad\Models\MediaFile;
 use Launchpad\Models\Membership;
 use Launchpad\Models\WebhookEndpoint;
 use Launchpad\Models\Workspace;
@@ -118,6 +119,11 @@ final class Activity
 
         WorkspaceFile::created(fn (WorkspaceFile $f) => self::record($f->workspace_id, 'file.uploaded', "uploaded {$f->name}"));
         WorkspaceFile::deleted(fn (WorkspaceFile $f) => self::record($f->workspace_id, 'file.deleted', "deleted {$f->name}"));
+
+        // deleting for good takes the bytes and is not a second line; the trash is the "deleted" one. A folder's line is written by Library::trash.
+        MediaFile::created(fn (MediaFile $f) => self::record($f->workspace_id, 'file.uploaded', "uploaded {$f->name}"));
+        MediaFile::deleted(fn (MediaFile $f) => ! $f->isForceDeleting() && self::record($f->workspace_id, 'file.deleted', "deleted {$f->name}"));
+        MediaFile::restored(fn (MediaFile $f) => self::record($f->workspace_id, 'file.restored', "restored {$f->name}"));
 
         Workspace::updated(function (Workspace $w) {
             $w->wasChanged('name') && self::record($w, 'team.renamed', "renamed the team from {$w->getOriginal('name')} to {$w->name}");

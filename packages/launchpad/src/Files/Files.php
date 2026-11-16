@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Launchpad\Billing\Entitlements;
+use Launchpad\Models\MediaFile;
 use Launchpad\Models\Workspace;
 use Launchpad\Models\WorkspaceFile;
 use Launchpad\Workspaces\WorkspaceScope;
@@ -37,7 +38,14 @@ final class Files
 
     public function used(Workspace $workspace): int
     {
-        return (int) WorkspaceFile::withoutGlobalScope(WorkspaceScope::class)->where('workspace_id', $workspace->id)->sum('size');
+        $used = (int) WorkspaceFile::withoutGlobalScope(WorkspaceScope::class)->where('workspace_id', $workspace->id)->sum('size');
+
+        // the media library shares the space (its trash counts until it is emptied)
+        if (config('launchpad.modules.media')) {
+            $used += (int) MediaFile::withoutGlobalScope(WorkspaceScope::class)->withTrashed()->where('workspace_id', $workspace->id)->sum('size');
+        }
+
+        return $used;
     }
 
     /** @throws ValidationException when it would take the workspace over its quota */

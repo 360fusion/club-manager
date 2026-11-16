@@ -8,7 +8,7 @@
     <p class="lp-muted">It may have expired, been withdrawn or already been used. Ask for a new one.</p>
 @else
     <h1>Join {{ $invitation->workspace->name }}</h1>
-    <p>{{ $invitation->inviter?->name ?? 'Someone' }} invited you to join as <strong>{{ $invitation->role->label() }}</strong>.</p>
+    <p>{{ $invitation->inviter?->name ?? 'Someone' }} invited you to join as <strong>{{ $invitation->roleLabel() }}</strong>.</p>
     @error('invitation')<div class="lp-alert lp-alert--error" role="alert">{{ $message }}</div>@enderror
     @if (! $user)
         <p>Sign in, or create an account, with <strong>{{ $invitation->email }}</strong> to accept.</p>

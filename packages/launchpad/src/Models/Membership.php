@@ -35,8 +35,31 @@ class Membership extends Model
             return (bool) $ticked;
         }
 
+        $given = $this->customRole?->permissions[$key] ?? null;
+
+        if ($given !== null) {
+            return (bool) $given;
+        }
+
         // what the role gets in this team (the owner may have changed it), else the defaults
         return $this->workspace->roleHas($this->role, $ability);
+    }
+
+    public function customRole(): BelongsTo
+    {
+        return $this->belongsTo(CustomRole::class);
+    }
+
+    /** The value a role menu sends for them: "custom:ID" for one of the team's own roles, else the built-in role's value */
+    public function roleValue(): string
+    {
+        return $this->custom_role_id ? 'custom:'.$this->custom_role_id : $this->role->value;
+    }
+
+    /** What the person is called in the team: their custom role's name, else the built-in role's */
+    public function roleLabel(): string
+    {
+        return $this->customRole?->name ?? $this->role->label();
     }
 
     public function workspace(): BelongsTo

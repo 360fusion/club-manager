@@ -30,8 +30,9 @@ class ServiceToken
     /** @throws \RuntimeException when no usable secret is set */
     public function issue(Model $user, Workspace $workspace): string
     {
-        $role = Membership::where(['workspace_id' => $workspace->id, 'user_id' => $user->getKey()])->first()?->role;
-        abort_if($role === null, 403, 'Not a member of that workspace.');
+        $membership = Membership::where(['workspace_id' => $workspace->id, 'user_id' => $user->getKey()])->first();
+        abort_if($membership === null, 403, 'Not a member of that workspace.');
+        $role = $membership->role;
 
         $now = time();
         $plan = $this->entitlements->plan($workspace);
@@ -47,6 +48,7 @@ class ServiceToken
             'wid' => (string) $workspace->id,
             'wslug' => $workspace->slug,
             'role' => $role->value,
+            'custom_role' => $membership->customRole?->name,
             'plan' => $plan->key,
             'limits' => $limits,
             'iat' => $now,

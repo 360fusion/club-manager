@@ -29,7 +29,7 @@
         <x-launchpad::field name="email" label="Email address" type="email" />
         <div class="lp-field">
             <label for="invite-role">Role</label>
-            <select id="invite-role" name="role">@foreach ($assignable as $option)@if ($role === \Launchpad\Workspaces\Role::Owner || $option !== \Launchpad\Workspaces\Role::Admin)<option value="{{ $option->value }}">{{ $option->label() }}</option>@endif @endforeach</select>
+            <select id="invite-role" name="role">@foreach ($assignable as $option)<option value="{{ $option['value'] }}">{{ $option['label'] }}</option>@endforeach</select>
             @error('role')<p class="lp-error">{{ $message }}</p>@enderror
         </div>
         <fieldset class="lp-field lp-field--set">
@@ -61,12 +61,12 @@
                             @csrf @method('put')
                             <label class="lp-skip" for="role-{{ $member->id }}">Role for {{ $member->user->name }}</label>
                             <select id="role-{{ $member->id }}" name="role">
-                                @foreach ($assignable as $option)@if ($role === \Launchpad\Workspaces\Role::Owner || $option !== \Launchpad\Workspaces\Role::Admin)<option value="{{ $option->value }}" @selected($member->role === $option)>{{ $option->label() }}</option>@endif @endforeach
+                                @foreach ($assignable as $option)<option value="{{ $option['value'] }}" @selected($member->roleValue() === $option['value'])>{{ $option['label'] }}</option>@endforeach
                             </select>
                             <button class="lp-btn lp-btn--quiet" type="submit">Change</button>
                         </form>
                     @else
-                        {{ $member->role->label() }}
+                        {{ $member->roleLabel() }}
                     @endif
                 </td>
                 <td>
@@ -101,7 +101,7 @@
         <h3>Waiting to accept</h3>
         <ul>
             @foreach ($invitations as $invitation)
-                <li>{{ $invitation->email }} ({{ $invitation->role->label() }}@if ($permissionLabels($invitation->permissions)), {{ implode(', ', $permissionLabels($invitation->permissions)) }}@endif)
+                <li>{{ $invitation->email }} ({{ $invitation->roleLabel() }}@if ($permissionLabels($invitation->permissions)), {{ implode(', ', $permissionLabels($invitation->permissions)) }}@endif)
                     <form class="lp-inline" method="post" action="{{ route('workspace.invitations.destroy', [$workspace->slug, $invitation->id]) }}">@csrf @method('delete') <button class="lp-btn lp-btn--quiet" type="submit">Withdraw</button></form>
                 </li>
             @endforeach
@@ -132,16 +132,16 @@
         <input type="hidden" name="from" value="members">
         <div class="lp-table-wrap">
             <table>
-                <thead><tr><th scope="col">Can</th>@foreach (\Launchpad\Workspaces\Role::cases() as $r)<th scope="col">{{ $r->label() }}</th>@endforeach</tr></thead>
+                <thead><tr><th scope="col">Can</th>@foreach ($matrixColumns as $r)<th scope="col">{{ $r['label'] }}</th>@endforeach</tr></thead>
                 <tbody>
                 @foreach ($roleMatrix as $row)
                     <tr>
                         <th scope="row">{{ $row['label'] }}<br><span class="lp-muted lp-small">{{ $row['about'] }}</span></th>
-                        @foreach (\Launchpad\Workspaces\Role::cases() as $r)
+                        @foreach ($matrixColumns as $r)
                             <td>
-                                @if ($editing && $row['key'] && in_array($r->value, $editable, true))
-                                    <label><input type="checkbox" name="roles[{{ $r->value }}][{{ $row['key'] }}]" value="1" @checked($row['roles'][$r->value])><span class="lp-skip">{{ $row['label'] }} for {{ $r->label() }}</span></label>
-                                @elseif ($row['roles'][$r->value])<span aria-hidden="true">&#10003;</span><span class="lp-skip">Yes</span>@else<span class="lp-muted" aria-hidden="true">&ndash;</span><span class="lp-skip">No</span>@endif
+                                @if ($editing && $row['key'] && in_array($r['value'], $editable, true))
+                                    <label><input type="checkbox" name="roles[{{ $r['value'] }}][{{ $row['key'] }}]" value="1" @checked($row['roles'][$r['value']])><span class="lp-skip">{{ $row['label'] }} for {{ $r['label'] }}</span></label>
+                                @elseif ($row['roles'][$r['value']])<span aria-hidden="true">&#10003;</span><span class="lp-skip">Yes</span>@else<span class="lp-muted" aria-hidden="true">&ndash;</span><span class="lp-skip">No</span>@endif
                             </td>
                         @endforeach
                     </tr>

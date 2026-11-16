@@ -6,26 +6,26 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Launchpad\Http\Ui;
 use Launchpad\Models\Invitation;
 use Launchpad\Workspaces\CurrentWorkspace;
 use Launchpad\Workspaces\Invitations;
-use Launchpad\Workspaces\Role;
+use Launchpad\Workspaces\Workspaces;
 
 class InvitationController extends Controller
 {
     public function store(Request $request, CurrentWorkspace $current, Invitations $invitations): RedirectResponse
     {
-        $data = $request->validate(['email' => ['required', 'email', 'max:255'], 'role' => ['required', Rule::enum(Role::class)]]);
+        $data = $request->validate(['email' => ['required', 'email', 'max:255'], 'role' => ['required', 'string']]);
+        [$role, $custom] = app(Workspaces::class)->parseRole($current->workspace, $data['role']);
 
         $ticks = [];
         foreach (array_keys((array) config('launchpad.workspaces.permissions')) as $key) {
             $ticks[$key] = $request->boolean("permissions.{$key}");
         }
 
-        $invitations->invite($current->workspace, $data['email'], Role::from($data['role']), $request->user(), $ticks);
+        $invitations->invite($current->workspace, $data['email'], $role, $request->user(), $ticks, $custom);
 
         return back()->with('status', 'Invitation sent.');
     }
@@ -51,7 +51,7 @@ class InvitationController extends Controller
         $rightAccount = $invitation && $user && strtolower($user->email) === $invitation->email;
 
         return Ui::render('workspaces.invitation', ['invitation' => $invitation, 'token' => $token, 'user' => $user, 'rightAccount' => $rightAccount], fn () => [
-            'invitation' => $invitation ? ['email' => $invitation->email, 'roleLabel' => $invitation->role->label(), 'workspace' => $invitation->workspace->name, 'inviter' => $invitation->inviter?->name] : null,
+            'invitation' => $invitation ? ['email' => $invitation->email, 'roleLabel' => $invitation->roleLabel(), 'workspace' => $invitation->workspace->name, 'inviter' => $invitation->inviter?->name] : null,
             'token' => $token,
             'userEmail' => $user?->email,
             'rightAccount' => (bool) $rightAccount,

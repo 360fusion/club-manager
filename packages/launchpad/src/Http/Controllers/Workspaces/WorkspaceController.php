@@ -6,12 +6,16 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Launchpad\Accounts\AccountRegistration;
 use Launchpad\Http\Ui;
+use Launchpad\Models\CustomRole;
+use Launchpad\Models\Invitation;
 use Launchpad\Models\Membership;
 use Launchpad\Models\Workspace;
+use Launchpad\Notifications\Notice;
 use Launchpad\Workspaces\Ability;
 use Launchpad\Workspaces\CurrentWorkspace;
 use Launchpad\Workspaces\Role;
@@ -61,7 +65,17 @@ class WorkspaceController extends Controller
         ])->values();
         $permissionList = collect((array) config('launchpad.workspaces.permissions'))->map(fn ($p, $key) => ['key' => $key, 'label' => $p[0], 'about' => $p[1]])->values();
 
-        return Ui::render('workspaces.settings', ['workspace' => $workspace, 'role' => $current->role(), 'roles' => $roles, 'permissionList' => $permissionList, 'editable' => $current->role()->editableRoles()], fn () => [
+        // the team's own roles, and the built-in ones this person may base a new one on
+        $bases = $this->customBases($current);
+        $customBases = array_map(fn (Role $r) => ['value' => $r->value, 'label' => $r->label()], $bases);
+        $customRoles = $workspace->customRoles->map(fn (CustomRole $c) => [
+            'id' => $c->id, 'name' => $c->name, 'base' => $c->base_role->value, 'baseLabel' => $c->base_role->label(), 'canEdit' => in_array($c->base_role, $bases, true),
+            'permissions' => collect((array) config('launchpad.workspaces.permissions'))->map(fn ($p, $key) => $c->grants($key))->all(),
+        ])->values();
+
+        return Ui::render('workspaces.settings', ['workspace' => $workspace, 'role' => $current->role(), 'roles' => $roles, 'permissionList' => $permissionList, 'editable' => $current->role()->editableRoles(), 'customRoles' => $customRoles, 'customBases' => $customBases], fn () => [
+            'customRoles' => $customRoles,
+            'customBases' => $customBases,
             'workspace' => ['name' => $workspace->name, 'slug' => $workspace->slug, 'timezone' => $workspace->timezone, 'personal' => $workspace->isPersonal()],
             'isOwner' => $current->role() === Role::Owner,
             'editableRoles' => array_map(fn (Role $r) => $r->value, $current->role()->editableRoles()),
@@ -100,6 +114,87 @@ class WorkspaceController extends Controller
         $current->workspace->update(['role_permissions' => array_filter($set) ?: null]);
 
         return $this->backToRoles($request, $current)->with('status', 'What each role can do is saved.');
+    }
+
+    /** @return list<Role> the roles a custom role may sit on for this person: manager or member, and only ones they may change the permissions of */
+    private function customBases(CurrentWorkspace $current): array
+    {
+        return array_values(array_filter($current->role()->editableRoles(), fn (Role $r) => in_array($r, [Role::Manager, Role::Member], true)));
+    }
+
+    public function storeCustomRole(Request $request, CurrentWorkspace $current): RedirectResponse
+    {
+        abort_if($this->customBases($current) === [], 403);
+
+        $max = (int) config('launchpad.workspaces.max_custom_roles');
+
+        if ($current->workspace->customRoles()->count() >= $max) {
+            return back()->withErrors(['custom_role' => "A team can have up to {$max} roles of its own. Remove one to add another."])->withInput();
+        }
+
+        return $this->saveCustomRole($request, $current, null);
+    }
+
+    public function updateCustomRole(Request $request, string $slug, CustomRole $customRole, CurrentWorkspace $current): RedirectResponse
+    {
+        abort_unless($customRole->workspace_id === $current->workspace->id, 404);
+        abort_unless(in_array($customRole->base_role, $this->customBases($current), true), 403);
+
+        return $this->saveCustomRole($request, $current, $customRole);
+    }
+
+    /**
+     * A role of the team's own: a name, and the permissions it grants on top of its base role (manager or member, which gives its rank and is
+     * fixed once made). Nobody turns on a permission they do not hold themselves. Only what differs from the base role is kept.
+     */
+    private function saveCustomRole(Request $request, CurrentWorkspace $current, ?CustomRole $role): RedirectResponse
+    {
+        $workspace = $current->workspace;
+        $request->merge(['role_name' => trim((string) $request->input('role_name'))]);
+        $data = $request->validate([
+            'role_name' => ['required', 'string', 'max:40',
+                Rule::unique('custom_roles', 'name')->where('workspace_id', $workspace->id)->ignore($role?->id),
+                fn ($attribute, $value, $fail) => collect(Role::cases())->contains(fn (Role $r) => strcasecmp($r->label(), $value) === 0) ? $fail('That is the name of a built-in role.') : null],
+            'role_base' => $role ? ['nullable'] : ['required', Rule::in(array_map(fn (Role $r) => $r->value, $this->customBases($current)))],
+        ]);
+        $base = $role?->base_role ?? Role::from($data['role_base']);
+
+        $set = [];
+        foreach (array_keys((array) config('launchpad.workspaces.permissions')) as $key) {
+            $on = $request->boolean("permissions.{$key}");
+
+            if ($on && ! ($role ? $role->grants($key) : $workspace->roleHas($base, $key)) && ! $current->can($key)) {
+                return back()->withErrors(['custom_role' => 'You can only turn on permissions you have yourself.'])->withInput();
+            }
+
+            if ($on !== $workspace->roleHas($base, $key)) {
+                $set[$key] = $on;
+            }
+        }
+
+        $values = ['name' => $data['role_name'], 'permissions' => $set ?: null];
+        $role ? $role->update($values) : $workspace->customRoles()->create($values + ['base_role' => $base]);
+
+        return redirect(route('workspace.settings', $workspace->slug).'#custom-roles')->with('status', $role ? 'Role saved.' : 'Role added.');
+    }
+
+    /** People holding the role go back to the built-in role it sits on, and keep what was ticked for them personally */
+    public function destroyCustomRole(string $slug, CustomRole $customRole, CurrentWorkspace $current): RedirectResponse
+    {
+        abort_unless($customRole->workspace_id === $current->workspace->id, 404);
+        abort_unless(in_array($customRole->base_role, $this->customBases($current), true), 403);
+
+        DB::transaction(function () use ($customRole, $current) {
+            // one by one, so each change is synced and the person is told
+            Membership::where('custom_role_id', $customRole->id)->with('user')->get()->each(function (Membership $m) use ($customRole, $current) {
+                $m->update(['custom_role_id' => null]);
+                Notice::to($m->user, 'Your role changed', "The role {$customRole->name} was removed in {$current->workspace->name}. You are now {$m->role->label()}.", route('workspace.members', $current->workspace->slug));
+            });
+            Invitation::where('custom_role_id', $customRole->id)->update(['custom_role_id' => null]);
+            $customRole->delete();
+        });
+
+        return redirect(route('workspace.settings', $current->workspace->slug).'#custom-roles')->with('status', 'Role removed.');
     }
 
     /** Back to the page the form was on, with its edit boxes closed again (the address without ?edit=1), at the roles card */

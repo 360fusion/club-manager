@@ -49,9 +49,9 @@ final class Webhooks
     }
 
     /** What member.joined and member.removed carry */
-    public static function memberPayload(Workspace $workspace, Model $user, ?Role $role): array
+    public static function memberPayload(Workspace $workspace, Model $user, ?Role $role, ?string $customRole = null): array
     {
-        return ['workspace' => $workspace->slug, 'user' => ['id' => $user->getKey(), 'name' => $user->name, 'email' => $user->email], 'role' => $role?->value];
+        return ['workspace' => $workspace->slug, 'user' => ['id' => $user->getKey(), 'name' => $user->name, 'email' => $user->email], 'role' => $role?->value, 'custom_role' => $customRole];
     }
 
     /** One delivery to one endpoint, whatever it subscribed to (the "Send test event" button) */

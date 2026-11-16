@@ -30,7 +30,10 @@ final class AccountMenu
             $items[] = [__('Team'), route('workspace.members', $workspace->slug), request()->routeIs('workspace.members', 'workspace.settings', 'workspaces.*', 'invitations.*')];
         }
 
-        if ($workspace && Route::has('workspace.files')) {
+        // the library takes the Files page's place (its routes stay, for old links)
+        if ($workspace && Route::has('workspace.media')) {
+            $items[] = [__('Media'), route('workspace.media', $workspace->slug), request()->routeIs('workspace.media*')];
+        } elseif ($workspace && Route::has('workspace.files')) {
             $items[] = [__('Files'), route('workspace.files', $workspace->slug), request()->routeIs('workspace.files*')];
         }
 

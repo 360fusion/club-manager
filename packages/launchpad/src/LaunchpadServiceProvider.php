@@ -41,6 +41,7 @@ use Launchpad\Console\HelpBuildCommand;
 use Launchpad\Console\InstallCommand;
 use Launchpad\Console\LangMissingCommand;
 use Launchpad\Console\MakeAdminCommand;
+use Launchpad\Console\MediaImportFilesCommand;
 use Launchpad\Console\OpenApiCommand;
 use Launchpad\Console\PruneHelpFeedbackCommand;
 use Launchpad\Console\PublishCommand;
@@ -71,7 +72,10 @@ use Launchpad\Mail\Renderer;
 use Launchpad\Models\AccountEvent;
 use Launchpad\Models\ApiToken;
 use Launchpad\Models\ApiTokenUsage;
+use Launchpad\Models\CustomRole;
 use Launchpad\Models\LoggedError;
+use Launchpad\Models\MediaFile;
+use Launchpad\Models\MediaFolder;
 use Launchpad\Models\Membership;
 use Launchpad\Models\Workspace;
 use Launchpad\Models\WorkspaceEvent;
@@ -181,7 +185,7 @@ class LaunchpadServiceProvider extends ServiceProvider
 
         // once a day; the retention period is checked inside
         $this->callAfterResolving(Schedule::class, fn ($schedule) => $schedule->command('launchpad:purge-closed')->dailyAt('03:15')->onOneServer());
-        $this->callAfterResolving(Schedule::class, fn ($schedule) => $schedule->command('model:prune', ['--model' => [WorkspaceEvent::class, ApiTokenUsage::class, LoggedError::class]])->daily()->onOneServer());
+        $this->callAfterResolving(Schedule::class, fn ($schedule) => $schedule->command('model:prune', ['--model' => [WorkspaceEvent::class, ApiTokenUsage::class, LoggedError::class, ...(config('launchpad.modules.media') ? [MediaFile::class, MediaFolder::class] : [])]])->daily()->onOneServer());
         // so `launchpad:doctor --running` can tell the scheduler and a queue worker are alive
         $this->callAfterResolving(Schedule::class, function ($schedule) {
             $schedule->call(fn () => Heartbeat::beat('scheduler'))->name('launchpad-scheduler-heartbeat')->everyMinute();
@@ -274,7 +278,7 @@ class LaunchpadServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([DoctorCommand::class, PurgeClosedAccountsCommand::class, HelpBuildCommand::class, InstallCommand::class, MakeAdminCommand::class, OpenApiCommand::class, SyncCommand::class, PublishCommand::class, StatusCommand::class, PruneHelpFeedbackCommand::class, LangMissingCommand::class]);
+            $this->commands([DoctorCommand::class, PurgeClosedAccountsCommand::class, HelpBuildCommand::class, InstallCommand::class, MakeAdminCommand::class, OpenApiCommand::class, SyncCommand::class, PublishCommand::class, StatusCommand::class, PruneHelpFeedbackCommand::class, LangMissingCommand::class, MediaImportFilesCommand::class]);
             $this->publishes([__DIR__.'/../config/launchpad.php' => config_path('launchpad.php')], 'launchpad-config');
             $this->publishesMigrations([__DIR__.'/../database/migrations' => database_path('migrations')], 'launchpad-migrations');
             // to restyle every page: the views (and the one stylesheet) are copied into the app, which then wins over the package's
@@ -318,8 +322,11 @@ class LaunchpadServiceProvider extends ServiceProvider
         Workspace::deleted(fn (Workspace $w) => $sync()->emit('workspace.deleted', ['id' => (string) $w->id, 'legacy_id' => $w->legacy_id]));
 
         Membership::created(fn (Membership $m) => $sync()->emit('member.changed', $sync()->membershipPayload($m)));
-        Membership::updated(fn (Membership $m) => $m->wasChanged('role') ? $sync()->emit('member.changed', $sync()->membershipPayload($m)) : null);
+        Membership::updated(fn (Membership $m) => $m->wasChanged(['role', 'custom_role_id']) ? $sync()->emit('member.changed', $sync()->membershipPayload($m)) : null);
         Membership::deleted(fn (Membership $m) => $sync()->emit('member.changed', $sync()->membershipPayload($m, removed: true)));
+        // renaming a role changes what everyone holding it is called
+        CustomRole::updated(fn (CustomRole $r) => $r->wasChanged('name')
+            ? Membership::where('custom_role_id', $r->id)->get()->each(fn (Membership $m) => $sync()->emit('member.changed', $sync()->membershipPayload($m))) : null);
 
         // a plan changes when the subscription row does (Cashier writes it from Stripe's webhook), and the workspace's plan is worked out afresh
         $plan = function (Subscription $subscription) use ($sync) {

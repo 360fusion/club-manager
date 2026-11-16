@@ -10,7 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "360fusion/launchpad": "^0.7",
+        "360fusion/launchpad": "^0.8.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "gocardless/gocardless-pro": "^8.3",
         "inertiajs/inertia-laravel": "^3.3",
@@ -122,7 +122,7 @@
         "url": "packages/launchpad",
         "options": {
             "versions": {
-                "360fusion/launchpad": "0.7.0"
+                "360fusion/launchpad": "0.8.0"
             }
         }
     }]

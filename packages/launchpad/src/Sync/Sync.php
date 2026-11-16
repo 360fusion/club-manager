@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Launchpad\Billing\Entitlements;
+use Launchpad\Models\CustomRole;
 use Launchpad\Models\Membership;
 use Launchpad\Models\SyncEvent;
 use Launchpad\Models\Workspace;
@@ -89,7 +90,7 @@ class Sync
 
     public function membershipPayload(Membership $membership, bool $removed = false): array
     {
-        return ['workspace_id' => (string) $membership->workspace_id, 'user_id' => (string) $membership->user_id, 'role' => $removed ? null : $membership->role->value];
+        return ['workspace_id' => (string) $membership->workspace_id, 'user_id' => (string) $membership->user_id, 'role' => $removed ? null : $membership->role->value, 'custom_role' => $removed || ! $membership->custom_role_id ? null : CustomRole::find($membership->custom_role_id)?->name];
     }
 
     /** The signature the service checks: sha256 over "<timestamp>.<body>" with the shared secret */

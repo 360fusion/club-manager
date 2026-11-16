@@ -20,5 +20,6 @@ mv "$tmp/launchpad" "$root/packages/launchpad"
 
 cd "$root"
 composer config repositories.launchpad "{\"type\":\"path\",\"url\":\"packages/launchpad\",\"options\":{\"versions\":{\"360fusion/launchpad\":\"${tag#v}\"}}}"
-composer update 360fusion/launchpad --no-interaction
+# require, not update: on 0.x a caret constraint stops at the minor version, so ^0.7 would refuse 0.8.0
+composer require "360fusion/launchpad:^${tag#v}" --no-interaction
 echo "Launchpad $tag is in packages/launchpad. Commit packages/launchpad, composer.json and composer.lock."

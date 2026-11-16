@@ -8,7 +8,9 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Launchpad\Files\Files;
 use Launchpad\Launchpad;
+use Launchpad\Media\Library;
 use Launchpad\Models\ApiToken;
+use Launchpad\Models\CustomRole;
 use Launchpad\Models\Membership;
 use Launchpad\Models\Workspace;
 use Launchpad\Notifications\Notice;
@@ -53,7 +55,7 @@ class Workspaces
     }
 
     /** @throws ValidationException */
-    public function changeRole(Workspace $workspace, Membership $target, Role $new, Model $actor): void
+    public function changeRole(Workspace $workspace, Membership $target, Role $new, Model $actor, ?CustomRole $custom = null): void
     {
         $actorRole = $this->roleOf($workspace, $actor, Ability::ManageMembers);
 
@@ -68,8 +70,39 @@ class Workspaces
             throw ValidationException::withMessages(['role' => 'You cannot give that role to that person.']);
         }
 
-        $target->update(['role' => $new]);
-        Notice::to($target->user, 'Your role changed', "You are now {$new->label()} in {$workspace->name}.", route('workspace.members', $workspace->slug));
+        $this->assertCustomRole($workspace, $custom, $new, $this->membership($workspace, $actor));
+
+        $target->update(['role' => $new, 'custom_role_id' => $custom?->id]);
+        Notice::to($target->user, 'Your role changed', 'You are now '.($custom?->name ?? $new->label())." in {$workspace->name}.", route('workspace.members', $workspace->slug));
+    }
+
+    /**
+     * The role a form sent: a built-in role's value ("manager") or "custom:ID" for one of this team's own.
+     *
+     * @return array{0: Role, 1: ?CustomRole}
+     *
+     * @throws ValidationException
+     */
+    public function parseRole(Workspace $workspace, string $value): array
+    {
+        if (str_starts_with($value, 'custom:')) {
+            $custom = $workspace->customRoles()->find((int) substr($value, 7));
+
+            return $custom ? [$custom->base_role, $custom] : throw ValidationException::withMessages(['role' => 'Choose a role from the list.']);
+        }
+
+        return [Role::tryFrom($value) ?? throw ValidationException::withMessages(['role' => 'Choose a role from the list.']), null];
+    }
+
+    /** A custom role must belong to the team, sit on the role it is given with, and grant nothing the person handing it out does not hold
+     *
+     * @throws ValidationException
+     */
+    public function assertCustomRole(Workspace $workspace, ?CustomRole $custom, Role $base, Membership $by): void
+    {
+        if ($custom && ($custom->workspace_id !== $workspace->id || $custom->base_role !== $base || ! $custom->heldBy($by))) {
+            throw ValidationException::withMessages(['role' => 'You cannot give that role to that person.']);
+        }
     }
 
     /** @throws ValidationException */
@@ -108,8 +141,8 @@ class Workspaces
         }
 
         DB::transaction(function () use ($workspace, $to, $actor) {
-            $this->membership($workspace, $actor)->update(['role' => Role::Admin]);
-            $to->update(['role' => Role::Owner]);
+            $this->membership($workspace, $actor)->update(['role' => Role::Admin, 'custom_role_id' => null]);
+            $to->update(['role' => Role::Owner, 'custom_role_id' => null]);
             $workspace->update(['owner_id' => $to->user_id]);
         });
     }
@@ -129,8 +162,10 @@ class Workspaces
             // removed here as well as by the foreign keys' cascade, so it holds on a database that does not enforce them
             $workspace->memberships()->delete();
             $workspace->invitations()->delete();
+            $workspace->customRoles()->delete();
             ApiToken::where('workspace_id', $workspace->id)->delete();
             Files::purge($workspace);
+            config('launchpad.modules.media') && app(Library::class)->purge($workspace);
             Webhooks::forget($workspace);
             $workspace->delete();
         });
@@ -141,7 +176,7 @@ class Workspaces
         DB::transaction(function () use ($workspace, $membership) {
             $user = $membership->user;
             $membership->delete();
-            $user && Webhooks::dispatch($workspace, 'member.removed', Webhooks::memberPayload($workspace, $user, $membership->role));
+            $user && Webhooks::dispatch($workspace, 'member.removed', Webhooks::memberPayload($workspace, $user, $membership->role, $membership->customRole?->name));
 
             if ($user && $user->current_workspace_id === $workspace->id) {
                 $user->forceFill(['current_workspace_id' => Membership::where('user_id', $user->getKey())->value('workspace_id')])->save();

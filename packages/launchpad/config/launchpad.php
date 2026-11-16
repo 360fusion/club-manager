@@ -108,8 +108,10 @@ return [
         /* Customers' API tokens (the API page and /api/v1) and outbound webhooks (the Webhooks page) */
         'api' => true,
         'webhooks' => true,
-        /* The Files page: uploads that belong to a workspace */
+        /* The Files page: uploads that belong to a workspace. The media library replaces it: turn `media` on, run `php artisan launchpad:media-import-files`, then turn this off. */
         'files' => true,
+        /* The media library: a team's folders of images, video, audio and documents, with tags. Off until an app wants it. */
+        'media' => false,
         /* A team signs its people in with its company's identity provider (OpenID Connect), set up by the team's owner */
         'sso' => true,
         /* A team's directory adds and removes its people (SCIM 2.0), once its owner makes a token on the single sign-on page */
@@ -142,6 +144,9 @@ return [
            addresses). It also needs SESSION_DOMAIN=.example.com and a wildcard DNS record. `subdomains` true or false here overrides HQ. */
         'subdomain_domain' => env('LAUNCHPAD_TEAM_DOMAIN'),
         'subdomains' => env('LAUNCHPAD_TEAM_SUBDOMAINS') === null ? null : (bool) env('LAUNCHPAD_TEAM_SUBDOMAINS'),
+
+        /* How many roles of its own a team can make (on top of owner, admin, manager and member) */
+        'max_custom_roles' => 20,
 
         /* What an owner or admin can tick for each person, on top of their role: key => [label, what it lets them do, the roles that have it unticked].
            An app adds its own (and checks them with $membership->can('key') or the route middleware `workspace:key`). */
@@ -348,6 +353,10 @@ return [
             'member.joined' => 'A person joined the workspace',
             'member.removed' => 'A person was removed from, or left, the workspace',
             'subscription.changed' => 'The workspace\'s subscription changed',
+            'file.uploaded' => 'A file was added to the media library',
+            'file.deleted' => 'A file in the media library was deleted',
+            'file.restored' => 'A file in the media library was restored',
+            'folder.deleted' => 'A folder in the media library was deleted',
         ],
         /* Tries before a delivery is given up on (the wait grows from 30 seconds to an hour) */
         'max_attempts' => 8,
@@ -384,6 +393,7 @@ return [
         ],
     ],
 
+    /* Settings for the Files page (replaced by `media` below) */
     'files' => [
         /* Private by default: nothing is served from the disk's own address, only through the Files page or a signed link */
         'disk' => env('LAUNCHPAD_FILES_DISK', 'local'),
@@ -392,6 +402,18 @@ return [
         'mimes' => ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'txt', 'csv', 'docx', 'xlsx'],
         /* What a workspace may keep, in MB; a plan with a `storage_mb` limit (billing.plans.*.limits) uses that instead */
         'quota_mb' => 100,
+    ],
+
+    'media' => [
+        /* Private: bytes are served only through a route that checks the team, never from the disk's own address */
+        'disk' => env('LAUNCHPAD_MEDIA_DISK', 'local'),
+        'max_kb' => 51200,
+        /* Checked against what the file is, not what it is called. No html or svg: those would run as a page of ours if ever opened. */
+        'mimes' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'pdf', 'txt', 'csv', 'docx', 'xlsx', 'pptx', 'mp4', 'webm', 'mov', 'mp3', 'm4a', 'wav', 'ogg'],
+        /* What a team may keep, in MB */
+        'quota_mb' => 100,
+        /* Days a deleted file or folder stays in the trash before it goes for good (the setting `media_trash_days` wins) */
+        'trash_days' => 30,
     ],
 
     'contact' => [

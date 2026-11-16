@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Facades\Route;
 use Launchpad\Billing\Entitlements;
 use Launchpad\Models\ApiToken;
+use Launchpad\Models\MediaFile;
 use Launchpad\Models\Membership;
 use Launchpad\Models\Workspace;
 use Launchpad\Models\WorkspaceFile;
@@ -59,12 +60,17 @@ final class Onboarding
                 'done' => fn (Workspace $w) => ApiToken::where('workspace_id', $w->id)->exists(),
                 'ability' => Ability::ManageWorkspace->value,
             ] : null,
-            'files' => Route::has('workspace.files') ? [
+            'files' => Route::has('workspace.media') ? [
+                'label' => __('Upload a file'),
+                'url' => fn (Workspace $w) => route('workspace.media', $w->slug),
+                'done' => fn (Workspace $w) => MediaFile::withoutGlobalScope(WorkspaceScope::class)->where('workspace_id', $w->id)->exists(),
+                'ability' => null,
+            ] : (Route::has('workspace.files') ? [
                 'label' => __('Upload a file'),
                 'url' => fn (Workspace $w) => route('workspace.files', $w->slug),
                 'done' => fn (Workspace $w) => WorkspaceFile::withoutGlobalScope(WorkspaceScope::class)->where('workspace_id', $w->id)->exists(),
                 'ability' => null,
-            ] : null,
+            ] : null),
         ]);
     }
 

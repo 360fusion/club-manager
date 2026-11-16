@@ -17,6 +17,7 @@ const props = defineProps({
     assignable: { type: Array, default: () => [] },
     permissionList: { type: Array, default: () => [] },
     roleMatrix: { type: Array, default: () => [] },
+    matrixColumns: { type: Array, default: () => [] },
     editableRoles: { type: Array, default: () => [] },
 });
 
@@ -34,10 +35,9 @@ const ticks = reactive(Object.fromEntries(props.members.map((m) => [m.id, { ...(
 const savePermissions = (member) => router.put(`${base}/members/${member.id}/permissions`, {
     permissions: Object.fromEntries(Object.entries(ticks[member.id]).filter(([, on]) => on).map(([key]) => [key, 1])),
 }, { preserveScroll: true });
-const roleColumns = ['owner', 'admin', 'manager', 'member'];
 const editingRoles = ref(false);
 // what each role may do in this team: ticked here by whoever may change it
-const roleTicks = reactive(Object.fromEntries(roleColumns.map((r) => [r, Object.fromEntries(props.roleMatrix.filter((row) => row.key).map((row) => [row.key, !!row.roles[r]]))])));
+const roleTicks = reactive(Object.fromEntries(props.matrixColumns.map((c) => [c.value, Object.fromEntries(props.roleMatrix.filter((row) => row.key).map((row) => [row.key, !!row.roles[c.value]]))])));
 const saveRoleTable = () => router.put(`${base}/settings/roles`, {
     roles: Object.fromEntries(props.editableRoles.map((r) => [r, Object.fromEntries(Object.entries(roleTicks[r]).filter(([, on]) => on).map(([key]) => [key, 1]))])),
 }, { preserveScroll: true, onSuccess: () => (editingRoles.value = false) });
@@ -99,7 +99,7 @@ const granted = (member) => props.permissionList.filter((p) => member.permission
                         <td>
                             <template v-if="member.canManage">
                                 <label class="lp-skip" :for="`role-${member.id}`">Role for {{ member.name }}</label>
-                                <select :id="`role-${member.id}`" :value="member.role" @change="changeRole(member, $event.target.value)">
+                                <select :id="`role-${member.id}`" :value="member.roleValue" @change="changeRole(member, $event.target.value)">
                                     <option v-for="option in assignable" :key="option.value" :value="option.value">{{ option.label }}</option>
                                 </select>
                             </template>
@@ -147,13 +147,13 @@ const granted = (member) => props.permissionList.filter((p) => member.permission
             <div v-if="$page.props.errors.roles" class="lp-alert lp-alert--error" role="alert">{{ $page.props.errors.roles }}</div>
             <div class="lp-table-wrap">
                 <table>
-                    <thead><tr><th scope="col">Can</th><th v-for="r in roleColumns" :key="r" scope="col">{{ r.charAt(0).toUpperCase() + r.slice(1) }}</th></tr></thead>
+                    <thead><tr><th scope="col">Can</th><th v-for="c in matrixColumns" :key="c.value" scope="col">{{ c.label }}</th></tr></thead>
                     <tbody>
                         <tr v-for="row in roleMatrix" :key="row.label">
                             <th scope="row">{{ row.label }}<br><span class="lp-muted lp-small">{{ row.about }}</span></th>
-                            <td v-for="r in roleColumns" :key="r">
-                                <label v-if="editingRoles && row.key && editableRoles.includes(r)"><input v-model="roleTicks[r][row.key]" type="checkbox"><span class="lp-skip">{{ row.label }} for {{ r }}</span></label>
-                                <template v-else-if="row.roles[r]"><span aria-hidden="true">&#10003;</span><span class="lp-skip">Yes</span></template>
+                            <td v-for="c in matrixColumns" :key="c.value">
+                                <label v-if="editingRoles && row.key && editableRoles.includes(c.value)"><input v-model="roleTicks[c.value][row.key]" type="checkbox"><span class="lp-skip">{{ row.label }} for {{ c.label }}</span></label>
+                                <template v-else-if="row.roles[c.value]"><span aria-hidden="true">&#10003;</span><span class="lp-skip">Yes</span></template>
                                 <template v-else><span class="lp-muted" aria-hidden="true">&ndash;</span><span class="lp-skip">No</span></template>
                             </td>
                         </tr>

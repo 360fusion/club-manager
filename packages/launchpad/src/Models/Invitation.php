@@ -22,6 +22,16 @@ class Invitation extends Model
         return $this->belongsTo(Workspace::class);
     }
 
+    public function customRole(): BelongsTo
+    {
+        return $this->belongsTo(CustomRole::class);
+    }
+
+    public function roleLabel(): string
+    {
+        return $this->customRole?->name ?? $this->role->label();
+    }
+
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(Launchpad::userModel(), 'invited_by');

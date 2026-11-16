@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8e1eb81252ce8ba254014ba6eed2d97e",
+    "content-hash": "1a6b5e4c8fd3d0d6d9799bffdb14435e",
     "packages": [
         {
             "name": "360fusion/launchpad",
-            "version": "0.7.0",
+            "version": "0.8.0",
             "dist": {
                 "type": "path",
                 "url": "packages/launchpad",
-                "reference": "a400a978245cb370a66a461cd3098359910bc67e"
+                "reference": "c7c86721291e09b3cb809aaee2fed3b2c3ebd34f"
             },
             "require": {
                 "bacon/bacon-qr-code": "^3.1",

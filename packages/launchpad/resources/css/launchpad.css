@@ -58,10 +58,12 @@ a { color: var(--lp-accent); }
 .lp-muted { color: var(--lp-muted); }
 .lp-field { margin-bottom: 16px; }
 .lp-field label { display: block; font-weight: 600; margin-bottom: 4px; }
-.lp-field input[type="text"], .lp-field input[type="email"], .lp-field input[type="password"] {
-  width: 100%; padding: 10px 12px; font: inherit; color: inherit; background: var(--lp-bg); border: 1px solid var(--lp-line); border-radius: 8px;
+/* every box you type in follows the theme, not only text, email and password ones (search, month, number, a plain input) */
+input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="url"], input[type="number"], input[type="tel"], input[type="month"], input[type="date"] {
+  padding: 10px 12px; font: inherit; color: inherit; background: var(--lp-bg); border: 1px solid var(--lp-line); border-radius: 8px;
 }
-.lp-field input:focus-visible, .lp-btn:focus-visible, a:focus-visible { outline: 3px solid var(--lp-accent); outline-offset: 2px; }
+.lp-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) { width: 100%; }
+input:focus-visible, .lp-btn:focus-visible, a:focus-visible { outline: 3px solid var(--lp-accent); outline-offset: 2px; }
 .lp-check { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 16px; }
 .lp-error { color: var(--lp-danger); font-size: .9rem; margin: 4px 0 0; }
 .lp-btn { display: inline-block; padding: 10px 18px; font: inherit; font-weight: 600; border: 1px solid var(--lp-accent); border-radius: 8px; background: var(--lp-accent); color: var(--lp-on-accent); cursor: pointer; text-decoration: none; }
@@ -181,6 +183,24 @@ summary { cursor: pointer; font-weight: 600; }
 .lp-account__body .lp-field { flex: 0 1 280px; min-width: 0; }
 .lp-account__body form:not(.lp-inline) > .lp-btn { margin-bottom: 16px; }
 .lp-account__body form.lp-inline { display: inline; }
+
+/* dialogs (the media picker) sit on the page's panel colours, not the browser's white */
+dialog { background: var(--lp-panel); color: var(--lp-text); border: 1px solid var(--lp-line); border-radius: var(--lp-radius); padding: 24px; }
+dialog::backdrop { background: rgb(0 0 0 / .5); }
+
+/* the media library: folders along the top, then the tools, then the list at full width */
+.lp-media__folders { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 12px 0; margin-bottom: 8px; border-bottom: 1px solid var(--lp-line); }
+.lp-media__folders a[aria-current="page"] { font-weight: 700; text-decoration: none; }
+.lp-media__tools { display: flex; flex-wrap: wrap; gap: 0 32px; }
+.lp-media__tools > form { flex: 1 1 260px; }
+.lp-media__search, .lp-media__edit { margin: 8px 0; border-top: 0; padding: 0; }
+.lp-media__search summary, .lp-media__edit summary { cursor: pointer; color: var(--lp-accent); }
+.lp-media__files li, .lp-media .lp-list li { flex-wrap: wrap; }
+.lp-media__file { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.lp-media__file img { object-fit: cover; border-radius: 6px; flex: none; }
+.lp-media__file p { margin: 0; font-size: .9rem; }
+.lp-media__edit { margin: 0; }
+.lp-media__edit[open] { flex: 1 1 100%; padding-top: 8px; }
 
 /* permission ticks in the members table */
 .lp-perms { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }

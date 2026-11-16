@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Launchpad\Accounts\AccountRegistration;
+use Launchpad\Models\CustomRole;
 use Launchpad\Models\Invitation;
 use Launchpad\Models\Membership;
 use Launchpad\Models\Workspace;
@@ -24,7 +25,7 @@ class Invitations
     /**
      * @param  array<string, bool>  $permissions  what to tick for the person (keys of config launchpad.workspaces.permissions); only what the inviter holds can be given
      */
-    public function invite(Workspace $workspace, string $email, Role $role, Model $by, array $permissions = []): Invitation
+    public function invite(Workspace $workspace, string $email, Role $role, Model $by, array $permissions = [], ?CustomRole $custom = null): Invitation
     {
         $member = Membership::where(['workspace_id' => $workspace->id, 'user_id' => $by->getKey()])->first();
         abort_unless($member?->can(Ability::ManageMembers), 403);
@@ -35,6 +36,8 @@ class Invitations
         if (! in_array($role, Role::assignable(), true) || ($role === Role::Admin && $actor !== Role::Owner) || ($actor === Role::Manager && $role !== Role::Member)) {
             throw ValidationException::withMessages(['role' => 'You cannot invite someone with that role.']);
         }
+
+        app(Workspaces::class)->assertCustomRole($workspace, $custom, $role, $member);
 
         $ticks = [];
         foreach (array_keys((array) config('launchpad.workspaces.permissions')) as $key) {
@@ -50,6 +53,11 @@ class Invitations
             $ticks[$key] = (bool) $permissions[$key];
         }
 
+        // an unticked box is not a "no": keep only what adds to the custom role, or its own permissions would be switched off for the person
+        if ($custom) {
+            $ticks = array_filter($ticks, fn (bool $on, string $key) => $on && ! $custom->grants($key), ARRAY_FILTER_USE_BOTH);
+        }
+
         $existing = AccountRegistration::findByEmail($email);
         if ($existing && Membership::where(['workspace_id' => $workspace->id, 'user_id' => $existing->getKey()])->exists()) {
             throw ValidationException::withMessages(['email' => 'That person is already a member.']);
@@ -57,7 +65,7 @@ class Invitations
 
         $token = Str::random(40);
 
-        $invitation = DB::transaction(function () use ($workspace, $email, $role, $by, $token, $ticks) {
+        $invitation = DB::transaction(function () use ($workspace, $email, $role, $custom, $by, $token, $ticks) {
             // a newer invitation to the same address replaces the older one
             Invitation::where(['workspace_id' => $workspace->id, 'email' => $email])->active()->update(['revoked_at' => now()]);
 
@@ -65,6 +73,7 @@ class Invitations
                 'workspace_id' => $workspace->id,
                 'email' => $email,
                 'role' => $role,
+                'custom_role_id' => $custom?->id,
                 'token_hash' => Invitation::hashOf($token),
                 'invited_by' => $by->getKey(),
                 'permissions' => $ticks ?: null,
@@ -103,7 +112,7 @@ class Invitations
         return DB::transaction(function () use ($invitation, $user) {
             $membership = Membership::firstOrCreate(
                 ['workspace_id' => $invitation->workspace_id, 'user_id' => $user->getKey()],
-                ['role' => $invitation->role, 'permissions' => $invitation->permissions],
+                ['role' => $invitation->role, 'custom_role_id' => $invitation->custom_role_id, 'permissions' => $invitation->permissions],
             );
 
             $invitation->update(['accepted_at' => now()]);
@@ -111,7 +120,7 @@ class Invitations
 
             if ($membership->wasRecentlyCreated) {
                 Notice::to($invitation->workspace->owner, 'Someone joined', "{$user->name} joined {$invitation->workspace->name}.", route('workspace.members', $invitation->workspace->slug));
-                Webhooks::dispatch($invitation->workspace, 'member.joined', Webhooks::memberPayload($invitation->workspace, $user, $membership->role));
+                Webhooks::dispatch($invitation->workspace, 'member.joined', Webhooks::memberPayload($invitation->workspace, $user, $membership->role, $membership->customRole?->name));
             }
 
             return $membership;

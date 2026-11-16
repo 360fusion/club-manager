@@ -7,10 +7,19 @@ use Launchpad\Models\Workspace;
 /** What each workspace role can do, as a table: the rules in Role plus the permissions in config launchpad.workspaces.permissions (before any ticks for a person) */
 final class RoleMatrix
 {
+    /** @return list<array{value: string, label: string}> the columns of the table: the built-in roles, then the team's own */
+    public static function columns(?Workspace $workspace = null): array
+    {
+        $own = $workspace ? $workspace->customRoles->map(fn ($c) => ['value' => 'custom:'.$c->id, 'label' => $c->name])->all() : [];
+
+        return [...array_map(fn (Role $r) => ['value' => $r->value, 'label' => $r->label()], Role::cases()), ...$own];
+    }
+
     /** @return list<array{key: ?string, label: string, about: string, roles: array<string, bool>}> one row per thing, a yes or no for each role */
     public static function rows(?Workspace $workspace = null): array
     {
         $rows = [];
+        $custom = $workspace ? $workspace->customRoles : collect();
 
         foreach ([
             [Ability::ViewMembers, 'See the members', 'Open the list of people in the team.'],
@@ -18,11 +27,13 @@ final class RoleMatrix
             [Ability::Transfer, 'Transfer ownership', 'Hand the team to someone else.'],
             [Ability::Delete, 'Delete the team', 'Remove the team and its data.'],
         ] as [$ability, $label, $about]) {
-            $rows[] = ['key' => null, 'label' => $label, 'about' => $about, 'roles' => collect(Role::cases())->mapWithKeys(fn (Role $role) => [$role->value => $workspace ? $workspace->roleHas($role, $ability) : $role->can($ability)])->all()];
+            $rows[] = ['key' => null, 'label' => $label, 'about' => $about, 'roles' => collect(Role::cases())->mapWithKeys(fn (Role $role) => [$role->value => $workspace ? $workspace->roleHas($role, $ability) : $role->can($ability)])->all()
+                + $custom->mapWithKeys(fn ($c) => ['custom:'.$c->id => $workspace->roleHas($c->base_role, $ability)])->all()];
         }
 
         foreach ((array) config('launchpad.workspaces.permissions') as $key => [$label, $about, $given]) {
-            $rows[] = ['key' => $key, 'label' => $label, 'about' => $about, 'roles' => collect(Role::cases())->mapWithKeys(fn (Role $role) => [$role->value => $workspace ? $workspace->roleHas($role, $key) : ($role === Role::Owner || in_array($role->value, (array) $given, true))])->all()];
+            $rows[] = ['key' => $key, 'label' => $label, 'about' => $about, 'roles' => collect(Role::cases())->mapWithKeys(fn (Role $role) => [$role->value => $workspace ? $workspace->roleHas($role, $key) : ($role === Role::Owner || in_array($role->value, (array) $given, true))])->all()
+                + $custom->mapWithKeys(fn ($c) => ['custom:'.$c->id => $c->grants($key)])->all()];
         }
 
         return $rows;

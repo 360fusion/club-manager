@@ -6,6 +6,8 @@ use Launchpad\Http\Controllers\Workspaces\ApiTokenController;
 use Launchpad\Http\Controllers\Workspaces\ApiTokenUsageController;
 use Launchpad\Http\Controllers\Workspaces\FileController;
 use Launchpad\Http\Controllers\Workspaces\InvitationController;
+use Launchpad\Http\Controllers\Workspaces\MediaController;
+use Launchpad\Http\Controllers\Workspaces\MediaFolderController;
 use Launchpad\Http\Controllers\Workspaces\MemberController;
 use Launchpad\Http\Controllers\Workspaces\OnboardingController;
 use Launchpad\Http\Controllers\Workspaces\WebhookController;
@@ -54,6 +56,23 @@ Route::middleware(['auth', 'account.open'])->group(function () {
                 Route::get('files/{file}', [FileController::class, 'download'])->name('workspace.files.download');
                 Route::delete('files/{file}', [FileController::class, 'destroy'])->name('workspace.files.destroy');
             }
+
+            if (config('launchpad.modules.media')) {
+                Route::get('media', [MediaController::class, 'index'])->name('workspace.media');
+                Route::get('media/browse', [MediaController::class, 'browseJson'])->name('workspace.media.browse');
+                Route::post('media', [MediaController::class, 'store'])->name('workspace.media.store');
+                Route::post('media/check', [MediaController::class, 'check'])->name('workspace.media.check');
+                Route::post('media/folders', [MediaFolderController::class, 'store'])->name('workspace.media.folders.store');
+                Route::patch('media/folders/{folder}', [MediaFolderController::class, 'update'])->name('workspace.media.folders.update');
+                Route::delete('media/folders/{folder}', [MediaFolderController::class, 'trash'])->name('workspace.media.folders.trash');
+                Route::post('media/folders/{folder}/restore', [MediaFolderController::class, 'restore'])->name('workspace.media.folders.restore');
+                Route::delete('media/folders/{folder}/forever', [MediaFolderController::class, 'destroy'])->name('workspace.media.folders.destroy');
+                Route::get('media/{file}', [MediaController::class, 'show'])->name('workspace.media.show');
+                Route::patch('media/{file}', [MediaController::class, 'update'])->name('workspace.media.update');
+                Route::delete('media/{file}', [MediaController::class, 'trash'])->name('workspace.media.trash');
+                Route::post('media/{file}/restore', [MediaController::class, 'restore'])->name('workspace.media.restore');
+                Route::delete('media/{file}/forever', [MediaController::class, 'destroy'])->name('workspace.media.destroy');
+            }
         });
 
         Route::middleware('workspace:manage-workspace')->group(function () {
@@ -63,6 +82,9 @@ Route::middleware(['auth', 'account.open'])->group(function () {
             Route::get('activity/download', [ActivityController::class, 'download'])->middleware('throttle:10,1')->name('workspace.activity.download');
             Route::put('settings/roles', [WorkspaceController::class, 'updateRoles'])->name('workspace.settings.roles');
             Route::delete('settings/roles', [WorkspaceController::class, 'resetRoles'])->name('workspace.settings.roles.reset');
+            Route::post('settings/custom-roles', [WorkspaceController::class, 'storeCustomRole'])->name('workspace.custom-roles.store');
+            Route::put('settings/custom-roles/{customRole}', [WorkspaceController::class, 'updateCustomRole'])->name('workspace.custom-roles.update');
+            Route::delete('settings/custom-roles/{customRole}', [WorkspaceController::class, 'destroyCustomRole'])->name('workspace.custom-roles.destroy');
 
             if (config('launchpad.modules.api')) {
                 Route::get('api', [ApiTokenController::class, 'index'])->name('workspace.api');

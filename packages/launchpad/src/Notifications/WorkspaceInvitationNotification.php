@@ -28,7 +28,7 @@ class WorkspaceInvitationNotification extends Notification implements ShouldQueu
         return Renderer::message('workspace.invitation', [
             'inviter' => $this->invitation->inviter?->name ?? 'Someone',
             'workspace' => $workspace->name,
-            'role' => $this->invitation->role->label(),
+            'role' => $this->invitation->roleLabel(),
             'days' => Invitations::DAYS,
             'url' => route('invitations.show', $this->token),
         ]);

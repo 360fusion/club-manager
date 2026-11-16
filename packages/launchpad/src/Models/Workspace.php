@@ -43,6 +43,11 @@ class Workspace extends Model
         return $this->belongsTo(Launchpad::userModel(), 'owner_id');
     }
 
+    public function customRoles(): HasMany
+    {
+        return $this->hasMany(CustomRole::class)->orderBy('name');
+    }
+
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);

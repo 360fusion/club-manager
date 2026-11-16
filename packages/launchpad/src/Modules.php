@@ -9,7 +9,7 @@ namespace Launchpad;
 final class Modules
 {
     /** the tables of a workspace are needed by every module that stores something per workspace */
-    private const TEAMS = ['workspaces', 'billing', 'api', 'webhooks', 'files', 'sso', 'scim', 'sync'];
+    private const TEAMS = ['workspaces', 'billing', 'api', 'webhooks', 'files', 'media', 'sso', 'scim', 'sync'];
 
     /** migration name (without date and number) => the modules that need it: it runs when any of them is on */
     private const MIGRATIONS = [
@@ -32,6 +32,7 @@ final class Modules
         'create_api_token_usage_table' => ['api'],
         'add_replaced_at_to_personal_access_tokens' => ['api'],
         'create_workspace_files_table' => ['files'],
+        'create_media_tables' => ['media'],
         'create_sso_connections_table' => ['sso', 'scim'],
         'let_unverified_sso_domains_repeat' => ['sso', 'scim'],
         'add_scim_provisioning' => ['sso', 'scim'],

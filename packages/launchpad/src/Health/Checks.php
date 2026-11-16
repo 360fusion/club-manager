@@ -101,7 +101,7 @@ final class Checks
         $add('Mail from address', ! $live || ! in_array(config('mail.from.address'), [null, '', 'hello@example.com'], true), 'MAIL_FROM_ADDRESS = '.config('mail.from.address').$note);
 
         try {
-            $missing = array_values(array_filter([(new Workspace)->getTable(), 'personal_access_tokens', 'features', 'workspace_files'], fn ($table) => ! Schema::hasTable($table)));
+            $missing = array_values(array_filter([(new Workspace)->getTable(), 'personal_access_tokens', 'features', 'workspace_files', ...(config('launchpad.modules.media') ? ['media_files'] : [])], fn ($table) => ! Schema::hasTable($table)));
             $add('Migrations have run', $missing === [], $missing === [] ? 'the database has Launchpad\'s tables' : 'no table for: '.implode(', ', $missing).' (php artisan migrate --force)');
         } catch (\Throwable $e) {
             $add('Migrations have run', false, 'the database cannot be reached: '.$e->getMessage());
