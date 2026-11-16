@@ -110,7 +110,6 @@ class EventOnlinePayment
     /**
      * Create the payment page for what is still owed, on Stripe or PayPal, and return its address.
      * PayPal sends the payer back to $paypalReturnUrl to take the payment.
- for what is still owed and return its address.
      */
     public function start(EventRegistration $registration, string $successUrl, string $cancelUrl, ?int $optionId = null, ?string $paypalReturnUrl = null): string
     {
@@ -162,6 +161,12 @@ class EventOnlinePayment
         // With a connected Stripe account the payment goes to the lodge's own account and the commission is taken from it.
         $connected = $option->method->usesConnect() ? $club->platformAccount : null;
         $amountMinor = (int) round($balance * 100);
+
+        // Starting again closes the earlier page, so the booking cannot be paid twice.
+        if ($registration->stripe_session_id) {
+            $this->stripe->expireCheckoutSession($option->method, $registration->stripe_session_id, $connected?->stripe_account_id);
+        }
+
         $commission = $connected ? $this->fees->commissionMinor($amountMinor, $connected) : 0;
 
         $session = $this->stripe->createCheckoutSession($option->method, [
@@ -280,8 +285,11 @@ class EventOnlinePayment
 
         $registration = EventRegistration::with(['event.club', 'paymentMethod'])->find((int) ($session->metadata->registration_id ?? 0));
 
-        // The booking must belong to this club and to this very Checkout session, so a forged or replayed event does nothing.
-        if (! $registration || $registration->event->club_id !== $club->id || $registration->stripe_session_id !== $session->id) {
+        // The booking must belong to this club, and the session must be the booking's latest one or one we started for it
+        // in this club (an earlier page the member still paid on). Replays are stopped by the payment id check below.
+        $ours = $registration && ($registration->stripe_session_id === $session->id || (string) ($session->metadata->club_id ?? '') === (string) $club->id);
+
+        if (! $registration || $registration->event->club_id !== $club->id || ! $ours) {
             Log::warning('Stripe payment did not match a booking', ['club' => $club->id, 'session' => $session->id ?? null]);
 
             return 'no matching booking';

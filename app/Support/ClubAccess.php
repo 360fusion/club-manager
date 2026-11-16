@@ -75,10 +75,12 @@ final class ClubAccess
             return false;
         }
 
+        // Below admin, nobody hands out or takes away the admin or treasurer roles (the keys to the club and its money).
         if ($actorRole !== ClubRole::Admin->value) {
-            $touchesAdmin = in_array(ClubRole::Admin->value, [$newRole, $targetCurrentRole], true);
+            $guarded = [ClubRole::Admin->value, ClubRole::Treasurer->value];
+            $touchesGuarded = in_array($newRole, $guarded, true) || in_array($targetCurrentRole, $guarded, true);
 
-            if ($touchesAdmin || ($targetUserId !== null && $targetUserId === $actor->id)) {
+            if ($touchesGuarded || ($targetUserId !== null && $targetUserId === $actor->id)) {
                 return false;
             }
         }

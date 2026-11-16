@@ -22,8 +22,8 @@
 <body class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans antialiased">
     @php
         $user = auth()->user();
-        $clubSlug = request()->route('clubSlug') ?? request()->route('slug') ?? (isset($club) && is_object($club) ? $club->slug : null);
-        $currentClub = isset($club) && is_object($club) ? $club : ($clubSlug ? \App\Models\Club::where('slug', $clubSlug)->first() : null);
+        $currentClub ??= null;
+        $clubSlug = request()->route('clubSlug') ?? request()->route('slug');
         $clubName = $currentClub?->name ?? config('app.name');
         $clubSlug = $currentClub?->slug ?? $clubSlug ?? 'lodge-of-fraternity';
         $userClubs = $user ? $user->clubs : collect();

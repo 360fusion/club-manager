@@ -360,6 +360,25 @@ class AccountingService
     }
 
     /**
+     * The date itself, or the first day after the closed years it falls in. For money that arrives on its own (a card or
+     * PayPal payment) and has to go into the books even when the treasurer has closed the year it was paid in.
+     */
+    public function firstOpenDate(Club $club, CarbonInterface $date): CarbonInterface
+    {
+        $year = $club->financialYearFor($date);
+
+        if (! $club->financialYearIsClosed($year)) {
+            return $date;
+        }
+
+        while ($club->financialYearIsClosed($year)) {
+            $year++;
+        }
+
+        return $club->financialYearRange($year)[0];
+    }
+
+    /**
      * Why a bill or invoice that is already in the books cannot be changed or deleted, or null when it can: its entry
      * is in a financial year that has been closed (a superadmin may still act).
      */

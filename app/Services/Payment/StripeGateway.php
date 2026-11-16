@@ -36,6 +36,19 @@ class StripeGateway
     }
 
     /**
+     * Close a Checkout page that has not been paid, so a member who started paying twice can only pay once.
+     * Best effort: a page that is already paid, expired or unknown is left as it is.
+     */
+    public function expireCheckoutSession(ClubPaymentMethod $method, string $sessionId, ?string $connectedAccount = null): void
+    {
+        try {
+            $this->client($method, $connectedAccount)->checkout->sessions->expire($sessionId, [], $connectedAccount ? ['stripe_account' => $connectedAccount] : []);
+        } catch (ApiErrorException $e) {
+            Log::info('Earlier Stripe checkout was not expired', ['club' => $method->club_id, 'session' => $sessionId, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Refund some or all of a card payment. Amounts are in the smallest currency unit.
      */
     /**

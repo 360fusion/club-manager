@@ -20,6 +20,7 @@ use App\Models\MeetingRsvp;
 use App\Models\Page;
 use App\Models\User;
 use App\Notifications\ConfirmNewEmail;
+use App\Support\ClubAccess;
 use App\Support\EmailVerification;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -224,6 +225,17 @@ class SecurityAuditTest extends TestCase
         $this->assertSame('owner', $this->a->users()->where('users.id', $this->owner->id)->first()->pivot->role);
     }
 
+    public function test_only_owners_and_admins_hand_out_or_take_away_the_treasurer_role(): void
+    {
+        $secretary = User::factory()->create();
+        $this->a->users()->attach($secretary->id, ['role' => 'coach', 'status' => 'active']);
+
+        $this->assertFalse(ClubAccess::canAssignRole($secretary, $this->a, 'treasurer', 'member', $this->member->id));
+        $this->assertFalse(ClubAccess::canAssignRole($secretary, $this->a, 'member', 'treasurer', $this->member->id));
+        $this->assertTrue(ClubAccess::canAssignRole($secretary, $this->a, 'coach', 'member', $this->member->id));
+        $this->assertTrue(ClubAccess::canAssignRole($this->admin, $this->a, 'treasurer', 'member', $this->member->id));
+    }
+
     public function test_update_attachments_cannot_be_html_or_scripts(): void
     {
         $this->actingAs($this->admin)->post(route('admin.updates.store', ['clubSlug' => 'club-a']), [
@@ -241,7 +253,10 @@ class SecurityAuditTest extends TestCase
 
     public function test_responses_carry_basic_security_headers(): void
     {
-        $this->get('/login')->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('X-Frame-Options')->assertHeader('Referrer-Policy')->assertHeader('Content-Security-Policy-Report-Only');
+        $this->get('/login')->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('X-Frame-Options')->assertHeader('Referrer-Policy')->assertHeader('Content-Security-Policy-Report-Only')
+            ->assertHeader('Cross-Origin-Opener-Policy', 'same-origin')->assertHeader('Cross-Origin-Resource-Policy', 'same-origin');
+
+        $this->get('/robots.txt')->assertHeaderMissing('Cross-Origin-Resource-Policy');
     }
 
     public function test_only_owners_can_change_who_holds_the_settings_capability(): void

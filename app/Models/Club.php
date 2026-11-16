@@ -458,6 +458,14 @@ class Club extends Model implements HasMedia
     }
 
     /**
+     * Whether a deadline stored as the lodge's wall-clock time (a reply or booking cut-off) has passed where the lodge is.
+     */
+    public function hasPassed(?\DateTimeInterface $wallClock): bool
+    {
+        return $wallClock !== null && now()->isAfter($this->atLocalTime($wallClock));
+    }
+
+    /**
      * The currency this club keeps its books in: its own choice if valid, else
      * the currency of its province's or grand lodge's country, else the default.
      */

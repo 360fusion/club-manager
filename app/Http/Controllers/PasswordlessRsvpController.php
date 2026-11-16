@@ -28,7 +28,7 @@ class PasswordlessRsvpController extends Controller
         $meeting = $rsvp->meeting;
         $club = $meeting->club;
         $user = $rsvp->user;
-        $isCutoffPassed = $meeting->rsvp_cutoff_at && Carbon::now()->isAfter($meeting->rsvp_cutoff_at);
+        $isCutoffPassed = $meeting->rsvpClosed();
         $clubUser = $user->clubs()->where('club_id', $club->id)->first()?->pivot;
         $isVisitor = $clubUser && $clubUser->role === 'visitor';
         $visitorHomeClub = $isVisitor ? trim(($clubUser->home_club_name ?? '').($clubUser->home_club_number ? ' No '.$clubUser->home_club_number : '')) : null;
@@ -61,7 +61,7 @@ class PasswordlessRsvpController extends Controller
         $user = $rsvp->user;
         $club = $meeting->club;
 
-        if ($meeting->rsvp_cutoff_at && Carbon::now()->isAfter($meeting->rsvp_cutoff_at)) {
+        if ($meeting->rsvpClosed()) {
             return redirect()->back()->withErrors(['cutoff' => 'The dining deadline has passed. Please contact the Secretary directly.']);
         }
 

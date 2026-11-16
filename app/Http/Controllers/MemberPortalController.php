@@ -55,7 +55,7 @@ class MemberPortalController extends Controller
             ->when($isPending, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('meeting_date', 'asc')
             ->get()
-            ->map(function ($meeting) use ($user) {
+            ->map(function ($meeting) use ($user, $club) {
                 $userRsvp = $user ? MeetingRsvp::where('meeting_id', $meeting->id)
                     ->where('user_id', $user->id)
                     ->with('guests')
@@ -71,7 +71,7 @@ class MemberPortalController extends Controller
                     'venue' => $meeting->venue,
                     'dress_code' => $meeting->dress_code,
                     'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('j M Y, H:i') : null,
-                    'is_cutoff_passed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
+                    'is_cutoff_passed' => $club->hasPassed($meeting->rsvp_cutoff_at),
                     'dining_cost_member' => number_format((float) $meeting->dining_cost_member, 2),
                     'user_rsvp' => $userRsvp ? [
                         'attendance_status' => $userRsvp->attendance_status,
@@ -157,7 +157,7 @@ class MemberPortalController extends Controller
             ->where('status', 'published')
             ->orderBy('meeting_date', 'asc')
             ->get()
-            ->map(function ($meeting) use ($user) {
+            ->map(function ($meeting) use ($user, $club) {
                 $userRsvp = $user ? MeetingRsvp::where('meeting_id', $meeting->id)
                     ->where('user_id', $user->id)
                     ->with('guests')
@@ -173,7 +173,7 @@ class MemberPortalController extends Controller
                     'venue' => $meeting->venue,
                     'dress_code' => $meeting->dress_code,
                     'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('j M Y, H:i') : null,
-                    'is_cutoff_passed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
+                    'is_cutoff_passed' => $club->hasPassed($meeting->rsvp_cutoff_at),
                     'dining_cost_member' => number_format((float) $meeting->dining_cost_member, 2),
                     'user_rsvp' => $userRsvp ? [
                         'attendance_status' => $userRsvp->attendance_status,

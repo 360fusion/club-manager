@@ -22,6 +22,12 @@ class EventGuestBookingMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    /** A mail server that is briefly down gets three tries, a minute and then five minutes apart. */
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [60, 300];
+
     public function __construct(public Event $event, public EventRegistration $registration, public EventAttendee $guest)
     {
         $this->onQueue('transactional');

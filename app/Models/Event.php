@@ -131,9 +131,7 @@ class Event extends Model
 
     public function getIsBookingClosedAttribute(): bool
     {
-        $cutoff = $this->booking_cutoff_at;
-
-        return $cutoff ? Carbon::now()->isAfter($cutoff) : false;
+        return $this->club->hasPassed($this->booking_cutoff_at);
     }
 
     /**

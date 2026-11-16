@@ -88,6 +88,18 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cs', Currencies::symbolFor($club))->with('cc', $club?->currencyCode() ?? Currencies::DEFAULT);
         });
 
+        // The committee and accounting layout names the club in the URL, reusing the one the admin check already loaded.
+        View::composer('components.layouts.app', function ($view) {
+            $club = $view->getData()['club'] ?? null;
+
+            if (! $club instanceof Club) {
+                $slug = request()->route('clubSlug') ?? request()->route('slug');
+                $club = is_string($slug) ? (request()->attributes->get("club:{$slug}") ?? Club::where('slug', $slug)->first()) : null;
+            }
+
+            $view->with('currentClub', $club);
+        });
+
         // Longer passwords that have not appeared in known breaches (needs outbound access, so production only).
         Password::defaults(fn () => $this->app->isProduction() ? Password::min(10)->uncompromised() : Password::min(8));
 

@@ -21,6 +21,13 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
+        // Pages only: other sites may not open them in a linked window or embed them. Images and feeds are left alone
+        // so lodges' own websites can still show them.
+        if (str_starts_with((string) $response->headers->get('Content-Type'), 'text/html')) {
+            $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+            $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+        }
+
         // Staging and local copies must never end up in a search engine, whatever robots.txt says.
         if (! app()->isProduction()) {
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');

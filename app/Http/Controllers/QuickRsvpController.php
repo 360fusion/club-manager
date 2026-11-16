@@ -26,7 +26,7 @@ class QuickRsvpController extends Controller
         $scope = MemberScope::for($request->user(), $slug);
         $meeting = Meeting::where('club_id', $scope->club->id)->where('status', 'published')->findOrFail($id);
 
-        if ($meeting->rsvp_cutoff_at && now()->isAfter($meeting->rsvp_cutoff_at)) {
+        if ($meeting->rsvpClosed()) {
             return back()->withErrors(['cutoff' => 'Replies for this meeting have closed. Please contact the Secretary.']);
         }
 

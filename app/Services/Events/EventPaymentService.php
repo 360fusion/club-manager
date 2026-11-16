@@ -249,7 +249,8 @@ class EventPaymentService
 
         $this->accounting->postJournalEntry($club, [
             'description' => 'Event payment: '.$registration->event->title.' - '.$registration->contact_name,
-            'entry_date' => ($receivedAt ?? now())->toDateString(),
+            // A payment that arrives by itself (no one recording it) is never refused for a closed year: it goes on the first open day.
+            'entry_date' => ($actor ? ($receivedAt ?? now()) : $this->accounting->firstOpenDate($club, $receivedAt ?? now()))->toDateString(),
             'source_type' => 'EventRegistration',
             'source_id' => $registration->id,
             'created_by' => $actor?->id,

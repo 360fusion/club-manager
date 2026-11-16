@@ -102,6 +102,14 @@ class Meeting extends Model
     }
 
     /**
+     * Whether replies (and dining) for this meeting have closed, by the lodge's own clock.
+     */
+    public function rsvpClosed(): bool
+    {
+        return $this->club->hasPassed($this->rsvp_cutoff_at);
+    }
+
+    /**
      * @return BelongsTo<RecurringRule, $this>
      */
     public function recurringRule(): BelongsTo

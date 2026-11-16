@@ -423,6 +423,7 @@ TEXT;
         $response = $this->get(route('admin.committee.index', $this->club->slug));
         $response->assertOk();
         $response->assertSee('Lodge Committee');
+        $response->assertSee($this->club->name, false);
 
         $meeting = ClubCommitteeMeeting::create([
             'club_id' => $this->club->id,

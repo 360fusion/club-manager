@@ -83,8 +83,9 @@ class SecretaryRecordsTest extends TestCase
         $this->assertSame('admin', $this->club->users()->find($admin->id)->pivot->role);
         $this->assertSame('active', $this->club->users()->find($admin->id)->pivot->status);
 
-        $role($member, 'treasurer')->assertRedirect();
-        $this->assertSame('treasurer', $this->club->users()->find($member->id)->pivot->role, 'giving a member an ordinary staff role still works');
+        $role($member, 'treasurer')->assertForbidden();
+        $role($member, 'coach')->assertRedirect();
+        $this->assertSame('coach', $this->club->users()->find($member->id)->pivot->role, 'giving a member an ordinary staff role still works');
     }
 
     public function test_superadmin_access_to_a_lodge_needs_two_factor_sign_in_on_a_real_server(): void

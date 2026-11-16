@@ -77,7 +77,7 @@ class MemberRsvpController extends Controller
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
         abort_if($meeting->status !== 'published' && ! ClubAccess::can($user, $club, 'manage_meetings'), 404);
 
-        if ($meeting->rsvp_cutoff_at && Carbon::now()->isAfter($meeting->rsvp_cutoff_at)) {
+        if ($meeting->rsvpClosed()) {
             return redirect()->back()->withErrors(['cutoff' => 'The dining deadline for this meeting has passed. Please contact the Secretary directly.']);
         }
 

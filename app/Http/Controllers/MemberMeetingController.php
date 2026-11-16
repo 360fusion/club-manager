@@ -9,7 +9,6 @@ use App\Enums\ClubMemberStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Support\ClubAccess;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -74,7 +73,7 @@ class MemberMeetingController extends Controller
             'secretaryUser' => $secretary,
             'worshipfulMaster' => $master ? ['name' => $master->formatted_rank_name] : null,
             'memberRole' => $memberPivot->role ?? 'member',
-            'isCutoffPassed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
+            'isCutoffPassed' => $meeting->rsvpClosed(),
             'charityGrants' => $charityGrants,
         ]);
     }

@@ -50,12 +50,14 @@ class MemberInbox
      */
     private function unansweredSummonses(MemberScope $scope): Collection
     {
-        $meetings = Meeting::whereIn('club_id', $scope->clubIds())
+        $meetings = Meeting::with('club')->whereIn('club_id', $scope->clubIds())
             ->where('status', 'published')
             ->whereDate('meeting_date', '>=', today())
             ->where(fn ($cutoff) => $cutoff->whereNull('rsvp_cutoff_at')->orWhere('rsvp_cutoff_at', '>', now()))
             ->orderBy('meeting_date')
-            ->get();
+            ->get()
+            ->reject(fn (Meeting $meeting) => $meeting->rsvpClosed())
+            ->values();
 
         $answered = MeetingRsvp::whereIn('meeting_id', $meetings->pluck('id'))
             ->where('user_id', $scope->user->id)

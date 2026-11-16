@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\Visibility;
 use App\Mail\EventBookingMail;
+use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Models\ClubType;
@@ -13,6 +14,7 @@ use App\Models\EventPaymentMethod;
 use App\Models\EventRegistration;
 use App\Models\User;
 use App\Services\Events\EventRegistrationService;
+use App\Services\FinancialYearService;
 use App\Services\Payment\StripeGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -191,6 +193,38 @@ class EventOnlinePaymentTest extends TestCase
         $this->assertSame('10.00', $registration->fresh()->amount_paid);
         $this->assertSame('part_paid', $registration->fresh()->payment_status);
         $this->assertSame(1, EventPaymentLog::count(), 'only the genuine part payment was recorded');
+    }
+
+    public function test_paying_on_an_earlier_checkout_page_is_still_recorded_and_starting_again_closes_the_old_page(): void
+    {
+        $registration = $this->book($this->online);
+        $registration->update(['stripe_session_id' => 'cs_old']);
+
+        $this->mock(StripeGateway::class, function (MockInterface $mock) {
+            $mock->shouldReceive('expireCheckoutSession')->once()->withArgs(fn ($method, $session) => $session === 'cs_old');
+            $mock->shouldReceive('createCheckoutSession')->once()->andReturn(['id' => 'cs_new', 'url' => 'https://checkout.stripe.test/pay/cs_new']);
+        });
+        $this->actingAs($this->member)->post(route('member.events.pay', ['slug' => 'club-a', 'id' => $this->event->id]), [], ['X-Inertia' => 'true'])->assertStatus(409);
+        $this->assertSame('cs_new', $registration->fresh()->stripe_session_id);
+
+        // The member had already paid on the old page before it closed: the money is recorded against the booking.
+        $this->webhook('cs_old', $registration, 9600, ['metadata' => ['registration_id' => (string) $registration->id, 'club_id' => (string) $this->club->id]])
+            ->assertOk()->assertJsonPath('note', null);
+        $this->assertSame('paid', $registration->fresh()->payment_status);
+    }
+
+    public function test_a_card_payment_arriving_while_its_year_is_closed_goes_into_the_next_open_year(): void
+    {
+        $registration = $this->book($this->online);
+        $registration->update(['stripe_session_id' => 'cs_test_123']);
+        $year = $this->club->financialYearFor(now());
+        app(FinancialYearService::class)->closeFinancialYear($this->club, $year);
+
+        $this->webhook('cs_test_123', $registration, 9600)->assertOk()->assertJsonPath('note', null);
+
+        $this->assertSame('paid', $registration->fresh()->payment_status);
+        $entry = JournalEntry::where('source_type', 'EventRegistration')->sole();
+        $this->assertSame($this->club->financialYearRange($year + 1)[0]->toDateString(), $entry->entry_date->toDateString());
     }
 
     public function test_a_notification_cannot_pay_another_clubs_booking(): void

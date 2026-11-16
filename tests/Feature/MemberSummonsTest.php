@@ -79,4 +79,18 @@ class MemberSummonsTest extends TestCase
             ->where('worshipfulMaster.name', $master->formatted_rank_name));
         $this->assertStringStartsWith('VWBro', $secretary->formatted_rank_name);
     }
+
+    public function test_replies_close_at_the_cut_off_by_the_lodges_own_clock_in_summer(): void
+    {
+        $this->meeting->update(['meeting_date' => '2026-07-10', 'rsvp_cutoff_at' => '2026-07-05 23:59:59']);
+        $reply = fn () => $this->actingAs($this->member)->post(route('member.meetings.rsvp', ['slug' => $this->club->slug, 'id' => $this->meeting->id]), ['attendance_status' => 'apologies']);
+
+        // 22:30 UTC is 23:30 in London: still open.
+        $this->travelTo(Carbon::parse('2026-07-05 22:30:00', 'UTC'));
+        $reply()->assertSessionHasNoErrors();
+
+        // 23:30 UTC is already 00:30 the next day in London: closed, although it is not yet midnight UTC.
+        $this->travelTo(Carbon::parse('2026-07-05 23:30:00', 'UTC'));
+        $reply()->assertSessionHasErrors('cutoff');
+    }
 }

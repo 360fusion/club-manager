@@ -34,7 +34,7 @@ class MemberCalendar
         $user = $scope->user;
         $clubIds = $scope->clubIds();
 
-        $meetings = Meeting::whereIn('club_id', $clubIds)
+        $meetings = Meeting::with('club')->whereIn('club_id', $clubIds)
             ->where('status', 'published')
             ->whereBetween('meeting_date', [$from->toDateString(), $to->toDateString()])
             ->get();
@@ -43,7 +43,7 @@ class MemberCalendar
             ->where('user_id', $user->id)
             ->pluck('attendance_status', 'meeting_id');
 
-        $events = Event::whereIn('club_id', $clubIds)
+        $events = Event::with('club')->whereIn('club_id', $clubIds)
             ->published()
             ->visibleTo($user)
             ->where('status', '!=', 'cancelled')
@@ -71,7 +71,7 @@ class MemberCalendar
                 'end' => $start->copy()->addHours(self::MEETING_HOURS),
                 'where' => $meeting->venue,
                 'reply' => $meetingReplies[$meeting->id] ?? null,
-                'closed' => $meeting->rsvp_cutoff_at ? now()->isAfter($meeting->rsvp_cutoff_at) : false,
+                'closed' => $meeting->rsvpClosed(),
                 'simple' => true,
                 'url' => route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false),
             ];
