@@ -10,27 +10,28 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
+    /** Named, because the generated name of the first is longer than MySQL's 64-character limit. */
     private const INDEXES = [
-        'club_acc_bank_transactions' => ['bank_account_id', 'transaction_date'],
-        'accounting_journal_items' => ['account_id'],
-        'club_user' => ['user_id', 'status'],
-        'event_registrations' => ['user_id'],
+        'club_acc_bank_transactions' => ['bank_txn_account_date_index', ['bank_account_id', 'transaction_date']],
+        'accounting_journal_items' => ['journal_items_account_index', ['account_id']],
+        'club_user' => ['club_user_user_status_index', ['user_id', 'status']],
+        'event_registrations' => ['event_registrations_user_index', ['user_id']],
     ];
 
     public function up(): void
     {
-        foreach (self::INDEXES as $table => $columns) {
+        foreach (self::INDEXES as $table => [$name, $columns]) {
             if (! Schema::hasIndex($table, $columns)) {
-                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->index($columns));
+                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->index($columns, $name));
             }
         }
     }
 
     public function down(): void
     {
-        foreach (self::INDEXES as $table => $columns) {
-            if (Schema::hasIndex($table, $columns)) {
-                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($columns));
+        foreach (self::INDEXES as $table => [$name, $columns]) {
+            if (Schema::hasIndex($table, $name)) {
+                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($name));
             }
         }
     }
