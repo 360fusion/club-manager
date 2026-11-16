@@ -1,0 +1,135 @@
+# The package's part of the API description (OpenAPI 3.1). An app adds its own routes in resources/openapi/*.yaml; `php artisan launchpad:openapi` merges
+# them, and the test helper Launchpad\Testing\AssertsApiIsDescribed fails for any /api/v1 route with no entry. Paths are relative to /api/v1.
+openapi: 3.1.0
+info:
+  title: API
+  version: '1'
+  description: |
+    Every call is for one team, the one the token was made for. Send the token as `Authorization: Bearer <token>`.
+    Errors are JSON with a `message` (and `errors` for a validation failure). Each token may make a limited number of calls a minute
+    (its team's plan decides how many); a `429` says when to try again. A write may carry an `Idempotency-Key` so a retry is not done twice.
+security:
+  - token: []
+paths:
+  /workspace:
+    get:
+      operationId: getWorkspace
+      summary: The team the token is for
+      description: Needs the `read` ability.
+      tags: [Team]
+      responses:
+        '200':
+          description: The team
+          headers:
+            X-RateLimit-Limit: { $ref: '#/components/headers/RateLimitLimit' }
+            X-RateLimit-Remaining: { $ref: '#/components/headers/RateLimitRemaining' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [name, slug, plan]
+                    properties:
+                      name: { type: string, example: Acme Sales }
+                      slug: { type: string, example: acme-sales }
+                      plan: { type: [string, 'null'], description: "The plan's key; null when billing is off", example: pro }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /members:
+    get:
+      operationId: listMembers
+      summary: The people in the team
+      description: Needs the `read` ability.
+      tags: [Team]
+      responses:
+        '200':
+          description: Everyone in the team, oldest membership first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [name, email, role]
+                      properties:
+                        name: { type: string, example: Olive Owner }
+                        email: { type: string, format: email, example: olive@example.com }
+                        role: { type: string, enum: [owner, admin, manager, member] }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+components:
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+      description: A token made on the team's API page, e.g. `12|lp_…`
+  headers:
+    RateLimitLimit:
+      description: Calls this token may make a minute
+      schema: { type: integer }
+    RateLimitRemaining:
+      description: Calls left this minute
+      schema: { type: integer }
+    RetryAfter:
+      description: Seconds to wait before trying again
+      schema: { type: integer }
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: "Send the same key when retrying a write; within a day the first answer is given again instead of doing it twice. 1 to 255 letters, numbers or `_ . : -`."
+      schema: { type: string, maxLength: 255, pattern: '^[A-Za-z0-9_.:-]+$' }
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties: { type: array, items: { type: string } }
+  responses:
+    Unauthenticated:
+      description: No token, or one that is unknown, expired, revoked or no longer works for its team
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: Unauthenticated. }
+    Forbidden:
+      description: The token does not have the ability this call needs
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: This token may not do that. }
+    ValidationFailed:
+      description: The request was not valid
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    TooManyRequests:
+      description: Too many calls this minute
+      headers:
+        Retry-After: { $ref: '#/components/headers/RetryAfter' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: A request with this Idempotency-Key is still being processed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

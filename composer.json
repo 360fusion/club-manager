@@ -118,7 +118,12 @@
     "prefer-stable": true,
     "repositories": [{
         "name": "launchpad",
-        "type": "vcs",
-        "url": "https://github.com/360fusion/launchpad.git"
+        "type": "path",
+        "url": "packages/launchpad",
+        "options": {
+            "versions": {
+                "360fusion/launchpad": "0.7.0"
+            }
+        }
     }]
 }
