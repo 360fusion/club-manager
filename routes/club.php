@@ -236,6 +236,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/meetings/{id}/rsvp-payment-status', [MeetingDiningController::class, 'updatePaymentStatus'])->name('admin.meetings.rsvp.payment_status');
     Route::get('/{clubSlug}/admin/meetings/{id}/dining', [MeetingDiningController::class, 'dining'])->name('admin.meetings.dining');
     Route::post('/{clubSlug}/admin/meetings/{id}/dining/payment', [MeetingDiningController::class, 'recordDiningPayment'])->name('admin.meetings.dining.payment');
+    Route::post('/{clubSlug}/admin/meetings/{id}/dining/refund', [MeetingDiningController::class, 'refundDining'])->name('admin.meetings.dining.refund');
+    Route::get('/{clubSlug}/admin/meetings/{id}/dining/caterer', [MeetingDiningController::class, 'catererSheet'])->name('admin.meetings.dining.caterer');
     Route::get('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingBusinessController::class, 'financialReturn'])->name('admin.meetings.financial_return.show');
     Route::post('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingBusinessController::class, 'storeFinancialReturn'])->name('admin.meetings.financial_return.store');
     Route::get('/{clubSlug}/admin/meetings/{id}/pdf', [MeetingSummonsController::class, 'pdf'])->name('admin.meetings.pdf');
@@ -556,6 +558,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
     Route::post('/members/{slug}/meetings/{id}/rsvp', [MemberRsvpController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
     Route::post('/members/{slug}/meetings/{id}/pay', [MemberRsvpController::class, 'payMeetingDining'])->name('member.meetings.pay');
+    Route::get('/members/{slug}/meetings/{id}/paypal-return', [MemberRsvpController::class, 'meetingPayPalReturn'])->name('member.meetings.paypal_return');
     Route::get('/members/{slug}/meetings/{id}/pdf', [MemberMeetingController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
     Route::get('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'show'])->name('member.signatures.show');
     Route::post('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'store'])->name('member.signatures.store');

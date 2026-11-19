@@ -21,16 +21,16 @@ const props = defineProps({
   memberRole: { type: String, default: 'member' },
   isCutoffPassed: { type: Boolean, default: false },
   owed: { type: String, default: null },
-  canPayByCard: { type: Boolean, default: false },
+  payWith: { type: Array, default: () => [] },
   charityGrants: { type: Array, default: () => [] },
 });
 
 const showRsvpModal = ref(false);
 
-const paying = ref(false);
-const payByCard = () => router.post(route('member.meetings.pay', { slug: props.club.slug, id: props.meeting.id }), {}, {
-  onStart: () => { paying.value = true; },
-  onFinish: () => { paying.value = false; },
+const paying = ref(null);
+const pay = (provider) => router.post(route('member.meetings.pay', { slug: props.club.slug, id: props.meeting.id }), { provider }, {
+  onStart: () => { paying.value = provider; },
+  onFinish: () => { paying.value = null; },
 });
 const paymentOutcome = new URLSearchParams(window.location.search).get('payment');
 
@@ -205,7 +205,10 @@ const linkButtonClass = 'inline-flex items-center justify-center rounded-xl bord
           <Alert v-if="$page.props.errors?.payment" variant="danger" role="alert">{{ $page.props.errors.payment }}</Alert>
           <div v-if="owed" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
             <span class="text-amber-900 dark:text-amber-200">Dining still to pay: <strong>{{ owed }}</strong></span>
-            <Button v-if="canPayByCard" size="sm" :loading="paying" @click="payByCard">Pay by card</Button>
+            <span class="flex flex-wrap gap-2">
+            <Button v-if="payWith.includes('card')" size="sm" :loading="paying === 'card'" @click="pay('card')">Pay by card</Button>
+            <Button v-if="payWith.includes('paypal')" size="sm" variant="secondary" :loading="paying === 'paypal'" @click="pay('paypal')">Pay with PayPal</Button>
+          </span>
           </div>
 
           <!-- Bank details and payment reference -->

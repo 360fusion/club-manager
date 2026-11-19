@@ -326,6 +326,7 @@ class MeetingAdminController extends Controller
                 ['label' => 'Dining numbers to the Secretary', 'due' => $meeting->rsvp_cutoff_at?->copy()->addDay()->format('j M Y'), 'sent' => $local($meeting->numbers_sent_at)],
                 ['label' => 'Reminder to those coming', 'due' => $meeting->meeting_date->copy()->subDays($days['confirm'])->format('j M Y'), 'sent' => $local($meeting->confirmations_sent_at)],
             ],
+            'apologies' => $numbers['apologies'],
             'unpaid_heads' => $numbers['unpaid_heads'],
             'outstanding' => $numbers['outstanding'],
         ];

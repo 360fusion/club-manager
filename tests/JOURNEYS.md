@@ -50,11 +50,30 @@ a short on-screen run for a phone, done before each app release.
 | D4 | Signs out | That phone stops getting pushes; other phones of the same person keep them | test |
 | D5 | Opens a `clubmanager://` link | The app opens at that page; links to other sites are refused | test, device |
 
+## E. A lodge meeting: replies, the Secretary's numbers and the festive board
+
+Automated as one story in `tests/Feature/Journeys/MeetingJourneyTest.php`. Days are the lodge's settings (Settings,
+Dining): ask 7 days before, numbers 3 days before (dining closes at midnight before), reminder 1 day before.
+
+| # | Step | Expected | Checked by |
+|---|---|---|---|
+| E1 | The Secretary publishes the summons | Every member is emailed it with a private reply link | test |
+| E2 | A member sends apologies from the summons email, with a reason | Recorded with the reason | test |
+| E3 | A week before, 9am lodge time | "Will you be there?" by email and app to those who have not replied, once; each answer opens their reply page with it picked | test, device (email link) |
+| E4 | A member books dining with a guest and pays by card or PayPal from the summons | Both places paid, recorded once from Stripe's or PayPal's confirmation | test, device with Stripe test keys |
+| E5 | The day dining closes, 9am | Last call to whoever still has not replied | test |
+| E6 | Dining has closed | The Secretary gets the numbers (dining, apologies with reasons, no reply, dietary, unpaid; brethren named with rank); the caterer gets the count, menu and dietary needs only | test |
+| E7 | Late changes | Adding dining is refused (ask the Secretary); dropping it or sending apologies works; each change is emailed to the Secretary, and the caterer hears only when the count changes | test, device |
+| E8 | A paid guest is taken off | Listed under "Paid but no longer dining"; the Secretary refunds it through the same provider (an owner or admin, as it needs the payments permission) | test |
+| E9 | The day before, 9am | Reminder to those coming, with what they still owe and a link to change | test, device (push) |
+| E10 | The Secretary prints the caterer sheet | Final count, menu, dietary needs and who is dining; PDF download | test, device |
+
 ## On-screen run (before each app release)
 
 On one phone or simulator at a time (this Mac runs short of memory with two), signed in as a member with a booking,
 in this order: A1, A2, A4, A5, A8, then as an organiser B2, B5 (scan the ticket on a second screen, or open its door
-link), B7, then D1, D2, D5 and D4. Take a screenshot at each step. D3 needs Stripe test keys in the lodge's payment
+link), B7, then D1, D2, D5 and D4, then for a meeting E3 (open the emailed answer link), E7 (try adding dining after
+the deadline) and E10. Take a screenshot at each step. D3 needs Stripe test keys in the lodge's payment
 options and `EVENTS_ONLINE_PAYMENTS=true`.
 
 ## Run log

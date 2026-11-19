@@ -25,6 +25,7 @@ defineProps({
               <Input v-model.number="form.meeting_deadline_days" type="number" min="1" max="14" label="Dining numbers (days before)" :error="form.errors.meeting_deadline_days" hint="Dining replies close at midnight before; a last call goes that morning." />
               <Input v-model.number="form.meeting_confirm_days" type="number" min="0" max="7" label="Reminder to confirm (days before)" :error="form.errors.meeting_confirm_days" hint="To everyone coming, with a link to change their reply or pay." />
             </div>
+            <Input v-model="form.caterer_email" type="email" label="Caterer's email (optional)" :error="form.errors.caterer_email" hint="Gets the dining count, menu and dietary needs when replies close, and again if the count changes. No names of absentees or payments." class="sm:max-w-md" />
           </div>
 
           <div class="space-y-3">

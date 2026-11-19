@@ -28,6 +28,12 @@ class EmailTemplate
         'signature_request' => 'sign_url',
         'account_invitation' => 'invite_url',
         'account_invitation_reminder' => 'invite_url',
+        'meeting_reply_ask' => 'reply_links',
+        'meeting_reply_last_call' => 'reply_links',
+        'meeting_reply_confirm' => 'reply_links',
+        'meeting_numbers' => 'numbers',
+        'meeting_numbers_changed' => 'numbers',
+        'meeting_numbers_caterer' => 'numbers',
     ];
 
     /**

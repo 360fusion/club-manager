@@ -8,6 +8,7 @@ import Button from '@/Components/Ui/Button.vue';
 import StatCard from '@/Components/Ui/StatCard.vue';
 import Input from '@/Components/Ui/Input.vue';
 import Modal from '@/Components/Ui/Modal.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import { formatMoney } from '@/Utils/currency';
 
 const props = defineProps({
@@ -16,6 +17,8 @@ const props = defineProps({
   diners: { type: Array, default: () => [] },
   totals: { type: Object, default: () => ({ heads: 0, expected: 0, collected: 0, outstanding: 0 }) },
   paymentMethods: { type: Array, default: () => ['bank', 'online', 'cash'] },
+  refundable: { type: Array, default: () => [] },
+  canRefund: { type: Boolean, default: false },
 });
 
 const METHOD_LABELS = {
@@ -71,6 +74,18 @@ const markUnpaid = (diner) => {
   });
 };
 
+// Refunding a place that is no longer dining: back through Stripe or PayPal when it was paid online.
+const refunding = ref(null);
+const refundForm = useForm({ kind: 'member', diner_id: null });
+const refund = () => {
+  refundForm.kind = refunding.value.kind;
+  refundForm.diner_id = refunding.value.id;
+  refundForm.post(route('admin.meetings.dining.refund', { clubSlug: props.club.slug, id: props.meeting.id }), {
+    preserveScroll: true,
+    onFinish: () => { refunding.value = null; },
+  });
+};
+
 const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waived'].includes(d.payment_status)).length);
 </script>
 
@@ -88,6 +103,7 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
+            <a :href="route('admin.meetings.dining.caterer', { clubSlug: club.slug, id: meeting.id })" target="_blank" rel="noopener" class="inline-flex min-h-8 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Caterer sheet</a>
             <Button variant="secondary" size="sm" :href="route('admin.meetings.index', { clubSlug: club.slug })">All meetings</Button>
             <Button size="sm" :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })">Secretary dashboard</Button>
           </div>
@@ -153,7 +169,27 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
           </table>
         </div>
       </Card>
+
+      <Card v-if="refundable.length">
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Paid but no longer dining</h2>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">These places were paid for, then dropped. Refund them if the lodge is not being charged for them.</p>
+        <p v-if="refundForm.errors.refund || $page.props.errors?.amount" class="mt-2 text-xs text-rose-700 dark:text-rose-400" role="alert">{{ refundForm.errors.refund || $page.props.errors.amount }}</p>
+        <ul class="mt-3 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+          <li v-for="place in refundable" :key="`${place.kind}-${place.id}`" class="flex flex-wrap items-center justify-between gap-2 py-2">
+            <span class="text-slate-700 dark:text-slate-200">
+              {{ place.name }}<span v-if="place.host" class="text-slate-500 dark:text-slate-400"> (guest of {{ place.host }})</span>
+              <span class="text-slate-500 dark:text-slate-400"> · {{ formatMoney(place.fee) }} · now {{ place.now }}</span>
+            </span>
+            <Button v-if="canRefund" variant="secondary" size="sm" @click="refunding = place">{{ place.online ? 'Refund' : 'Mark refunded' }}</Button>
+          </li>
+        </ul>
+      </Card>
     </div>
+
+    <ConfirmDialog :open="refunding !== null" :title="refunding?.online ? 'Refund this place?' : 'Mark this place refunded?'" :confirm-label="refunding?.online ? 'Refund' : 'Mark refunded'" :processing="refundForm.processing" @confirm="refund" @close="refunding = null">
+      <template v-if="refunding?.online">{{ formatMoney(refunding?.fee) }} goes back to {{ refunding?.name }}'s card or PayPal account. This cannot be undone.</template>
+      <template v-else>This was paid by bank transfer or cash, so the money goes back by hand. Mark {{ refunding?.name }}'s {{ formatMoney(refunding?.fee) }} as refunded?</template>
+    </ConfirmDialog>
 
     <Modal :open="showPaymentModal" title="Record dining payment" :subtitle="`${activeDiner?.name} · ${formatMoney(activeDiner?.fee)}`" @close="closePaymentModal">
       <form id="dining-payment-form" class="space-y-4" @submit.prevent="submitPayment">

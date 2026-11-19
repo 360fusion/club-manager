@@ -9,6 +9,7 @@ use App\Mail\MeetingNumbersMail;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\MeetingRsvpGuest;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -124,16 +125,16 @@ class MeetingReplies
             .' → '.self::label($rsvp->attendance_status).($heads ? " ({$heads} dining)" : '').'.';
 
         if ($heads < $before['heads'] && $before['paid']) {
-            $change .= ' They had already paid for dining.';
+            $change .= ' They had already paid for dining: refund them from the dining list if needed.';
         }
 
-        $this->sendNumbers($meeting, $change);
+        $this->sendNumbers($meeting, $change, $this->numbers($meeting)['dining'] - $heads + $before['heads']);
     }
 
     /**
      * Email the Secretary the numbers, or an update with what changed. Returns false when the lodge has nobody to send them to.
      */
-    public function sendNumbers(Meeting $meeting, ?string $change = null): bool
+    public function sendNumbers(Meeting $meeting, ?string $change = null, ?int $diningBefore = null): bool
     {
         $club = $meeting->club;
         $email = (Member::summonsSecretary($club)['email'] ?? null) ?: $club->email;
@@ -142,7 +143,14 @@ class MeetingReplies
             return false;
         }
 
-        Mail::to($email)->queue(new MeetingNumbersMail($club, $meeting, $this->numbers($meeting), $change));
+        $numbers = $this->numbers($meeting);
+        Mail::to($email)->queue(new MeetingNumbersMail($club, $meeting, $numbers, $change));
+
+        // The caterer only hears when the dining count itself changes, without names.
+        $caterer = $club->settings['caterer_email'] ?? null;
+        if ($caterer && ($change === null || $numbers['dining'] !== $diningBefore)) {
+            Mail::to($caterer)->queue(new MeetingNumbersMail($club, $meeting, $numbers, $change === null ? null : "The numbers have changed: now {$numbers['dining']} dining.", true));
+        }
 
         return true;
     }
@@ -158,8 +166,9 @@ class MeetingReplies
     }
 
     /**
-     * Replace a reply's guests with those submitted. A guest already paid for keeps their row, and so their payment,
-     * while they stay on the reply (matched by name).
+     * Replace a reply's guests with those submitted. A guest already paid for (or refunded) keeps their row and so their
+     * payment: matched by name while they stay on the reply, and kept as not dining when taken off, so the Secretary
+     * sees them under "paid but no longer dining" and can refund them.
      *
      * @param  array<int, array<string, mixed>>  $guests
      */
@@ -167,8 +176,10 @@ class MeetingReplies
     {
         $guests = array_values(array_filter($guests, fn (array $guest) => filled($guest['guest_name'] ?? null)));
         $names = collect($guests)->pluck('guest_name');
-        $paid = $rsvp->guests()->where('payment_status', 'paid')->whereIn('guest_name', $names)->get()->keyBy('guest_name');
-        $rsvp->guests()->whereNotIn('id', $paid->pluck('id'))->delete();
+        $settled = $rsvp->guests()->whereIn('payment_status', ['paid', 'refunded'])->get();
+        $paid = $settled->whereIn('guest_name', $names->all())->keyBy('guest_name');
+        $rsvp->guests()->whereNotIn('id', $settled->pluck('id'))->delete();
+        $rsvp->guests()->whereIn('id', $settled->whereNotIn('guest_name', $names->all())->pluck('id'))->update(['attending_dining' => false]);
 
         foreach ($guests as $guest) {
             $dining = (bool) ($guest['attending_dining'] ?? true);
@@ -189,6 +200,17 @@ class MeetingReplies
         }
 
         $rsvp->unsetRelation('guests');
+    }
+
+    /**
+     * The guests a member sees and edits on their reply: not one they took off after paying, which only the Secretary
+     * deals with now.
+     *
+     * @return Collection<int, MeetingRsvpGuest>
+     */
+    public static function listedGuests(MeetingRsvp $rsvp): Collection
+    {
+        return $rsvp->guests->reject(fn ($guest) => ! $guest->attending_dining && in_array($guest->payment_status, ['paid', 'refunded'], true))->values();
     }
 
     /**
@@ -283,6 +305,15 @@ class MeetingReplies
     {
         $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)->whereIn('attendance_status', self::ANSWERS)->with(['user', 'guests'])->get();
         $attending = $rsvps->whereIn('attendance_status', self::ATTENDING);
+        $nonRepliers = $this->nonRepliers($meeting);
+
+        // Brethren are named with their rank, as on the summons and in the minutes ("WBro John Smith").
+        $members = Member::where('club_id', $meeting->club_id)->whereIn('user_id', $rsvps->pluck('user_id')->merge($nonRepliers->pluck('id')))->get()->keyBy('user_id');
+        $name = fn (?User $user) => match (true) {
+            $user === null => 'Member',
+            $members->has($user->id) => $members[$user->id]->formatted_rank_name,
+            default => $user->name,
+        };
 
         $diningMembers = $attending->where('attendance_status', 'attending_dining')->count();
         $diningGuests = $attending->sum(fn (MeetingRsvp $rsvp) => $rsvp->guests->where('attending_dining', true)->count());
@@ -290,11 +321,11 @@ class MeetingReplies
         $dietary = [];
         foreach ($attending as $rsvp) {
             if ($rsvp->attendance_status === 'attending_dining' && filled($rsvp->dietary_requirements)) {
-                $dietary[] = ['person' => $rsvp->user->name ?? 'Member', 'requirement' => (string) $rsvp->dietary_requirements];
+                $dietary[] = ['person' => $name($rsvp->user), 'requirement' => (string) $rsvp->dietary_requirements];
             }
             foreach ($rsvp->guests->where('attending_dining', true) as $guest) {
                 if (filled($guest->dietary_requirements)) {
-                    $dietary[] = ['person' => $guest->guest_name.' (guest of '.($rsvp->user->name ?? 'a member').')', 'requirement' => (string) $guest->dietary_requirements];
+                    $dietary[] = ['person' => $guest->guest_name.' (guest of '.$name($rsvp->user).')', 'requirement' => (string) $guest->dietary_requirements];
                 }
             }
         }
@@ -307,9 +338,9 @@ class MeetingReplies
             'dining_guests' => $diningGuests,
             'meeting_only' => $attending->where('attendance_status', 'attending_meeting_only')->count(),
             'apologies' => $rsvps->where('attendance_status', 'apologies')
-                ->map(fn (MeetingRsvp $rsvp) => ['name' => $rsvp->user->name ?? 'Member', 'reason' => $rsvp->apology_reason])
+                ->map(fn (MeetingRsvp $rsvp) => ['name' => $name($rsvp->user), 'reason' => $rsvp->apology_reason])
                 ->sortBy('name')->values()->all(),
-            'no_reply' => $this->nonRepliers($meeting)->pluck('name')->sort()->values()->all(),
+            'no_reply' => $nonRepliers->map($name)->sort()->values()->all(),
             'dietary' => $dietary,
             'unpaid_heads' => $owing->sum(fn (array $owed) => ($owed['member'] ? 1 : 0) + count($owed['guest_ids'])),
             'outstanding' => round($owing->sum('amount'), 2),

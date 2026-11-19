@@ -14,7 +14,7 @@ const props = defineProps({
   payUrl: { type: String, required: true },
   answer: { type: String, default: null },
   owed: { type: String, default: null },
-  canPayByCard: Boolean,
+  payWith: { type: Array, default: () => [] },
   club: Object,
   user: Object,
   meeting: Object,
@@ -55,8 +55,8 @@ const submit = () => {
   form.post(props.submitUrl, { preserveScroll: true });
 };
 
-const paying = ref(false);
-const payByCard = () => router.post(props.payUrl, {}, { onStart: () => { paying.value = true; }, onFinish: () => { paying.value = false; } });
+const paying = ref(null);
+const pay = (provider) => router.post(props.payUrl, { provider }, { onStart: () => { paying.value = provider; }, onFinish: () => { paying.value = null; } });
 const paymentOutcome = new URLSearchParams(window.location.search).get('payment');
 
 const { copied: refCopied, copy } = useClipboard();
@@ -120,7 +120,10 @@ const showsPayment = () => form.attendance_status === 'attending_dining' || form
         <!-- Dining still to pay -->
         <div v-if="owed" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
           <span class="text-amber-900 dark:text-amber-200">Dining still to pay: <strong>{{ owed }}</strong></span>
-          <Button v-if="canPayByCard" size="sm" :loading="paying" @click="payByCard">Pay by card</Button>
+          <span class="flex flex-wrap gap-2">
+            <Button v-if="payWith.includes('card')" size="sm" :loading="paying === 'card'" @click="pay('card')">Pay by card</Button>
+            <Button v-if="payWith.includes('paypal')" size="sm" variant="secondary" :loading="paying === 'paypal'" @click="pay('paypal')">Pay with PayPal</Button>
+          </span>
         </div>
         <Badge v-else-if="rsvp.payment_status === 'paid'" variant="success">Dining paid</Badge>
         <Alert v-if="$page.props.errors?.payment" variant="danger" role="alert">{{ $page.props.errors.payment }}</Alert>

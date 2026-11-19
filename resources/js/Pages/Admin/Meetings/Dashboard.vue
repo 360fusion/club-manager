@@ -151,12 +151,12 @@ const filters = computed(() => [
   ['visitors', 'Visitors', props.stats.visiting_count || 0],
 ]);
 
+// Named with their rank, as the minutes record them; worked out on the server with the Secretary's numbers.
 const apologiesFormattedText = computed(() => {
-  const list = memberRsvps.value.filter(r => r.attendance_status === 'apologies');
+  const list = props.replySchedule?.apologies ?? [];
   if (!list.length) return 'No apologies have been received for this meeting.';
-  
-  const names = list.map(r => r.user ? r.user.name : 'Member').join(', ');
-  return `APOLOGIES FOR ABSENCE:\nApologies were received and recorded from: ${names}.`;
+
+  return `APOLOGIES FOR ABSENCE:\nApologies were received and recorded from: ${list.map((a) => a.name).join(', ')}.`;
 });
 
 const formattedMeetingDate = computed(() => formatDate(props.meeting?.meeting_date, { month: 'long' }));

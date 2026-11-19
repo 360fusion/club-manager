@@ -7,11 +7,13 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Mail\MeetingNumbersMail;
 use App\Mail\MeetingReplyMail;
 use App\Models\Club;
+use App\Models\ClubEmailTemplate;
 use App\Models\ClubPaymentMethod;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\User;
 use App\Services\Meetings\MeetingReplies;
+use App\Services\Payment\PayPalGateway;
 use App\Services\Payment\StripeGateway;
 use App\Services\RsvpTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -101,6 +103,21 @@ class MeetingReplyScheduleTest extends TestCase
         Mail::assertQueued(MeetingReplyMail::class, fn (MeetingReplyMail $mail) => $mail->kind === MeetingReplyMail::ASK && $mail->hasTo($this->silent->email));
         $this->assertSame(1, $this->silent->notifications()->count());
         $this->assertSame(0, $this->diner->notifications()->count());
+    }
+
+    public function test_a_lodges_own_wording_is_used_and_still_carries_the_private_answers(): void
+    {
+        ClubEmailTemplate::create(['club_id' => $this->club->id, 'template_key' => 'meeting_reply_ask', 'subject' => 'Festive board: {{meeting_title}}', 'body_html' => '<p>Brother {{member_name}}, are you dining?</p>']);
+
+        $this->runAt('2026-12-04 09:00');
+
+        Mail::assertQueued(MeetingReplyMail::class, function (MeetingReplyMail $mail) {
+            $html = $mail->render();
+
+            return $mail->envelope()->subject === 'Festive board: December Meeting'
+                && str_contains($html, 'Brother Tom Silent, are you dining?')
+                && substr_count($html, '/summons/reply/') === 3;
+        });
     }
 
     public function test_a_summons_published_inside_the_week_is_not_followed_by_a_second_ask(): void
@@ -220,5 +237,99 @@ class MeetingReplyScheduleTest extends TestCase
         $this->travel(5)->minutes();
         $webhook()->assertSuccessful();
         $this->assertEquals($paidAt, $rsvp->fresh()->paid_at);
+    }
+
+    public function test_dining_can_be_paid_with_paypal_and_is_taken_once_when_the_payer_comes_back(): void
+    {
+        config(['events.online_payments' => true]);
+        ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => ClubPaymentMethod::PAYPAL, 'label' => 'PayPal', 'sort_order' => 0, 'is_active' => true, 'config' => ['paypal_client_id' => 'id', 'paypal_client_secret' => 'secret', 'paypal_webhook_id' => 'wh']]);
+        $order = null;
+        $this->mock(PayPalGateway::class, function (MockInterface $mock) use (&$order) {
+            $mock->shouldReceive('createOrder')->once()->andReturnUsing(function ($method, $params) use (&$order) {
+                $order = $params;
+
+                return ['id' => 'ORDER-1', 'url' => 'https://paypal.test/approve/ORDER-1'];
+            });
+            $mock->shouldReceive('captureOrder')->once()->andReturnUsing(function () use (&$order) {
+                return ['status' => 'COMPLETED', 'capture_id' => 'CAP-1', 'amount' => 65.0, 'currency' => 'GBP', 'custom_id' => $order['custom_id']];
+            });
+        });
+        $summons = route('member.meetings.summons', ['slug' => $this->club->slug, 'id' => $this->meeting->id]);
+
+        $this->actingAs($this->diner)->post(route('member.meetings.pay', ['slug' => $this->club->slug, 'id' => $this->meeting->id]), ['provider' => 'paypal'])
+            ->assertRedirect('https://paypal.test/approve/ORDER-1');
+        $this->assertSame(65.0, $order['amount']);
+
+        $back = fn () => $this->get(route('member.meetings.paypal_return', ['slug' => $this->club->slug, 'id' => $this->meeting->id, 'token' => 'ORDER-1']));
+        $back()->assertRedirect($summons.'?payment=success');
+        $back()->assertRedirect($summons.'?payment=success');
+
+        $rsvp = MeetingRsvp::where('user_id', $this->diner->id)->with('guests')->first();
+        $this->assertSame(['paid', 'paypal', 'CAP-1'], [$rsvp->payment_status, $rsvp->online_provider, $rsvp->online_payment_id]);
+        $this->assertSame('paid', $rsvp->guests->first()->payment_status);
+    }
+
+    public function test_a_place_paid_online_then_dropped_is_refunded_by_the_lodge_through_the_same_provider(): void
+    {
+        config(['events.online_payments' => true]);
+        ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => ClubPaymentMethod::CARD, 'label' => 'Card', 'sort_order' => 0, 'is_active' => true, 'config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => self::SECRET]]);
+        $rsvp = MeetingRsvp::where('user_id', $this->diner->id)->first();
+        $rsvp->forceFill(['payment_status' => 'paid', 'online_provider' => 'stripe', 'online_payment_id' => 'pi_dropped'])->save();
+        $rsvp->update(['attendance_status' => 'attending_meeting_only']);
+
+        $owner = User::factory()->create();
+        $this->club->users()->attach($owner->id, ['role' => 'owner', 'status' => 'active']);
+        $secretary = User::factory()->create();
+        $this->club->users()->attach($secretary->id, ['role' => 'coach', 'status' => 'active']);
+        $refund = ['kind' => 'member', 'diner_id' => $rsvp->id];
+        $url = route('admin.meetings.dining.refund', ['clubSlug' => $this->club->slug, 'id' => $this->meeting->id]);
+
+        $this->mock(StripeGateway::class)->shouldReceive('refund')->once()->withArgs(fn ($method, $intent, $minor) => $intent === 'pi_dropped' && $minor === 3000)->andReturn('re_1');
+
+        $this->actingAs($secretary)->get(route('admin.meetings.dining', ['clubSlug' => $this->club->slug, 'id' => $this->meeting->id]))
+            ->assertInertia(fn ($page) => $page->where('refundable.0.name', 'Dan Diner')->where('refundable.0.online', true)->where('canRefund', false));
+        $this->actingAs($secretary)->post($url, $refund)->assertForbidden();
+
+        $this->actingAs($owner)->post($url, $refund)->assertSessionHasNoErrors();
+        $this->assertSame('refunded', $rsvp->fresh()->payment_status);
+    }
+
+    public function test_the_caterer_gets_the_count_menu_and_dietary_needs_but_not_who_is_away_or_unpaid(): void
+    {
+        $this->club->update(['settings' => [...($this->club->settings ?? []), 'caterer_email' => 'kitchen@example.test']]);
+        $this->meeting->update(['festive_board_menu' => 'Soup, beef, crumble']);
+        Member::create(['club_id' => $this->club->id, 'user_id' => $this->absent->id, 'first_name' => 'Abe', 'last_name' => 'Absent', 'masonic_rank' => 'WBro', 'membership_status' => 'active']);
+        $this->meeting->forceFill(['replies_requested_at' => now(), 'last_call_sent_at' => now()])->save();
+
+        $this->runAt('2026-12-08 09:00');
+
+        Mail::assertQueued(MeetingNumbersMail::class, fn (MeetingNumbersMail $mail) => $mail->hasTo('secretary@example.test') && str_starts_with($mail->numbers['apologies'][0]['name'], 'WBro Abe Absent'));
+        Mail::assertQueued(MeetingNumbersMail::class, function (MeetingNumbersMail $mail) {
+            $html = $mail->render();
+
+            return $mail->forCaterer && $mail->hasTo('kitchen@example.test') && str_contains($html, 'Dining: 2')
+                && str_contains($html, 'Soup, beef, crumble') && str_contains($html, 'Vegetarian')
+                && ! str_contains($html, 'Absent') && ! str_contains($html, 'Silent') && ! str_contains($html, 'unpaid');
+        });
+
+        // A reply that does not change the count is not passed on to the caterer.
+        $replies = app(MeetingReplies::class);
+        $rsvp = $replies->rsvpFor($this->meeting, $this->silent);
+        $before = MeetingReplies::before($rsvp);
+        $rsvp->update(['attendance_status' => 'apologies']);
+        $replies->afterChange($this->meeting->fresh(), $rsvp, $before);
+
+        Mail::assertQueued(MeetingNumbersMail::class, fn (MeetingNumbersMail $mail) => $mail->forCaterer, 1);
+    }
+
+    public function test_the_caterer_sheet_lists_who_is_dining_and_downloads_as_a_pdf(): void
+    {
+        $owner = User::factory()->create();
+        $this->club->users()->attach($owner->id, ['role' => 'owner', 'status' => 'active']);
+        $url = route('admin.meetings.dining.caterer', ['clubSlug' => $this->club->slug, 'id' => $this->meeting->id]);
+
+        $this->actingAs($owner)->get($url)->assertOk()->assertSee('2 dining')->assertSee('Gus Guest')->assertSee('Vegetarian')->assertDontSee('Abe Absent');
+        $this->actingAs($owner)->get($url.'?download=1')->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->actingAs($this->diner)->get($url)->assertForbidden();
     }
 }

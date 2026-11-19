@@ -72,13 +72,13 @@ class MemberMeetingController extends Controller
             ],
             'meeting' => $meeting,
             'members' => $members,
-            'userRsvp' => $userRsvp,
+            'userRsvp' => $userRsvp?->setRelation('guests', MeetingReplies::listedGuests($userRsvp)),
             'secretaryUser' => $secretary,
             'worshipfulMaster' => $master ? ['name' => $master->formatted_rank_name] : null,
             'memberRole' => $memberPivot->role ?? 'member',
             'isCutoffPassed' => $meeting->rsvpClosed(),
             'owed' => $userRsvp && ($owed = MeetingReplies::owed($meeting, $userRsvp)['amount']) > 0 ? Currencies::format($owed, $club) : null,
-            'canPayByCard' => $userRsvp && app(MeetingDiningPayment::class)->canPay($userRsvp->setRelation('meeting', $meeting)),
+            'payWith' => $userRsvp ? app(MeetingDiningPayment::class)->providers($userRsvp->setRelation('meeting', $meeting)) : [],
             'charityGrants' => $charityGrants,
         ]);
     }

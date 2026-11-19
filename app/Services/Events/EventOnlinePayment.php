@@ -384,6 +384,12 @@ class EventOnlinePayment
         }
 
         $resource = (array) ($event['resource'] ?? []);
+
+        // Meeting dining paid with PayPal arrives on the same webhook, its custom id starting "mr".
+        if (str_starts_with((string) ($resource['custom_id'] ?? ''), 'mr')) {
+            return app(MeetingDiningPayment::class)->handlePayPalCapture($club, $resource);
+        }
+
         $registration = EventRegistration::with(['event.club', 'paymentMethod'])->find((int) ($resource['custom_id'] ?? 0));
         $orderId = $resource['supplementary_data']['related_ids']['order_id'] ?? null;
 

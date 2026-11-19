@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
@@ -131,6 +132,29 @@ class MemberRsvpController extends Controller
         $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $request->user()->id)->firstOrFail();
         $back = route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id]);
 
-        return Inertia::location($payments->start($rsvp, NativeApp::returnUrl($request, $back.'?payment=success'), NativeApp::returnUrl($request, $back.'?payment=cancelled')));
+        return Inertia::location($payments->start(
+            $rsvp,
+            $request->input('provider') === MeetingDiningPayment::PAYPAL ? MeetingDiningPayment::PAYPAL : MeetingDiningPayment::CARD,
+            NativeApp::returnUrl($request, $back.'?payment=success'),
+            NativeApp::returnUrl($request, $back.'?payment=cancelled'),
+            NativeApp::returnUrl($request, route('member.meetings.paypal_return', ['slug' => $club->slug, 'id' => $meeting->id])),
+        ));
+    }
+
+    public function meetingPayPalReturn(Request $request, string $slug, int $id, MeetingDiningPayment $payments): RedirectResponse
+    {
+        $club = $this->findClub($slug);
+        abort_unless(ClubAccess::isActiveMember($request->user(), $club), 403, 'You are not a member of this club.');
+
+        $meeting = Meeting::where('club_id', $club->id)->findOrFail($id);
+        $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $request->user()->id)->firstOrFail();
+
+        try {
+            $paid = $payments->capturePayPal($rsvp, (string) $request->query('token'));
+        } catch (ValidationException) {
+            $paid = false;
+        }
+
+        return redirect(route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id]).'?payment='.($paid ? 'success' : 'cancelled'));
     }
 }

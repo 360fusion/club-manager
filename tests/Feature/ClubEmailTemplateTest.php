@@ -15,6 +15,7 @@ use App\Models\EventPaymentMethod;
 use App\Models\EventRegistration;
 use App\Models\User;
 use App\Services\Events\EventRegistrationService;
+use App\Support\EmailTemplate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -87,7 +88,7 @@ class ClubEmailTemplateTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('admin.email_templates.index', ['clubSlug' => 'club-a']))->assertInertia(fn ($page) => $page
             ->component('Admin/EmailTemplates/Index')
-            ->has('templates', 9)
+            ->has('templates', count(EmailTemplate::LODGE_EDITABLE))
             ->where('templates', fn ($templates) => collect($templates)->firstWhere('key', 'event_refund')['customised'] === true
                 && collect($templates)->firstWhere('key', 'event_refund')['subject'] === 'Money back'
                 && collect($templates)->firstWhere('key', 'event_payment_reminder')['customised'] === false));

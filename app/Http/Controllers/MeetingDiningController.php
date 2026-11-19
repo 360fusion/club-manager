@@ -10,10 +10,16 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\MeetingRsvpGuest;
 use App\Models\User;
+use App\Services\Meetings\MeetingDiningPayment;
+use App\Services\Meetings\MeetingReplies;
+use App\Support\ClubAccess;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * The dining list, who is attending, and the RSVPs and payments an organiser records for members and visitors. Split out of MeetingAdminController; the URLs, route names and permissions are unchanged.
@@ -77,7 +83,25 @@ class MeetingDiningController extends Controller
         $diners = $diners->sortBy(fn ($d) => [$d['host'] ?? $d['name'], $d['kind'] === 'guest' ? 1 : 0])->values();
         $settled = $diners->whereIn('payment_status', ['paid', 'waived']);
 
+        // Places paid for but no longer dining (a member who dropped dining, a guest taken off): the Secretary decides on a refund.
+        $refundable = collect();
+        foreach (MeetingRsvp::where('meeting_id', $meeting->id)->with(['user', 'guests'])->get() as $rsvp) {
+            $attending = in_array($rsvp->attendance_status, MeetingReplies::ATTENDING, true);
+
+            if ($rsvp->payment_status === 'paid' && $rsvp->attendance_status !== 'attending_dining') {
+                $refundable->push(['kind' => 'member', 'id' => $rsvp->id, 'name' => $rsvp->user->name, 'host' => null, 'fee' => (float) $meeting->dining_cost_member, 'online' => (bool) $rsvp->online_payment_id, 'now' => MeetingReplies::label($rsvp->attendance_status)]);
+            }
+
+            foreach ($rsvp->guests as $guest) {
+                if ($guest->payment_status === 'paid' && (! $guest->attending_dining || ! $attending)) {
+                    $refundable->push(['kind' => 'guest', 'id' => $guest->id, 'name' => $guest->guest_name, 'host' => $rsvp->user->name, 'fee' => (float) ($guest->dining_fee ?: $meeting->dining_cost_guest), 'online' => (bool) $guest->online_payment_id, 'now' => 'not dining']);
+                }
+            }
+        }
+
         return Inertia::render('Admin/Meetings/Dining', [
+            'refundable' => $refundable->values(),
+            'canRefund' => ClubAccess::can(request()->user(), $club, 'manage_billing'),
             'club' => $club,
             'meeting' => [
                 'id' => $meeting->id,
@@ -133,6 +157,60 @@ class MeetingDiningController extends Controller
         return redirect()->back()->with('success', $isSettled
             ? "Dining payment recorded for {$who}."
             : "Dining payment status updated for {$who}.");
+    }
+
+    /**
+     * A sheet for the caterer: the dining count, menu, dietary needs and who is dining. Printable, or a PDF with ?download=1.
+     */
+    public function catererSheet(Request $request, string $clubSlug, int $id, MeetingReplies $replies): SymfonyResponse
+    {
+        $club = $this->findClub($clubSlug);
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $diners = [];
+        foreach ($replies->attending($meeting) as $rsvp) {
+            if ($rsvp->attendance_status === 'attending_dining') {
+                $diners[] = ['name' => $rsvp->user->name, 'host' => '', 'dietary' => (string) $rsvp->dietary_requirements];
+            }
+            foreach ($rsvp->guests->where('attending_dining', true) as $guest) {
+                $diners[] = ['name' => trim(($guest->guest_title_rank ? $guest->guest_title_rank.' ' : '').$guest->guest_name), 'host' => $rsvp->user->name, 'dietary' => (string) $guest->dietary_requirements];
+            }
+        }
+
+        $data = ['club' => $club, 'meeting' => $meeting, 'numbers' => $replies->numbers($meeting), 'diners' => collect($diners)->sortBy('name')->values()->all()];
+
+        if ($request->boolean('download')) {
+            return Pdf::loadView('summons.caterer-sheet', $data + ['pdf' => true])
+                ->setPaper('a4')
+                ->download('Caterer-'.Str::slug($meeting->title).'-'.$meeting->meeting_date->format('Y-m-d').'.pdf');
+        }
+
+        return response()->view('summons.caterer-sheet', $data + ['pdf' => false]);
+    }
+
+    /**
+     * Refund one dining place that is no longer dining: back through Stripe or PayPal when it was paid online,
+     * otherwise just marked refunded. Moving money needs the payments permission as well as access to meetings.
+     */
+    public function refundDining(Request $request, string $clubSlug, int $id, MeetingDiningPayment $payments): RedirectResponse
+    {
+        $club = $this->findClub($clubSlug);
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate(['kind' => 'required|in:member,guest', 'diner_id' => 'required|integer']);
+
+        if ($validated['kind'] === 'member') {
+            $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('id', $validated['diner_id'])->firstOrFail();
+            $payments->refund($rsvp);
+            $who = $rsvp->user->name;
+        } else {
+            $guest = MeetingRsvpGuest::where('id', $validated['diner_id'])->whereHas('rsvp', fn ($q) => $q->where('meeting_id', $meeting->id))->firstOrFail();
+            $payments->refund($guest->rsvp, $guest);
+            $who = $guest->guest_name;
+        }
+
+        return redirect()->back()->with('success', "Dining refunded for {$who}.");
     }
 
     /**

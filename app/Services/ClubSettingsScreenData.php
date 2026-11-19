@@ -140,6 +140,7 @@ class ClubSettingsScreenData
             'meeting_ask_days' => 7,
             'meeting_deadline_days' => 3,
             'meeting_confirm_days' => 1,
+            'caterer_email' => null,
             'require_dietary_allergens' => true,
             'allow_guest_meals' => true,
 

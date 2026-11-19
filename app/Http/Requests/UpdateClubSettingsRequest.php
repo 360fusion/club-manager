@@ -120,6 +120,7 @@ class UpdateClubSettingsRequest extends ClubRequest
             'meeting_ask_days' => 'nullable|integer|min:1|max:30',
             'meeting_deadline_days' => 'nullable|integer|min:1|max:14',
             'meeting_confirm_days' => 'nullable|integer|min:0|max:7',
+            'caterer_email' => 'nullable|email|max:255',
             'require_dietary_allergens' => 'nullable|boolean',
             'allow_guest_meals' => 'nullable|boolean',
 

@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -46,7 +47,22 @@ class PasswordlessRsvpController extends Controller
 
         $back = route('summons.rsvp.show', ['token' => $token]);
 
-        return Inertia::location($payments->start($rsvp, NativeApp::returnUrl($request, $back.'?payment=success'), NativeApp::returnUrl($request, $back.'?payment=cancelled')));
+        return Inertia::location($payments->start(
+            $rsvp,
+            $this->provider($request),
+            NativeApp::returnUrl($request, $back.'?payment=success'),
+            NativeApp::returnUrl($request, $back.'?payment=cancelled'),
+            NativeApp::returnUrl($request, route('summons.rsvp.paypal_return', ['token' => $token])),
+        ));
+    }
+
+    public function payPalReturn(Request $request, string $token, RsvpTokenService $tokenService, MeetingDiningPayment $payments): RedirectResponse
+    {
+        $rsvp = $tokenService->validateToken($token);
+
+        abort_unless($rsvp !== null, 403);
+
+        return redirect(route('summons.rsvp.show', ['token' => $token]).'?payment='.($this->capture($payments, $rsvp, $request) ? 'success' : 'cancelled'));
     }
 
     public function showSigned(Request $request, int $rsvp, MeetingReplies $replies, MeetingDiningPayment $payments): Response
@@ -83,9 +99,44 @@ class PasswordlessRsvpController extends Controller
         abort_unless($reply !== null, 403);
 
         // Each way back is signed with its own outcome, as any extra query would break the link's signature.
-        $back = fn (string $outcome) => NativeApp::returnUrl($request, URL::temporarySignedRoute('summons.reply', $replies->linkExpiry($reply->meeting), ['rsvp' => $reply->id, 'payment' => $outcome]));
+        $expires = $replies->linkExpiry($reply->meeting);
+        $back = fn (string $outcome) => NativeApp::returnUrl($request, URL::temporarySignedRoute('summons.reply', $expires, ['rsvp' => $reply->id, 'payment' => $outcome]));
 
-        return Inertia::location($payments->start($reply, $back('success'), $back('cancelled')));
+        return Inertia::location($payments->start(
+            $reply,
+            $this->provider($request),
+            $back('success'),
+            $back('cancelled'),
+            NativeApp::returnUrl($request, URL::temporarySignedRoute('summons.reply.paypal_return', $expires, ['rsvp' => $reply->id])),
+        ));
+    }
+
+    /**
+     * PayPal adds its own token and PayerID to the way back, so the signature is checked without them.
+     */
+    public function payPalReturnSigned(Request $request, int $rsvp, MeetingReplies $replies, MeetingDiningPayment $payments): RedirectResponse
+    {
+        abort_unless($request->hasValidSignatureWhileIgnoring(['token', 'PayerID']), 403);
+        $reply = $this->activeReply($rsvp);
+        abort_unless($reply !== null, 403);
+
+        $outcome = $this->capture($payments, $reply, $request) ? 'success' : 'cancelled';
+
+        return redirect(URL::temporarySignedRoute('summons.reply', $replies->linkExpiry($reply->meeting), ['rsvp' => $reply->id, 'payment' => $outcome]));
+    }
+
+    private function provider(Request $request): string
+    {
+        return $request->input('provider') === MeetingDiningPayment::PAYPAL ? MeetingDiningPayment::PAYPAL : MeetingDiningPayment::CARD;
+    }
+
+    private function capture(MeetingDiningPayment $payments, MeetingRsvp $rsvp, Request $request): bool
+    {
+        try {
+            return $payments->capturePayPal($rsvp, (string) $request->query('token'));
+        } catch (ValidationException) {
+            return false;
+        }
     }
 
     /**
@@ -125,9 +176,9 @@ class PasswordlessRsvpController extends Controller
             'club' => ['name' => $club->name],
             'user' => ['name' => $user->name],
             'meeting' => $meeting->only(['id', 'title', 'meeting_date', 'starts_at', 'rehearsal_starts_at', 'venue', 'dress_code', 'dining_cost_member', 'bank_sort_code', 'bank_account_number', 'payment_link']),
-            'rsvp' => $rsvp->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_reference', 'payment_status', 'guests']),
+            'rsvp' => [...$rsvp->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_reference', 'payment_status']), 'guests' => MeetingReplies::listedGuests($rsvp)],
             'owed' => $owed['amount'] > 0 ? Currencies::format($owed['amount'], $club) : null,
-            'canPayByCard' => $payments->canPay($rsvp),
+            'payWith' => $payments->providers($rsvp),
             'isCutoffPassed' => $meeting->rsvpClosed(),
             'isVisitor' => $isVisitor,
             'visitorHomeClub' => $visitorHomeClub,
