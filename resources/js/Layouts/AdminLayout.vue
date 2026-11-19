@@ -4,6 +4,7 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
+import { isNativeApp } from '@/Support/nativeApp';
 
 const props = defineProps({
   title: {
@@ -92,6 +93,11 @@ provide('layoutHasHeading', true);
         </div>
         <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
       </div>
+      <!-- The app has no browser back button and no tab bar on admin pages: this is the way back to the member area. -->
+      <Link v-if="isNativeApp" :href="route('members.dashboard')" class="ml-auto mr-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-slate-200 hover:text-white">
+        <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        Member area
+      </Link>
       <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen ? 'true' : 'false'" @click="sidebarOpen = !sidebarOpen" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white">
         <svg class="w-6 h-6" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
