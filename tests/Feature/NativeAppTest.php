@@ -49,6 +49,21 @@ class NativeAppTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('androidPush', false));
     }
 
+    public function test_livewire_admin_pages_in_the_app_clear_the_status_bar_and_lead_back_to_the_member_area(): void
+    {
+        $club = Club::factory()->create(['slug' => 'club-a']);
+        $admin = User::factory()->create();
+        $club->users()->attach($admin->id, ['role' => 'admin', 'status' => 'active']);
+        $page = route('admin.club_acc.members.import', ['clubSlug' => 'club-a']);
+
+        $this->actingAs($admin)->withHeaders(['User-Agent' => 'Mozilla/5.0 (iPhone) ClubManagerApp'])->get($page)
+            ->assertOk()
+            ->assertSee('native-app', false)
+            ->assertSee('Member area');
+
+        $this->flushHeaders()->actingAs($admin)->get($page)->assertOk()->assertDontSee('Member area');
+    }
+
     public function test_a_signed_in_member_registers_their_phone_for_push(): void
     {
         $user = User::factory()->create();

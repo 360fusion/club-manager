@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-@php($inApp = \App\Support\NativeApp::isApp(request()))
+@php
+    $inApp = \App\Support\NativeApp::isApp(request());
+@endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['h-full bg-slate-100 dark:bg-slate-950', 'native-app' => $inApp])>
 <head>
     <meta charset="utf-8">
