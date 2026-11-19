@@ -14,8 +14,11 @@ use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\EventRegistration;
 use App\Models\Invoice;
+use App\Models\MeetingRsvp;
+use App\Models\MeetingRsvpGuest;
 use App\Services\AccountingService;
 use App\Services\Events\EventPaymentService;
+use App\Services\Meetings\MeetingReplies;
 use App\Support\Currencies;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -267,8 +270,16 @@ class BankReconciliationMatcherService
                 } elseif ($exact && $surname !== '' && str_contains($desc, $surname)) {
                     $score = 80;
                     $reason = "Name ({$surname}) & amount match the balance";
+                } elseif ($exact && $registration->said_paid_at) {
+                    $score = 70;
+                    $reason = 'The amount matches the balance';
                 } else {
                     continue;
+                }
+
+                if ($registration->said_paid_at) {
+                    $score = min(100, $score + 5);
+                    $reason .= '; they said they paid by bank on '.$registration->said_paid_at->format('j M');
                 }
 
                 $matches[] = [
@@ -282,6 +293,10 @@ class BankReconciliationMatcherService
                     'record' => $registration,
                 ];
             }
+        }
+
+        if ($amount > 0) {
+            array_push($matches, ...$this->diningMatches($clubId, $desc, $ref, $amount));
         }
 
         // 2. Outgoing Debits (- amount) -> Match against Unpaid Supplier Bills in Accounts Payable
@@ -404,8 +419,19 @@ class BankReconciliationMatcherService
                     'bank_reconciliation',
                     bankAccount: $bankAcc,
                 );
+                $registration->forceFill(['bank_transaction_id' => $transaction->id])->save();
                 $ledgerAlreadyPosted = true;
                 $note .= " [Event booking: {$registration->payment_reference}]";
+            } elseif ($matchType === 'meeting_dining') {
+                $rsvp = MeetingRsvp::whereHas('meeting', fn ($q) => $q->where('club_id', $transaction->club_id))->with(['meeting', 'guests'])->find((int) $targetId);
+
+                if (! $rsvp) {
+                    return false;
+                }
+
+                $this->payDining($rsvp, abs($amount), $lineDate, $transaction);
+                $note .= ' [Meeting dining: '.$rsvp->meeting->title.']';
+                $targetCode = '4200'; // Bar & Dining Sales
             } elseif ($matchType === 'supplier_bill') {
                 $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
@@ -497,6 +523,139 @@ class BankReconciliationMatcherService
 
             return true;
         });
+    }
+
+    /**
+     * The dining places a reply still owes for, in the order a payment covers them: the member, then each guest.
+     *
+     * @return list<array{guest: ?int, fee: float}>
+     */
+    private function diningPlaces(MeetingRsvp $rsvp): array
+    {
+        $owed = MeetingReplies::owed($rsvp->meeting, $rsvp);
+        $places = $owed['member'] ? [['guest' => null, 'fee' => (float) $rsvp->meeting->dining_cost_member]] : [];
+
+        foreach ($rsvp->guests->whereIn('id', $owed['guest_ids']) as $guest) {
+            $places[] = ['guest' => $guest->id, 'fee' => MeetingReplies::guestFee($rsvp->meeting, $guest)];
+        }
+
+        return $places;
+    }
+
+    /**
+     * How many of a reply's places an amount pays for exactly (0 when it does not add up to whole places).
+     *
+     * @param  list<array{guest: ?int, fee: float}>  $places
+     */
+    private function placesCovered(array $places, float $amount): int
+    {
+        $sum = 0.0;
+
+        foreach ($places as $index => $place) {
+            $sum += $place['fee'];
+            if (abs($sum - $amount) < 0.01) {
+                return $index + 1;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Meeting dining paid by bank: the reference on the summons (or the surname) and an amount that pays whole places.
+     * A member who said they had paid ranks higher.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function diningMatches(int $clubId, string $desc, string $ref, float $amount): array
+    {
+        $matches = [];
+        $rsvps = MeetingRsvp::whereIn('attendance_status', MeetingReplies::ATTENDING)
+            ->whereHas('meeting', fn ($q) => $q->where('club_id', $clubId)->where('meeting_date', '>=', now()->subMonths(6)->toDateString()))
+            ->with(['meeting', 'guests', 'user'])
+            ->get();
+
+        foreach ($rsvps as $rsvp) {
+            $places = $this->diningPlaces($rsvp);
+            $covered = $this->placesCovered($places, $amount);
+
+            if ($covered === 0 || ! $rsvp->user) {
+                continue;
+            }
+
+            $all = $covered === count($places);
+            $reference = strtolower($rsvp->payment_reference ?: MeetingReplies::paymentReference($rsvp->meeting, $rsvp->user));
+            $surname = strtolower(last(explode(' ', trim($rsvp->user->name))));
+
+            if (str_contains($desc, $reference) || str_contains($ref, $reference)) {
+                $score = $all ? 100 : 90;
+                $reason = 'Dining reference '.strtoupper($reference).($all ? ' & amount match' : " (pays {$covered} of ".count($places).' places)');
+            } elseif ($all && $surname !== '' && str_contains($desc, $surname)) {
+                $score = 80;
+                $reason = "Name ({$surname}) & amount match the dining owed";
+            } elseif ($all && $rsvp->said_paid_at) {
+                $score = 70;
+                $reason = 'The amount matches the dining owed';
+            } else {
+                continue;
+            }
+
+            if ($rsvp->said_paid_at) {
+                $score = min(100, $score + 5);
+                $reason .= '; they said they paid by bank on '.$rsvp->said_paid_at->format('j M');
+            }
+
+            $matches[] = [
+                'match_type' => 'meeting_dining',
+                'target_id' => $rsvp->id,
+                'target_title' => 'Dining: '.$rsvp->meeting->title.' ('.$rsvp->meeting->meeting_date->format('j M').') — '.$rsvp->user->name,
+                'target_amount' => array_sum(array_column($places, 'fee')),
+                'confidence_score' => $score,
+                'confidence_level' => $score >= 90 ? 'high' : 'medium',
+                'match_reason' => $reason,
+                'record' => $rsvp,
+            ];
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Mark the dining places a bank line pays for as paid by bank, member first, linked to the line so the Secretary
+     * sees it was seen in the bank.
+     */
+    private function payDining(MeetingRsvp $rsvp, float $amount, Carbon $lineDate, BankTransaction $transaction): void
+    {
+        $places = $this->diningPlaces($rsvp);
+        $covered = $this->placesCovered($places, $amount);
+
+        if ($covered === 0) {
+            throw new LedgerRuleException('This amount does not match the dining places still to pay on that reply.');
+        }
+
+        $paid = ['payment_status' => 'paid', 'payment_method' => 'bank', 'paid_at' => $lineDate, 'paid_recorded_by' => auth()->id(), 'bank_transaction_id' => $transaction->id];
+
+        foreach (array_slice($places, 0, $covered) as $place) {
+            $place['guest'] === null
+                ? $rsvp->forceFill($paid)->save()
+                : MeetingRsvpGuest::whereKey($place['guest'])->update($paid);
+        }
+    }
+
+    /** One-off documents that a reference and amount identify for certain, so a sure match can be confirmed in bulk. */
+    public const EXACT_MATCH_TYPES = ['event_registration', 'meeting_dining', 'member_subscription', 'invoice', 'supplier_bill'];
+
+    /**
+     * The one suggestion for a line that is certain (100: reference and amount), or null when there is none or more
+     * than one, so a bulk confirm never has to choose.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function exactMatch(BankTransaction $transaction): ?array
+    {
+        $sure = array_values(array_filter($this->suggestMatches($transaction), fn (array $match) => $match['confidence_score'] >= 100 && in_array($match['match_type'], self::EXACT_MATCH_TYPES, true)));
+
+        return count($sure) === 1 ? $sure[0] : null;
     }
 
     /**

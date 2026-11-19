@@ -141,6 +141,20 @@ class MemberRsvpController extends Controller
         ));
     }
 
+    /**
+     * "I've paid by bank transfer" for dining: shows as said-paid until the money is seen in the bank.
+     */
+    public function meetingSaidPaid(Request $request, string $slug, int $id, MeetingDiningPayment $payments): RedirectResponse
+    {
+        $club = $this->findClub($slug);
+        abort_unless(ClubAccess::isActiveMember($request->user(), $club), 403, 'You are not a member of this club.');
+
+        $meeting = Meeting::where('club_id', $club->id)->where('status', 'published')->findOrFail($id);
+        $payments->saidPaidByBank(MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $request->user()->id)->firstOrFail());
+
+        return back()->with('success', 'Thank you. It will show as paid once the Treasurer sees it in the bank.');
+    }
+
     public function meetingPayPalReturn(Request $request, string $slug, int $id, MeetingDiningPayment $payments): RedirectResponse
     {
         $club = $this->findClub($slug);

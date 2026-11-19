@@ -217,6 +217,7 @@ class EventPayload
             'booking_fee' => $registration->booking_fee,
             'booking_fee_label' => (float) $registration->booking_fee > 0 ? ($registration->event->booking_fee_label ?: 'Booking fee') : null,
             'reference' => $registration->payment_reference,
+            'said_paid_at' => $registration->said_paid_at?->format('j M Y'),
             'due_at' => $registration->due_at?->format('j M Y'),
             'instructions' => $method?->instructions,
             'bank' => $bankMethod ? $bankMethod->bankDetails() : null,

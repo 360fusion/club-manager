@@ -79,6 +79,8 @@ class MemberMeetingController extends Controller
             'isCutoffPassed' => $meeting->rsvpClosed(),
             'owed' => $userRsvp && ($owed = MeetingReplies::owed($meeting, $userRsvp)['amount']) > 0 ? Currencies::format($owed, $club) : null,
             'payWith' => $userRsvp ? app(MeetingDiningPayment::class)->providers($userRsvp->setRelation('meeting', $meeting)) : [],
+            'takesBank' => MeetingDiningPayment::takesBank($meeting),
+            'saidPaidAt' => $userRsvp?->said_paid_at?->format('j M Y'),
             'charityGrants' => $charityGrants,
         ]);
     }

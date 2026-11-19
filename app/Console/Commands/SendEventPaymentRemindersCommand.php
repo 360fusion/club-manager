@@ -21,6 +21,8 @@ class SendEventPaymentRemindersCommand extends Command
         EventRegistration::with(['event.club', 'paymentMethod', 'user'])
             ->where('status', 'attending')
             ->whereIn('payment_status', ['unpaid', 'part_paid'])
+            // Someone who says they have paid by bank is not chased while the Treasurer waits for the statement.
+            ->whereNull('said_paid_at')
             ->where('total', '>', 0)
             ->whereNotNull('due_at')
             ->where('due_at', '<=', now()->addDays((int) $this->option('days')))

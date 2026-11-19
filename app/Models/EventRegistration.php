@@ -68,6 +68,7 @@ class EventRegistration extends Model
             'promo_discount' => 'decimal:2',
             'due_at' => 'datetime',
             'paid_at' => 'datetime',
+            'said_paid_at' => 'datetime',
             'summons_sent_at' => 'datetime',
             'reminder_sent_at' => 'datetime',
         ];

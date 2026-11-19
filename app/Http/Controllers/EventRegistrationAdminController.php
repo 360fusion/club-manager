@@ -65,6 +65,9 @@ class EventRegistrationAdminController extends Controller
                 'dessert_item_id' => $attendee->dessert_item_id,
                 'dietary_requirements' => $attendee->dietary_requirements ?? '',
                 'payment_status' => $registration->payment_status ?? 'unpaid',
+                // "Says paid" until the money is seen: the booker ticked that they sent it by bank transfer.
+                'said_paid_at' => in_array($registration->payment_status, ['unpaid', 'part_paid'], true) ? $registration->said_paid_at?->format('j M') : null,
+                'seen_in_bank' => $registration->bank_transaction_id !== null,
                 'total' => number_format((float) $registration->total, 2, '.', ''),
                 'balance' => number_format($registration->balanceDue(), 2, '.', ''),
                 'amount_paid' => number_format((float) $registration->amount_paid, 2),

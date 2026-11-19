@@ -5,6 +5,7 @@ namespace App\Services\Meetings;
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Models\ClubPlatformAccount;
+use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\MeetingRsvpGuest;
 use App\Models\PlatformPayment;
@@ -42,6 +43,38 @@ class MeetingDiningPayment
         $method = ClubPaymentMethod::where('club_id', $club->id)->where('type', $type)->where('is_active', true)->first();
 
         return $method?->isReadyFor($club->currencyCode()) ? $method : null;
+    }
+
+    /**
+     * Whether the meeting gives bank details, so a member can pay by transfer and say they have.
+     */
+    public static function takesBank(Meeting $meeting): bool
+    {
+        return filled($meeting->bank_sort_code) || filled($meeting->bank_account_number);
+    }
+
+    /**
+     * The member says they have sent their dining money by bank transfer. Nothing is marked paid: the dining list shows
+     * "says paid" until the Treasurer matches the bank line or the Secretary records it.
+     */
+    public function saidPaidByBank(MeetingRsvp $rsvp): void
+    {
+        $rsvp->loadMissing(['meeting', 'guests', 'user']);
+
+        if (MeetingReplies::owed($rsvp->meeting, $rsvp)['amount'] <= 0) {
+            throw ValidationException::withMessages(['payment' => 'There is nothing left to pay for dining.']);
+        }
+
+        if (! self::takesBank($rsvp->meeting)) {
+            throw ValidationException::withMessages(['payment' => 'This meeting does not take bank transfers.']);
+        }
+
+        if ($rsvp->said_paid_at === null) {
+            $rsvp->forceFill([
+                'said_paid_at' => now(),
+                'payment_reference' => $rsvp->payment_reference ?: MeetingReplies::paymentReference($rsvp->meeting, $rsvp->user),
+            ])->save();
+        }
     }
 
     /**
@@ -271,7 +304,7 @@ class MeetingDiningPayment
             throw ValidationException::withMessages(['refund' => 'Only a paid place can be refunded.']);
         }
 
-        $amount = $guest ? (float) ($guest->dining_fee ?: $meeting->dining_cost_guest) : (float) $meeting->dining_cost_member;
+        $amount = $guest ? MeetingReplies::guestFee($meeting, $guest) : (float) $meeting->dining_cost_member;
         $key = 'meeting-refund-'.($guest ? 'guest-'.$guest->id : 'rsvp-'.$rsvp->id);
 
         if ($place->online_payment_id && $place->online_provider === 'stripe') {

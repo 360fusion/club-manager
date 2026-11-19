@@ -8,7 +8,7 @@ const props = defineProps({
     paying: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['pay']);
+const emit = defineEmits(['pay', 'said-paid']);
 
 const dark = computed(() => props.tone === 'dark');
 const owes = computed(() => Number(props.payment.balance) > 0);
@@ -49,6 +49,8 @@ const STATUS = {
                     <dt :class="muted">Reference</dt><dd class="font-mono font-bold">{{ payment.reference }}</dd>
                 </dl>
                 <p :class="['mt-1', muted]">Please use the reference exactly, so we can match your payment.</p>
+                <p v-if="payment.said_paid_at" class="mt-2 font-semibold text-amber-600">You told us you paid on {{ payment.said_paid_at }}. It will show as paid once the Treasurer sees it in the bank.</p>
+                <button v-else type="button" :disabled="paying" :class="['mt-2 w-full rounded-xl border px-3 py-2 text-xs font-bold disabled:opacity-60', dark ? 'border-slate-700 hover:bg-slate-900' : 'border-slate-300 hover:bg-white dark:border-slate-700 dark:hover:bg-slate-900']" @click="emit('said-paid')">I've paid by bank transfer</button>
             </div>
             <p v-else-if="payment.method_type === 'cash_on_door'" :class="muted">Pay when you arrive.</p>
 

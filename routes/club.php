@@ -448,6 +448,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/{clubSlug}/admin/accounting/contacts/{id}', [AccountingContactController::class, 'updateContact'])->name('admin.accounting.contacts.update');
     Route::delete('/{clubSlug}/admin/accounting/contacts/{id}', [AccountingContactController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
     Route::post('/{clubSlug}/admin/accounting/reconcile', [AccountingBankController::class, 'reconcileBankTransaction'])->name('admin.accounting.reconcile');
+    Route::post('/{clubSlug}/admin/accounting/reconcile/exact', [AccountingBankController::class, 'reconcileExactMatches'])->middleware('throttle:10,1')->name('admin.accounting.reconcile_exact');
     Route::delete('/{clubSlug}/admin/accounting/reconcile/rules/{id}', [AccountingBankController::class, 'forgetBankMatchRule'])->name('admin.accounting.match_rules.destroy');
     Route::post('/{clubSlug}/admin/accounting/ignore-transaction', [AccountingBankController::class, 'ignoreBankTransaction'])->name('admin.accounting.ignore_transaction');
     Route::post('/{clubSlug}/admin/accounting/statement-lines/delete', [AccountingBankController::class, 'deleteBankStatementLines'])->name('admin.accounting.statement_lines.delete');
@@ -555,6 +556,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/meetings', [MemberListController::class, 'meetings'])->name('member.meetings');
     Route::post('/members/{slug}/meetings/{id}/quick-rsvp', [QuickRsvpController::class, 'meeting'])->name('member.meetings.quick_rsvp');
     Route::post('/members/{slug}/events/{id}/pay', [EventOnlinePaymentController::class, 'member'])->name('member.events.pay');
+    Route::post('/members/{slug}/events/{id}/said-paid', [EventOnlinePaymentController::class, 'memberSaidPaid'])->middleware('throttle:20,1')->name('member.events.said_paid');
     Route::get('/members/{slug}/events/{id}/paypal-return', [EventOnlinePaymentController::class, 'memberPayPalReturn'])->name('member.events.paypal_return');
     Route::post('/members/{slug}/events/{id}/quote', [EventQuoteController::class, 'member'])->name('member.events.quote');
     Route::post('/members/{slug}/events/{id}/quick-rsvp', [QuickRsvpController::class, 'event'])->name('member.events.quick_rsvp');
@@ -568,6 +570,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
     Route::post('/members/{slug}/meetings/{id}/rsvp', [MemberRsvpController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
     Route::post('/members/{slug}/meetings/{id}/pay', [MemberRsvpController::class, 'payMeetingDining'])->name('member.meetings.pay');
+    Route::post('/members/{slug}/meetings/{id}/said-paid', [MemberRsvpController::class, 'meetingSaidPaid'])->middleware('throttle:20,1')->name('member.meetings.said_paid');
     Route::get('/members/{slug}/meetings/{id}/paypal-return', [MemberRsvpController::class, 'meetingPayPalReturn'])->name('member.meetings.paypal_return');
     Route::get('/members/{slug}/meetings/{id}/pdf', [MemberMeetingController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
     Route::get('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'show'])->name('member.signatures.show');

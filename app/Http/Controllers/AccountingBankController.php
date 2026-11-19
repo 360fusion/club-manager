@@ -7,12 +7,14 @@ use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
+use App\Exceptions\LedgerRuleException;
 use App\Http\Requests\AccountingAdmin\IgnoreBankTransactionRequest;
 use App\Http\Requests\AccountingAdmin\ImportBankStatementRequest;
 use App\Http\Requests\AccountingAdmin\ReconcileBankTransactionRequest;
 use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Bank statement import and reconciliation actions. Split out of AccountingAdminController; the URLs, route names and permissions are unchanged.
@@ -33,6 +35,31 @@ class AccountingBankController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Transaction successfully reconciled!');
+    }
+
+    /**
+     * "Confirm all exact matches": every unmatched line whose reference and amount point to exactly one booking, dining
+     * reply, subscription, invoice or bill. Anything less certain is left for a person to check.
+     */
+    public function reconcileExactMatches(string $clubSlug, BankReconciliationMatcherService $matcher): RedirectResponse
+    {
+        $club = $this->findClub($clubSlug);
+        $done = 0;
+
+        foreach (BankTransaction::where('club_id', $club->id)->where('status', 'unmatched')->orderBy('transaction_date')->get() as $tx) {
+            // Worked out line by line: a line confirmed above may have paid what the next line would have matched.
+            if (! $match = $matcher->exactMatch($tx)) {
+                continue;
+            }
+
+            try {
+                $done += $matcher->reconcileTransaction($tx, $match['match_type'], $match['target_id']) ? 1 : 0;
+            } catch (LedgerRuleException|ValidationException) {
+                // A closed period or a payment the booking refuses: left on the list for the Treasurer to look at.
+            }
+        }
+
+        return back()->with('success', $done === 0 ? 'No line had a certain match.' : "{$done} ".($done === 1 ? 'line' : 'lines').' matched by reference and amount.');
     }
 
     public function forgetBankMatchRule(Request $request, string $clubSlug, int $id): RedirectResponse

@@ -36,6 +36,7 @@ class MeetingRsvp extends Model
     protected $casts = [
         'token_expires_at' => 'datetime',
         'paid_at' => 'datetime',
+        'said_paid_at' => 'datetime',
         'responded_at' => 'datetime',
         'is_postal_printed' => 'boolean',
         'attended_at' => 'datetime',

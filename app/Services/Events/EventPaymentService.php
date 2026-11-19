@@ -69,6 +69,32 @@ class EventPaymentService
     }
 
     /**
+     * The booker says they have sent the money by bank transfer. Nothing is marked paid: the booking shows "says paid"
+     * until the Treasurer matches the bank line (or an organiser records it), and payment reminders stop.
+     */
+    public function saidPaidByBank(EventRegistration $registration, ?User $actor): EventRegistration
+    {
+        return DB::transaction(function () use ($registration, $actor) {
+            $registration = $this->lock($registration);
+
+            if ($registration->balanceDue() <= 0 || ! in_array($registration->payment_status, ['unpaid', 'part_paid'], true)) {
+                throw ValidationException::withMessages(['payment' => 'There is nothing left to pay on this booking.']);
+            }
+
+            if (EventPayload::payment($registration)['bank'] === null) {
+                throw ValidationException::withMessages(['payment' => 'This event does not take bank transfers.']);
+            }
+
+            if ($registration->said_paid_at === null) {
+                $registration->forceFill(['said_paid_at' => now()])->save();
+                $this->log($registration, 'said_paid', $registration->balanceDue(), 'Bank transfer', 'The booker says they have paid by bank transfer.', $actor, 'member');
+            }
+
+            return $registration;
+        });
+    }
+
+    /**
      * Take back a payment recorded by mistake. A reason is required so the history explains it.
      */
     public function markUnpaid(EventRegistration $registration, ?User $actor, string $comment): EventRegistration
@@ -87,6 +113,8 @@ class EventPaymentService
             $registration->amount_refunded = 0;
             $registration->payment_status = 'unpaid';
             $registration->paid_at = null;
+            $registration->said_paid_at = null;
+            $registration->bank_transaction_id = null;
             $registration->save();
 
             $this->log($registration, 'marked_unpaid', max(0, $paid), null, $comment, $actor, 'admin');
@@ -195,6 +223,7 @@ class EventPaymentService
                 'stripe_webhook' => 'Stripe',
                 'paypal' => 'PayPal',
                 'bank_reconciliation' => 'Bank reconciliation',
+                'member' => $registration->contact_name,
                 default => 'System',
             },
             'source' => $row->source,

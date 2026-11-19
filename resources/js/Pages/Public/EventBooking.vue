@@ -32,6 +32,8 @@ const payNow = (option = null) => {
   router.post(route('public.event.booking.pay', { clubSlug: props.club.slug, token: props.token }), { option }, { onFinish: () => { paying.value = false; } });
 };
 
+const saidPaid = () => router.post(route('public.event.booking.said_paid', { clubSlug: props.club.slug, token: props.token }), {}, { preserveScroll: true });
+
 // Stripe and PayPal send people back here with ?payment=success or ?payment=cancelled.
 const returned = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('payment') : null;
 
@@ -87,7 +89,7 @@ const cancelBooking = () => {
             </ul>
           </div>
 
-          <PaymentSummary v-if="booking.payment && !cancelled" :payment="booking.payment" :paying="paying" @pay="payNow" />
+          <PaymentSummary v-if="booking.payment && !cancelled" :payment="booking.payment" :paying="paying" @pay="payNow" @said-paid="saidPaid" />
 
           <p v-if="event.cancellation_policy" class="border-t border-current/10 pt-4 text-xs opacity-70">{{ event.cancellation_policy }}</p>
 

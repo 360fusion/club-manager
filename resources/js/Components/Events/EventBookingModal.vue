@@ -106,6 +106,8 @@ const payNow = (option = null) => {
     router.post(route('member.events.pay', { slug: props.clubSlug, id: props.event.id }), { option }, { onFinish: () => { paying.value = false; } });
 };
 
+const saidPaid = () => router.post(route('member.events.said_paid', { slug: props.clubSlug, id: props.event.id }), {}, { preserveScroll: true });
+
 const addGuest = () => {
     if (canAddGuest.value) {
         form.attendees.push(blankPerson(true));
@@ -211,7 +213,7 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
                     </label>
                 </div>
 
-                <PaymentSummary v-if="event.user_rsvp?.payment && Number(event.user_rsvp.payment.total) > 0" :payment="event.user_rsvp.payment" :paying="paying" @pay="payNow" />
+                <PaymentSummary v-if="event.user_rsvp?.payment && Number(event.user_rsvp.payment.total) > 0" :payment="event.user_rsvp.payment" :paying="paying" @pay="payNow" @said-paid="saidPaid" />
 
                 <Button v-if="event.max_guests > 0" variant="secondary" size="sm" :disabled="!canAddGuest" @click="addGuest">
                     Add a guest <span class="font-normal text-slate-500 dark:text-slate-400">({{ guestCount }} of {{ event.max_guests }})</span>

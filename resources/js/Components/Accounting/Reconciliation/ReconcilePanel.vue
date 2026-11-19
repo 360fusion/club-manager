@@ -1,4 +1,6 @@
 <script setup>
+import { computed, ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import Button from '@/Components/Ui/Button.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
@@ -6,7 +8,7 @@ import UiIcon from '@/Components/Ui/UiIcon.vue';
 // A section of the accounting reconciliation screen, in its own file so the page stays readable.
 defineEmits(['close-details']);
 
-defineProps({
+const props = defineProps({
     accounts: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     activeDetailsTxId: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     activeOptionsTxId: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
@@ -24,11 +26,25 @@ defineProps({
     toggleDetailsPopover: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     toggleOptionsDropdown: { type: [Object, Array, Function, String, Number, Boolean], default: undefined }
 });
+
+// Lines whose reference and amount point to exactly one booking, dining reply, subscription, invoice or bill (worked out
+// the same way on the server, which checks each line again before it confirms it).
+const EXACT_TYPES = ['event_registration', 'meeting_dining', 'member_subscription', 'invoice', 'supplier_bill'];
+const exactCount = computed(() => (props.filteredUnmatchedTx || []).filter((tx) => (tx.suggested_matches || []).filter((m) => m.confidence_score >= 100 && EXACT_TYPES.includes(m.match_type)).length === 1).length);
+const confirming = ref(false);
+const confirmExact = () => router.post(route('admin.accounting.reconcile_exact', { clubSlug: route().params.clubSlug }), {}, {
+    preserveScroll: true,
+    onStart: () => { confirming.value = true; },
+    onFinish: () => { confirming.value = false; },
+});
 </script>
 
 <template>
     <div class="space-y-4">
-
+      <div v-if="exactCount" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
+        <span class="text-emerald-900 dark:text-emerald-200"><strong>{{ exactCount }}</strong> {{ exactCount === 1 ? 'line matches' : 'lines match' }} a booking, dining reply, subscription, invoice or bill by reference and amount.</span>
+        <Button size="sm" :loading="confirming" @click="confirmExact">Confirm all exact matches</Button>
+      </div>
 
       <!-- Statement Line Rows Stack -->
       <div class="space-y-4">

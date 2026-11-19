@@ -15,6 +15,9 @@ const props = defineProps({
   answer: { type: String, default: null },
   owed: { type: String, default: null },
   payWith: { type: Array, default: () => [] },
+  // Set when the meeting gives bank details: the member can say they have paid by transfer.
+  saidPaidUrl: { type: String, default: null },
+  saidPaidAt: { type: String, default: null },
   club: Object,
   user: Object,
   meeting: Object,
@@ -58,6 +61,7 @@ const submit = () => {
 const paying = ref(null);
 const pay = (provider) => router.post(props.payUrl, { provider }, { onStart: () => { paying.value = provider; }, onFinish: () => { paying.value = null; } });
 const paymentOutcome = new URLSearchParams(window.location.search).get('payment');
+const saidPaid = () => router.post(props.saidPaidUrl, {}, { preserveScroll: true });
 
 const { copied: refCopied, copy } = useClipboard();
 const copyBankRef = () => copy(props.rsvp.payment_reference || `SUMMONS-${props.meeting.id}-${props.user.name.split(' ').pop().toUpperCase()}`);
@@ -123,7 +127,9 @@ const showsPayment = () => form.attendance_status === 'attending_dining' || form
           <span class="flex flex-wrap gap-2">
             <Button v-if="payWith.includes('card')" size="sm" :loading="paying === 'card'" @click="pay('card')">Pay by card</Button>
             <Button v-if="payWith.includes('paypal')" size="sm" variant="secondary" :loading="paying === 'paypal'" @click="pay('paypal')">Pay with PayPal</Button>
+            <Button v-if="saidPaidUrl && !saidPaidAt" size="sm" variant="secondary" @click="saidPaid">I've paid by bank transfer</Button>
           </span>
+          <p v-if="saidPaidAt" class="w-full text-amber-900 dark:text-amber-200">You told us you paid by bank on {{ saidPaidAt }}. It will show as paid once the Treasurer sees it in the bank.</p>
         </div>
         <Badge v-else-if="rsvp.payment_status === 'paid'" variant="success">Dining paid</Badge>
         <Alert v-if="$page.props.errors?.payment" variant="danger" role="alert">{{ $page.props.errors.payment }}</Alert>

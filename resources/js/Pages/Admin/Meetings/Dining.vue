@@ -143,9 +143,11 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
                 </td>
                 <td class="px-4 py-4 text-right font-medium tabular-nums text-slate-900 dark:text-white">{{ formatMoney(diner.fee) }}</td>
                 <td class="px-4 py-4">
-                  <Badge :variant="statusVariant(diner.payment_status)" class="capitalize">{{ diner.payment_status }}</Badge>
+                  <Badge v-if="diner.said_paid_at" variant="warning">Says paid by bank {{ diner.said_paid_at }}</Badge>
+                  <Badge v-else :variant="statusVariant(diner.payment_status)" class="capitalize">{{ diner.payment_status }}</Badge>
+                  <div v-if="diner.said_paid_at" class="mt-1 text-xs text-slate-500 dark:text-slate-400">Not seen in the bank yet</div>
                   <div v-if="diner.payment_method" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {{ METHOD_LABELS[diner.payment_method] || diner.payment_method }}
+                    {{ METHOD_LABELS[diner.payment_method] || diner.payment_method }}<span v-if="diner.seen_in_bank"> · seen in the bank</span>
                   </div>
                   <div v-if="diner.paid_at" class="text-xs text-slate-500 dark:text-slate-400">
                     {{ diner.paid_at }}<span v-if="diner.paid_by"> · {{ diner.paid_by }}</span>

@@ -61,6 +61,8 @@ class MeetingDiningController extends Controller
                 'payment_reference' => $rsvp->payment_reference,
                 'paid_at' => $rsvp->paid_at?->format('j M Y, H:i'),
                 'paid_by' => $rsvp->paidRecorder?->name,
+                'said_paid_at' => $rsvp->payment_status === 'unpaid' ? $rsvp->said_paid_at?->format('j M') : null,
+                'seen_in_bank' => $rsvp->bank_transaction_id !== null,
             ]);
 
             foreach ($rsvp->guests as $guest) {
@@ -69,13 +71,16 @@ class MeetingDiningController extends Controller
                     'id' => $guest->id,
                     'name' => trim(($guest->guest_title_rank ? $guest->guest_title_rank.' ' : '').$guest->guest_name),
                     'host' => $rsvp->user?->name,
-                    'fee' => (float) ($guest->dining_fee ?: $meeting->dining_cost_guest),
+                    'fee' => MeetingReplies::guestFee($meeting, $guest),
                     'dietary' => $guest->dietary_requirements,
                     'payment_status' => $guest->payment_status,
                     'payment_method' => $guest->payment_method,
                     'payment_reference' => null,
                     'paid_at' => $guest->paid_at?->format('j M Y, H:i'),
                     'paid_by' => $guest->paidRecorder?->name,
+                    // The host pays for their guests, so their "I've paid" covers the guest's place too.
+                    'said_paid_at' => $guest->payment_status === 'unpaid' ? $rsvp->said_paid_at?->format('j M') : null,
+                    'seen_in_bank' => $guest->bank_transaction_id !== null,
                 ]);
             }
         }
@@ -94,7 +99,7 @@ class MeetingDiningController extends Controller
 
             foreach ($rsvp->guests as $guest) {
                 if ($guest->payment_status === 'paid' && (! $guest->attending_dining || ! $attending)) {
-                    $refundable->push(['kind' => 'guest', 'id' => $guest->id, 'name' => $guest->guest_name, 'host' => $rsvp->user->name, 'fee' => (float) ($guest->dining_fee ?: $meeting->dining_cost_guest), 'online' => (bool) $guest->online_payment_id, 'now' => 'not dining']);
+                    $refundable->push(['kind' => 'guest', 'id' => $guest->id, 'name' => $guest->guest_name, 'host' => $rsvp->user->name, 'fee' => MeetingReplies::guestFee($meeting, $guest), 'online' => (bool) $guest->online_payment_id, 'now' => 'not dining']);
                 }
             }
         }
@@ -145,12 +150,19 @@ class MeetingDiningController extends Controller
             $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('id', $validated['diner_id'])->firstOrFail();
             $changes['payment_reference'] = $validated['payment_reference'] ?? $rsvp->payment_reference;
             $rsvp->update($changes);
+            // Taken back to unpaid: whatever the member said or the bank showed no longer stands.
+            if (! $isSettled) {
+                $rsvp->forceFill(['said_paid_at' => null, 'bank_transaction_id' => null])->save();
+            }
             $who = $rsvp->user?->name ?? 'member';
         } else {
             $guest = MeetingRsvpGuest::where('id', $validated['diner_id'])
                 ->whereHas('rsvp', fn ($q) => $q->where('meeting_id', $meeting->id))
                 ->firstOrFail();
             $guest->update($changes);
+            if (! $isSettled) {
+                $guest->forceFill(['bank_transaction_id' => null])->save();
+            }
             $who = $guest->guest_name;
         }
 

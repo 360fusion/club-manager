@@ -70,6 +70,7 @@ const ACTIONS = {
     stripe_paid: ['Paid online', 'text-emerald-600'],
     paypal_paid: ['Paid online (PayPal)', 'text-emerald-600'],
     reconciled: ['Matched to a bank line', 'text-emerald-600'],
+    said_paid: ['Says they paid by bank transfer', 'text-amber-600'],
 };
 
 const input = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';

@@ -22,6 +22,8 @@ const props = defineProps({
   isCutoffPassed: { type: Boolean, default: false },
   owed: { type: String, default: null },
   payWith: { type: Array, default: () => [] },
+  takesBank: { type: Boolean, default: false },
+  saidPaidAt: { type: String, default: null },
   charityGrants: { type: Array, default: () => [] },
 });
 
@@ -33,6 +35,7 @@ const pay = (provider) => router.post(route('member.meetings.pay', { slug: props
   onFinish: () => { paying.value = null; },
 });
 const paymentOutcome = new URLSearchParams(window.location.search).get('payment');
+const saidPaid = () => router.post(route('member.meetings.said_paid', { slug: props.club.slug, id: props.meeting.id }), {}, { preserveScroll: true });
 
 const openRsvpModal = () => {
   showRsvpModal.value = true;
@@ -208,7 +211,9 @@ const linkButtonClass = 'inline-flex items-center justify-center rounded-xl bord
             <span class="flex flex-wrap gap-2">
             <Button v-if="payWith.includes('card')" size="sm" :loading="paying === 'card'" @click="pay('card')">Pay by card</Button>
             <Button v-if="payWith.includes('paypal')" size="sm" variant="secondary" :loading="paying === 'paypal'" @click="pay('paypal')">Pay with PayPal</Button>
+            <Button v-if="takesBank && !saidPaidAt" size="sm" variant="secondary" @click="saidPaid">I've paid by bank transfer</Button>
           </span>
+            <p v-if="saidPaidAt" class="w-full text-amber-900 dark:text-amber-200">You told us you paid by bank on {{ saidPaidAt }}. It will show as paid once the Treasurer sees it in the bank.</p>
           </div>
 
           <!-- Bank details and payment reference -->

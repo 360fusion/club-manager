@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Services\Events\EventOnlinePayment;
+use App\Services\Events\EventPaymentService;
 use App\Support\NativeApp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * "Pay now" for a booking: sends the person to Stripe's or PayPal's secure page for what they still owe.
+ * "Pay now" for a booking: sends the person to Stripe's or PayPal's secure page for what they still owe, or records that
+ * they say they have paid by bank transfer.
  */
 class EventOnlinePaymentController extends Controller
 {
@@ -42,6 +44,23 @@ class EventOnlinePaymentController extends Controller
         $back = route('public.event.booking', ['clubSlug' => $clubSlug, 'token' => $token]);
 
         return Inertia::location($online->start($registration, $back.'?payment=success', $back.'?payment=cancelled', $optionId, route('public.event.booking.paypal_return', ['clubSlug' => $clubSlug, 'token' => $token])));
+    }
+
+    /**
+     * "I've paid by bank transfer": the booking shows as said-paid until the money is matched to the bank.
+     */
+    public function memberSaidPaid(Request $request, string $slug, int $id, EventPaymentService $payments): RedirectResponse
+    {
+        $payments->saidPaidByBank($this->memberRegistration($slug, $id), $request->user());
+
+        return back()->with('success', 'Thank you. It will show as paid once the Treasurer sees it in the bank.');
+    }
+
+    public function guestSaidPaid(Request $request, string $clubSlug, string $token, EventPaymentService $payments): RedirectResponse
+    {
+        $payments->saidPaidByBank($this->guestRegistration($clubSlug, $token), $request->user());
+
+        return back()->with('success', 'Thank you. It will show as paid once the Treasurer sees it in the bank.');
     }
 
     /**

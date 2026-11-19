@@ -295,6 +295,15 @@ class MeetingReplies
     }
 
     /**
+     * What one guest's dining costs: the fee stored on the guest, or the meeting's guest price when none was stored. The
+     * stored fee is a decimal string, so "0.00" has to be read as a number, not as "set".
+     */
+    public static function guestFee(Meeting $meeting, MeetingRsvpGuest $guest): float
+    {
+        return (float) $guest->dining_fee > 0 ? (float) $guest->dining_fee : (float) $meeting->dining_cost_guest;
+    }
+
+    /**
      * What someone still owes for dining: their own place if dining and unpaid, and each unpaid dining guest.
      *
      * @return array{amount: float, member: bool, guest_ids: list<int>}
@@ -308,7 +317,7 @@ class MeetingReplies
             : collect();
 
         $amount = ($member ? (float) $meeting->dining_cost_member : 0.0)
-            + $guests->sum(fn ($guest) => (float) ($guest->dining_fee ?: $meeting->dining_cost_guest));
+            + $guests->sum(fn ($guest) => self::guestFee($meeting, $guest));
 
         return ['amount' => round($amount, 2), 'member' => $member, 'guest_ids' => $guests->pluck('id')->values()->all()];
     }

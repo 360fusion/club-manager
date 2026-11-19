@@ -72,11 +72,13 @@ Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->
 Route::get('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'show'])->name('summons.rsvp.show');
 Route::post('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'store'])->name('summons.rsvp.store')->middleware('throttle:public-forms');
 Route::post('/summons/rsvp/{token}/pay', [PasswordlessRsvpController::class, 'pay'])->name('summons.rsvp.pay')->middleware('throttle:public-forms');
+Route::post('/summons/rsvp/{token}/said-paid', [PasswordlessRsvpController::class, 'saidPaid'])->name('summons.rsvp.said_paid')->middleware('throttle:public-forms');
 Route::get('/summons/rsvp/{token}/paypal-return', [PasswordlessRsvpController::class, 'payPalReturn'])->name('summons.rsvp.paypal_return')->middleware('throttle:public-forms');
 // The reply schedule's emails link here: signed, working until the end of the meeting day, optionally with an answer picked.
 Route::get('/summons/reply/{rsvp}', [PasswordlessRsvpController::class, 'showSigned'])->whereNumber('rsvp')->middleware('signed')->name('summons.reply');
 Route::post('/summons/reply/{rsvp}', [PasswordlessRsvpController::class, 'storeSigned'])->whereNumber('rsvp')->middleware(['signed', 'throttle:public-forms'])->name('summons.reply.store');
 Route::post('/summons/reply/{rsvp}/pay', [PasswordlessRsvpController::class, 'paySigned'])->whereNumber('rsvp')->middleware(['signed', 'throttle:public-forms'])->name('summons.reply.pay');
+Route::post('/summons/reply/{rsvp}/said-paid', [PasswordlessRsvpController::class, 'saidPaidSigned'])->whereNumber('rsvp')->middleware(['signed', 'throttle:public-forms'])->name('summons.reply.said_paid');
 Route::get('/summons/reply/{rsvp}/paypal-return', [PasswordlessRsvpController::class, 'payPalReturnSigned'])->whereNumber('rsvp')->middleware('throttle:public-forms')->name('summons.reply.paypal_return');
 
 // Signature requests: no login, the emailed link's token is the credential.
@@ -125,6 +127,7 @@ Route::post('/site/{clubSlug}/events/{eventSlug}/quote', [EventQuoteController::
 Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
 Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/pay', [EventOnlinePaymentController::class, 'guest'])->name('public.event.booking.pay')->middleware('throttle:auth-forms');
+Route::post('/site/{clubSlug}/booking/{token}/said-paid', [EventOnlinePaymentController::class, 'guestSaidPaid'])->name('public.event.booking.said_paid')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/booking/{token}/paypal-return', [EventOnlinePaymentController::class, 'guestPayPalReturn'])->name('public.event.booking.paypal_return')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/cancel', [PublicEventController::class, 'cancel'])->name('public.event.booking.cancel')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/files/{mediaId}', [PublicSiteExtrasController::class, 'file'])->whereNumber('mediaId')->middleware('throttle:60,1')->name('public.site.file');

@@ -28,7 +28,7 @@ class PasswordlessRsvpController extends Controller
         $rsvp = $tokenService->validateToken($token);
 
         return $rsvp
-            ? $this->page($rsvp, route('summons.rsvp.store', ['token' => $token]), route('summons.rsvp.pay', ['token' => $token]), null, $payments)
+            ? $this->page($rsvp, route('summons.rsvp.store', ['token' => $token]), route('summons.rsvp.pay', ['token' => $token]), route('summons.rsvp.said_paid', ['token' => $token]), null, $payments)
             : $this->expired();
     }
 
@@ -80,6 +80,7 @@ class PasswordlessRsvpController extends Controller
             $reply,
             URL::temporarySignedRoute('summons.reply.store', $expires, ['rsvp' => $reply->id]),
             URL::temporarySignedRoute('summons.reply.pay', $expires, ['rsvp' => $reply->id]),
+            URL::temporarySignedRoute('summons.reply.said_paid', $expires, ['rsvp' => $reply->id]),
             $answer,
             $payments,
         );
@@ -158,7 +159,28 @@ class PasswordlessRsvpController extends Controller
         ]);
     }
 
-    private function page(MeetingRsvp $rsvp, string $submitUrl, string $payUrl, ?string $answer, MeetingDiningPayment $payments): Response
+    /**
+     * "I've paid by bank transfer" from the emailed reply link.
+     */
+    public function saidPaid(string $token, RsvpTokenService $tokenService, MeetingDiningPayment $payments): RedirectResponse
+    {
+        $rsvp = $tokenService->validateToken($token);
+        abort_unless($rsvp !== null, 403);
+        $payments->saidPaidByBank($rsvp);
+
+        return back()->with('success', 'Thank you. It will show as paid once the Treasurer sees it in the bank.');
+    }
+
+    public function saidPaidSigned(int $rsvp, MeetingDiningPayment $payments): RedirectResponse
+    {
+        $reply = $this->activeReply($rsvp);
+        abort_unless($reply !== null, 403);
+        $payments->saidPaidByBank($reply);
+
+        return back()->with('success', 'Thank you. It will show as paid once the Treasurer sees it in the bank.');
+    }
+
+    private function page(MeetingRsvp $rsvp, string $submitUrl, string $payUrl, string $saidPaidUrl, ?string $answer, MeetingDiningPayment $payments): Response
     {
         $meeting = $rsvp->meeting;
         $club = $meeting->club;
@@ -171,6 +193,8 @@ class PasswordlessRsvpController extends Controller
         return Inertia::render('Summons/Rsvp', [
             'submitUrl' => $submitUrl,
             'payUrl' => $payUrl,
+            'saidPaidUrl' => MeetingDiningPayment::takesBank($meeting) ? $saidPaidUrl : null,
+            'saidPaidAt' => $rsvp->said_paid_at?->format('j M Y'),
             'answer' => $isVisitor && $answer === 'apologies' ? null : $answer,
             // Only what the page shows: the link is in an email, so nothing else about the person, lodge or meeting goes with it.
             'club' => ['name' => $club->name],

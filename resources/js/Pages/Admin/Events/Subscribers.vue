@@ -304,8 +304,9 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
                         :title="canManagePayments ? 'See who marked this and when, or change it' : undefined"
                         @click="canManagePayments && (panel = { id: sub.registration_id, name: sub.is_guest ? sub.booked_by : sub.name })"
                       >
-                        <Badge :variant="PAYMENT[sub.payment_status] ?? 'neutral'">
-                          <template v-if="sub.payment_status === 'paid'">Paid {{ formatMoney(sub.total) }}</template>
+                        <Badge :variant="sub.said_paid_at ? 'warning' : (PAYMENT[sub.payment_status] ?? 'neutral')">
+                          <template v-if="sub.said_paid_at">Says paid by bank {{ sub.said_paid_at }}, not seen yet</template>
+                          <template v-else-if="sub.payment_status === 'paid'">Paid {{ formatMoney(sub.total) }}<template v-if="sub.seen_in_bank">, seen in the bank</template></template>
                           <template v-else-if="sub.payment_status === 'part_paid'">{{ formatMoney(sub.amount_paid) }} of {{ formatMoney(sub.total) }}</template>
                           <template v-else-if="sub.payment_status === 'waived'">Waived</template>
                           <template v-else-if="sub.payment_status === 'refunded'">Refunded</template>

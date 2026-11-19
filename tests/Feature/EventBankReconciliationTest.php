@@ -110,6 +110,42 @@ class EventBankReconciliationTest extends TestCase
         $this->assertEqualsWithDelta(2.0, $credit('4110'), 0.001);
     }
 
+    public function test_the_booker_says_they_paid_by_bank_and_it_stays_unpaid_until_the_bank_line_is_matched(): void
+    {
+        $member = $this->registration->user;
+        $this->actingAs($member)->post(route('member.events.said_paid', ['slug' => 'club-a', 'id' => $this->registration->event_id]))->assertSessionHasNoErrors();
+
+        $registration = $this->registration->fresh();
+        $this->assertSame('unpaid', $registration->payment_status);
+        $this->assertNotNull($registration->said_paid_at);
+        $this->assertSame('said_paid', EventPaymentLog::sole()->action);
+        $list = route('admin.events.subscribers', ['clubSlug' => 'club-a', 'id' => $registration->event_id]);
+        $this->actingAs($this->treasurer)->get($list)->assertInertia(fn ($page) => $page->where('subscribers.0.said_paid_at', now()->format('j M')));
+
+        // A line with neither the reference nor the name still comes up, because they said they paid that amount.
+        $tx = $this->line('FASTER PAYMENT 0412', 52.00);
+        $suggestion = $this->matcher()->suggestMatches($tx)[0];
+        $this->assertSame(['event_registration', 75], [$suggestion['match_type'], $suggestion['confidence_score']]);
+
+        $this->actingAs($this->treasurer);
+        $this->matcher()->reconcileTransaction($tx, 'event_registration', $registration->id);
+        $this->assertSame([$tx->id, 'paid'], [$registration->fresh()->bank_transaction_id, $registration->fresh()->payment_status]);
+        $this->get($list)->assertInertia(fn ($page) => $page->where('subscribers.0.said_paid_at', null)->where('subscribers.0.seen_in_bank', true));
+    }
+
+    public function test_confirm_all_exact_matches_takes_only_lines_with_the_reference_and_amount(): void
+    {
+        $other = app(EventRegistrationService::class)->register($this->registration->event, tap(User::factory()->create(['name' => 'Rob Barker']), fn ($user) => $this->club->users()->attach($user->id, ['role' => 'member', 'status' => 'active'])), ['payment_method' => $this->registration->event->paymentMethods()->value('id'), 'attendees' => [['name' => 'Rob Barker']]]);
+        $exact = $this->line('BACS '.$this->registration->payment_reference, 52.00);
+        $byName = $this->line('BACS BARKER', 52.00);
+
+        $this->actingAs($this->treasurer)->post(route('admin.accounting.reconcile_exact', ['clubSlug' => 'club-a']))->assertSessionHas('success', '1 line matched by reference and amount.');
+
+        $this->assertSame(BankTransactionStatus::Matched, $exact->fresh()->status);
+        $this->assertSame(BankTransactionStatus::Unmatched, $byName->fresh()->status, 'a match on the name alone waits for a person');
+        $this->assertSame('unpaid', $other->fresh()->payment_status);
+    }
+
     public function test_another_clubs_booking_cannot_be_matched(): void
     {
         $other = Club::create(['club_type_id' => $this->club->club_type_id, 'name' => 'Club B', 'slug' => 'club-b', 'status' => 'active']);
