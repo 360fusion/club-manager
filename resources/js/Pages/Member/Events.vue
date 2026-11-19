@@ -6,6 +6,7 @@ import { formatMoney } from '@/Utils/currency';
 import { ref, computed } from 'vue';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import { isAndroidApp } from '@/Support/nativeApp';
 import Alert from '@/Components/Ui/Alert.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
@@ -199,6 +200,10 @@ const filterClass = (isActive) => [
                   :href="route('member.events.ticket', { slug: club.slug, id: event.id })"
                 >
                   <UiIcon name="ticket" /> Show ticket
+                </Button>
+                <!-- Android's calendar app takes Google Calendar's link; iPhones and computers open the calendar file. -->
+                <Button size="sm" variant="secondary" external :href="isAndroidApp ? event.calendar.google : event.calendar.ics">
+                  <UiIcon name="calendar" /> Add to calendar
                 </Button>
                 <Button
                   v-if="!event.is_booking_closed"

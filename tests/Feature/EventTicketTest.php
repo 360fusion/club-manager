@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
+use App\Services\Events\EventPayload;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -95,6 +96,27 @@ class EventTicketTest extends TestCase
 
         $this->assertSame(2, $this->booking->attendees()->whereNotNull('checked_in_at')->count());
         $this->assertNull($stranger->fresh()->checked_in_at);
+    }
+
+    public function test_an_event_goes_into_a_calendar_at_the_lodges_local_time(): void
+    {
+        $this->club->update(['name' => 'Harbour Lodge']);
+        $this->event->update(['starts_at' => '2027-07-01 19:00:00', 'ends_at' => null, 'location' => 'Masonic Hall']);
+
+        $links = EventPayload::calendarLinks($this->event->fresh());
+
+        // 19:00 in London in July is 18:00 UTC, and an event with no end gets three hours.
+        $this->assertStringContainsString('dates=20270701T180000Z%2F20270701T210000Z', $links['google']);
+        $this->get($links['ics'])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/calendar; charset=utf-8')
+            ->assertSee('SUMMARY:Harbour Lodge: Ladies Night', false)
+            ->assertSee('LOCATION:Masonic Hall', false);
+    }
+
+    public function test_a_calendar_link_only_works_as_it_was_signed(): void
+    {
+        $this->get(route('events.calendar', ['event' => $this->event->id]))->assertForbidden();
     }
 
     public function test_a_booking_from_another_event_cannot_be_checked_in_here(): void

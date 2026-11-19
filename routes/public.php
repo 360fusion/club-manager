@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\TwoFactorAuthController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\ClubDomainAllowedController;
+use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\EventOnlinePaymentController;
 use App\Http\Controllers\EventQuoteController;
 use App\Http\Controllers\GoCardlessWebhookController;
@@ -101,6 +102,8 @@ Route::get('/lodges/{slug}', [LodgeDirectoryController::class, 'show'])->middlew
 // A private copy of a newsletter, opened from "view in your browser" (before the /site/{club} routes so "newsletter" is never read as a club).
 // The iOS and Android app's way back in after paying in the phone's browser.
 Route::get('/app/return', [NativeAppController::class, 'return'])->middleware('throttle:60,1')->name('app.return');
+// "Add to calendar" for one event: signed and short-lived, because the phone's browser opens it without the app's sign-in.
+Route::get('/calendar/events/{event}.ics', [EventCalendarController::class, 'show'])->whereNumber('event')->middleware(['signed', 'throttle:60,1'])->name('events.calendar');
 Route::get('/site/newsletter/{token}', [NewsletterPublicController::class, 'view'])->middleware('throttle:60,1')->name('newsletters.view');
 Route::get('/site/oxford-boating', function () {
     $activeSlug = Club::first()?->slug ?? 'lodge-of-fraternity';

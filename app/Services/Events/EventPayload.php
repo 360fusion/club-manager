@@ -9,6 +9,7 @@ use App\Models\EventMenuItem;
 use App\Models\EventRegistration;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\URL;
 
 /**
  * The event shapes sent to the member and public pages, built in one place.
@@ -88,6 +89,30 @@ class EventPayload
                 'audience' => $tier->audience ?: 'all',
             ])->values(),
             'user_rsvp' => $registration ? self::registration($registration) : null,
+            'calendar' => self::calendarLinks($event),
+        ];
+    }
+
+    /**
+     * "Add to calendar": a calendar file for iPhones and computers, and Google Calendar's new-event page, which
+     * Android phones open in their calendar app.
+     *
+     * @return array{ics: string, google: string}
+     */
+    public static function calendarLinks(Event $event): array
+    {
+        $start = $event->club->atLocalTime($event->starts_at);
+        $end = $event->ends_at ? $event->club->atLocalTime($event->ends_at) : $start->addHours(3);
+        $utc = fn ($time) => $time->utc()->format('Ymd\THis\Z');
+
+        return [
+            'ics' => URL::temporarySignedRoute('events.calendar', now()->addDays(7), ['event' => $event->id]),
+            'google' => 'https://calendar.google.com/calendar/render?'.http_build_query([
+                'action' => 'TEMPLATE',
+                'text' => $event->club->name.': '.$event->title,
+                'dates' => $utc($start).'/'.$utc($end),
+                'location' => $event->formatted_location ?: $event->location,
+            ]),
         ];
     }
 

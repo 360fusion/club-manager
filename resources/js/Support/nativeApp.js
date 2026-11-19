@@ -2,6 +2,7 @@ import { router } from '@inertiajs/vue3';
 
 // The iOS and Android app (mobile/, Capacitor) is this member area in a web view; the native side injects window.Capacitor.
 export const isNativeApp = typeof window !== 'undefined' && Boolean(window.Capacitor?.isNativePlatform?.());
+export const isAndroidApp = isNativeApp && window.Capacitor.getPlatform() === 'android';
 
 // A path on this site only: never another host or a protocol-relative "//host".
 export function safePath(path) {

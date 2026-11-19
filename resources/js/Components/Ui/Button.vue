@@ -10,6 +10,8 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
     block: { type: Boolean, default: false },
     href: { type: String, default: '' },
+    // A plain link opened in a new window (in the app: the phone's browser), for files and other sites.
+    external: { type: Boolean, default: false },
 });
 
 const VARIANTS = {
@@ -38,8 +40,10 @@ const classes = computed(() => [
 
 <template>
     <component
-        :is="href ? Link : 'button'"
+        :is="href ? (external ? 'a' : Link) : 'button'"
         :href="href || undefined"
+        :target="href && external ? '_blank' : undefined"
+        :rel="href && external ? 'noopener' : undefined"
         :type="href ? undefined : type"
         :disabled="href ? undefined : (disabled || loading)"
         :class="classes"
