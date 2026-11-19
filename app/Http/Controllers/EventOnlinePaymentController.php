@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Services\Events\EventOnlinePayment;
+use App\Support\NativeApp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,13 @@ class EventOnlinePaymentController extends Controller
 
         $back = route('member.events', ['slug' => $slug]);
 
-        return Inertia::location($online->start($registration, $back.'?payment=success', $back.'?payment=cancelled', $optionId, route('member.events.paypal_return', ['slug' => $slug, 'id' => $id])));
+        return Inertia::location($online->start(
+            $registration,
+            NativeApp::returnUrl($request, $back.'?payment=success'),
+            NativeApp::returnUrl($request, $back.'?payment=cancelled'),
+            $optionId,
+            NativeApp::returnUrl($request, route('member.events.paypal_return', ['slug' => $slug, 'id' => $id])),
+        ));
     }
 
     public function guest(Request $request, string $clubSlug, string $token, EventOnlinePayment $online): Response

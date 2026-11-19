@@ -112,6 +112,20 @@ class EventOnlinePaymentTest extends TestCase
         $this->assertStringContainsString('payment=success', $captured['success_url']);
     }
 
+    public function test_paying_from_the_app_comes_back_through_the_page_that_reopens_the_app(): void
+    {
+        $this->book($this->later);
+        $captured = null;
+        $this->fakeCheckout($captured);
+
+        $this->actingAs($this->member)
+            ->post(route('member.events.pay', ['slug' => 'club-a', 'id' => $this->event->id]), [], ['X-Inertia' => 'true', 'User-Agent' => 'Mozilla/5.0 (iPhone) ClubManagerApp'])
+            ->assertStatus(409);
+
+        $this->assertSame(route('app.return', ['to' => '/members/club-a/events?payment=success']), $captured['success_url']);
+        $this->assertSame(route('app.return', ['to' => '/members/club-a/events?payment=cancelled']), $captured['cancel_url']);
+    }
+
     public function test_a_guest_can_pay_from_their_private_link_and_nobody_else_can_pay_for_them(): void
     {
         $this->event->update(['booking_fee_type' => 'none']);

@@ -17,6 +17,7 @@ use App\Http\Controllers\LegacyClubUrlController;
 use App\Http\Controllers\LodgeCalendarController;
 use App\Http\Controllers\LodgeDirectoryController;
 use App\Http\Controllers\LodgeFeedController;
+use App\Http\Controllers\NativeAppController;
 use App\Http\Controllers\NewsletterPublicController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PayPalWebhookController;
@@ -98,6 +99,8 @@ Route::get('/lodges/{slug}/calendar.ics', [LodgeCalendarController::class, 'show
 Route::get('/lodges/{slug}', [LodgeDirectoryController::class, 'show'])->middleware('throttle:120,1')->name('lodges.show');
 
 // A private copy of a newsletter, opened from "view in your browser" (before the /site/{club} routes so "newsletter" is never read as a club).
+// The iOS and Android app's way back in after paying in the phone's browser.
+Route::get('/app/return', [NativeAppController::class, 'return'])->middleware('throttle:60,1')->name('app.return');
 Route::get('/site/newsletter/{token}', [NewsletterPublicController::class, 'view'])->middleware('throttle:60,1')->name('newsletters.view');
 Route::get('/site/oxford-boating', function () {
     $activeSlug = Club::first()?->slug ?? 'lodge-of-fraternity';

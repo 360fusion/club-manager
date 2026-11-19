@@ -75,6 +75,7 @@ use App\Http\Controllers\MemberRsvpController;
 use App\Http\Controllers\MemberSignatureController;
 use App\Http\Controllers\MemberStatusAdminController;
 use App\Http\Controllers\MemberSubscriptionsController;
+use App\Http\Controllers\NativeAppController;
 use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterTypeAdminController;
 use App\Http\Controllers\NewsTagAdminController;
@@ -528,6 +529,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/notifications', [NotificationController::class, 'index'])->name('members.notifications');
     Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
+    Route::post('/members/push-devices', [NativeAppController::class, 'storeDevice'])->middleware('throttle:30,1')->name('members.push_devices.store');
+    Route::delete('/members/push-devices', [NativeAppController::class, 'destroyDevice'])->middleware('throttle:30,1')->name('members.push_devices.destroy');
     Route::get('/members/signed-documents', [MemberSignatureController::class, 'history'])->name('members.signed_documents');
 
     Route::get('/members/{slug}', [MemberPortalController::class, 'show'])->name('member.dashboard');

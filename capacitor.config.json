@@ -1,0 +1,16 @@
+{
+    "appId": "uk.clubmanager.app",
+    "appName": "Club Manager",
+    "webDir": "mobile/www",
+    "ios": { "path": "mobile/ios" },
+    "android": { "path": "mobile/android" },
+    "appendUserAgent": "ClubManagerApp",
+    "server": {
+        "url": "http://club-manager.test/members/dashboard",
+        "allowNavigation": ["club-manager.test"],
+        "cleartext": true
+    },
+    "plugins": {
+        "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+    }
+}

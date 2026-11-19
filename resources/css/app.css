@@ -71,6 +71,16 @@
     --color-slate-950: oklch(12.9% 0.05 266);
 }
 
+/* The iOS and Android app (Support/nativeApp.js adds .native-app) draws the page under the status bar: the navy top bar
+   grows to fill it, and a page without one (sign in) starts below it. */
+.native-app header.cm-nav {
+    padding-top: env(safe-area-inset-top);
+}
+
+.native-app body:not(:has(header.cm-nav)) {
+    padding-top: env(safe-area-inset-top);
+}
+
 /* An admin page reached by a full page load (from a Livewire page, or a refresh) is empty until Vue mounts. Painting the
    side nav's column into that first frame keeps the nav in place instead of it vanishing and coming back. It matches
    AdminLayout's sidebar: 16rem (w-64) of lodge navy (.cm-nav's slate-800) from the md breakpoint. */

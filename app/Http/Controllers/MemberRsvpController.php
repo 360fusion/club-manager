@@ -12,6 +12,7 @@ use App\Services\Events\EventMailer;
 use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventRegistrationService;
 use App\Support\ClubAccess;
+use App\Support\NativeApp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +60,13 @@ class MemberRsvpController extends Controller
         if ($registration->status === 'attending' && $registration->paymentMethod?->isOnline() && $online->canPay($registration)) {
             $back = route('member.events', ['slug' => $club->slug]);
 
-            return Inertia::location($online->start($registration, $back.'?payment=success', $back.'?payment=cancelled', null, route('member.events.paypal_return', ['slug' => $club->slug, 'id' => $event->id])));
+            return Inertia::location($online->start(
+                $registration,
+                NativeApp::returnUrl($request, $back.'?payment=success'),
+                NativeApp::returnUrl($request, $back.'?payment=cancelled'),
+                null,
+                NativeApp::returnUrl($request, route('member.events.paypal_return', ['slug' => $club->slug, 'id' => $event->id])),
+            ));
         }
 
         return redirect()->back()->with('success', $validated['attendance_status'] === 'declined' ? 'Your reply has been saved.' : 'Your booking has been saved.');

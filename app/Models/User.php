@@ -71,6 +71,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Phones the app is signed in on, for push notifications.
+     *
+     * @return HasMany<PushDevice, $this>
+     */
+    public function pushDevices(): HasMany
+    {
+        return $this->hasMany(PushDevice::class);
+    }
+
+    /**
      * The provinces whose lodge listings this user looks after (see Province::admins).
      *
      * @return BelongsToMany<Province, $this>

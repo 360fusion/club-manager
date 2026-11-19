@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\LodgeClaim;
 use App\Models\LodgeCorrection;
 use App\Support\Currencies;
+use App\Support\NativeApp;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -72,6 +73,8 @@ class HandleInertiaRequests extends Middleware
             'onClubDomain' => $request->attributes->has('club_domain_uri'),
             // Set while a page is rendered for the club's static website (App\Services\StaticSite\StaticSiteBuilder).
             'staticSite' => $request->attributes->get('static_site'),
+            // The Android app crashes asking for push without Firebase, which is only set up alongside the server's FCM key.
+            'androidPush' => NativeApp::isApp($request) && filled(config('services.fcm.credentials_path')),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,

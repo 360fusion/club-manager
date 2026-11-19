@@ -40,6 +40,20 @@ return [
         'price_pro' => env('STRIPE_PRICE_PRO', 'price_stripe_pro_demo'),
     ],
 
+    // Push to the iOS app straight through Apple (an APNs auth key, .p8) and to the Android app through
+    // Firebase Cloud Messaging (a service account JSON file). Either one left unset simply sends nothing.
+    'apns' => [
+        'key_id' => env('APNS_KEY_ID'),
+        'team_id' => env('APNS_TEAM_ID'),
+        'key_path' => env('APNS_KEY_PATH'),
+        'bundle_id' => env('APNS_BUNDLE_ID', 'uk.clubmanager.app'),
+        'production' => (bool) env('APNS_PRODUCTION', false),
+    ],
+
+    'fcm' => [
+        'credentials_path' => env('FCM_CREDENTIALS_PATH'),
+    ],
+
     'paddle' => [
         'price_basic' => env('PADDLE_PRICE_BASIC', 'pri_paddle_basic_demo'),
         'price_pro' => env('PADDLE_PRICE_PRO', 'pri_paddle_pro_demo'),

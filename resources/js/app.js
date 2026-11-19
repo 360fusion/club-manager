@@ -5,6 +5,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { currencySymbol, formatMoney } from './Utils/currency';
 import focusTrap from './Directives/focusTrap';
+import { startNativeApp } from './Support/nativeApp';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -28,6 +29,8 @@ createInertiaApp({
         app.config.globalProperties.$money = formatMoney;
 
         app.directive('focus-trap', focusTrap);
+
+        startNativeApp(Boolean(props.initialPage?.props?.auth?.user), Boolean(props.initialPage?.props?.androidPush));
 
         return app
             .use(plugin)
