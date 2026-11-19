@@ -193,12 +193,12 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
             <p v-if="err(index, 'ticket_tier_id')" :class="[errorText, 'mt-1']">{{ err(index, 'ticket_tier_id') }}</p>
           </div>
 
-          <template v-if="hasMenu">
+          <template v-if="event.has_dining">
             <label :class="['flex items-center gap-2 text-sm font-semibold', theme.headingText]">
               <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded" @change="setDining(person, $event.target.checked)" />
-              {{ index === 0 ? 'I\'m having the meal' : 'Having the meal' }}
+              {{ index === 0 ? 'I\'m dining' : 'Dining' }}
             </label>
-            <div v-if="person.attending_dining" class="grid gap-3 sm:grid-cols-3">
+            <div v-if="person.attending_dining && hasMenu" class="grid gap-3 sm:grid-cols-3">
               <div v-for="course in COURSES.filter((c) => (event.menu?.[c.key] ?? []).length)" :key="course.key">
                 <label :class="label">{{ course.label }}</label>
                 <select v-model="person[course.column]" :class="field">

@@ -69,6 +69,8 @@ const form = useForm({
   requires_payment: props.event.requires_payment ?? true,
   price: props.event.price || 0,
   has_dining: props.event.has_dining ?? false,
+  // Most dinners are just "dining or not"; a choice of dishes is for a ladies' night or special event.
+  choose_dishes: (props.event.menu_items || []).length > 0,
   dining_price: props.event.dining_price || 0,
   status: props.event.status || 'draft',
   visibility: props.event.visibility || 'club',
@@ -182,7 +184,7 @@ const submit = () => {
   form
     .transform((data) => ({
       ...data,
-      menu_items: data.has_dining
+      menu_items: data.has_dining && data.choose_dishes
         ? COURSES.flatMap(({ key }) => menu[key].map((dish) => ({ ...dish, category: key })))
         : [],
     }))
@@ -492,12 +494,21 @@ const PRICE_DISPLAY_OPTIONS = [
           <template #header>
             <label class="flex items-center gap-3">
               <input v-model="form.has_dining" type="checkbox" :class="checkbox" />
-              <span class="text-base font-semibold text-slate-900 dark:text-white">There is a meal with a choice of dishes</span>
+              <span class="text-base font-semibold text-slate-900 dark:text-white">There is a dinner</span>
             </label>
           </template>
 
-          <p v-if="!form.has_dining" class="text-sm text-slate-500 dark:text-slate-400">Tick this to add starters, mains and desserts for people to choose from.</p>
+          <p v-if="!form.has_dining" class="text-sm text-slate-500 dark:text-slate-400">Tick this if people can dine. Whoever books says whether they and each guest are dining.</p>
           <div v-else class="space-y-5">
+            <label class="flex items-start gap-3 text-sm">
+              <input v-model="form.choose_dishes" type="checkbox" :class="checkbox" />
+              <span>
+                <span class="block font-medium text-slate-900 dark:text-white">People choose their dishes</span>
+                <span class="block text-slate-500 dark:text-slate-400">For a ladies' night or special event. Leave it off to ask only who is dining.</span>
+              </span>
+            </label>
+
+            <template v-if="form.choose_dishes">
             <p class="text-sm text-slate-500 dark:text-slate-400">Enter the dishes people can choose from (three of each course to start with; leave empty any you don't need). Whoever books picks one starter, main and dessert for themselves and for each guest.</p>
 
             <div v-for="course in COURSES" :key="course.key" class="space-y-2">
@@ -521,6 +532,7 @@ const PRICE_DISPLAY_OPTIONS = [
                 </div>
               </div>
             </div>
+            </template>
             <p v-if="form.errors.menu_items" class="text-xs text-rose-600 dark:text-rose-400">{{ form.errors.menu_items }}</p>
           </div>
         </Card>

@@ -139,8 +139,8 @@ const setDining = (person, on) => {
     if (!on) Object.assign(person, { starter_item_id: null, main_item_id: null, dessert_item_id: null });
 };
 
-// The booker only needs a card when there is something to choose for them: a ticket type or a meal.
-const bookerNeedsCard = computed(() => hasMenu.value || tiersFor(form.attendees[0]).length > 1);
+// The booker only needs a card when there is something to choose for them: a ticket type or dinner.
+const bookerNeedsCard = computed(() => props.event.has_dining || tiersFor(form.attendees[0]).length > 1);
 
 const addGuest = () => form.attendees.push(blankPerson(true));
 const removeGuest = (index) => form.attendees.splice(index, 1);
@@ -309,7 +309,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
 
             <!-- 2. People -->
             <section class="space-y-3">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ hasMenu ? '2. Who is coming, and what are they having?' : '2. Is anyone else coming?' }}</h3>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ hasMenu ? '2. Who is coming, and what are they having?' : (event.has_dining ? '2. Who is coming, and who is dining?' : '2. Is anyone else coming?') }}</h3>
 
                 <template v-for="(person, index) in form.attendees" :key="index">
                 <div v-if="index > 0 || bookerNeedsCard" class="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
@@ -333,13 +333,13 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                         <p v-if="errorFor(index, 'ticket_tier_id')" :class="errorText">{{ errorFor(index, 'ticket_tier_id') }}</p>
                     </label>
 
-                    <template v-if="hasMenu">
+                    <template v-if="event.has_dining">
                         <label class="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
                             <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded" @change="setDining(person, $event.target.checked)" />
                             Having dinner
                             <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500 dark:text-slate-400">({{ $money(event.dining_price) }})</span>
                         </label>
-                        <div v-if="person.attending_dining" class="grid gap-3 sm:grid-cols-3">
+                        <div v-if="person.attending_dining && hasMenu" class="grid gap-3 sm:grid-cols-3">
                             <label v-for="course in COURSES.filter((c) => event.menu?.[c.key]?.length)" :key="course.key" class="block">
                                 <span :class="label">{{ course.label }}</span>
                                 <select v-model="person[course.column]" :class="field">
@@ -351,7 +351,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                         </div>
                     </template>
 
-                    <label v-if="hasMenu" class="block"><span :class="label">Dietary needs</span><input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Allergies, vegetarian..." :class="field" /></label>
+                    <label v-if="event.has_dining" class="block"><span :class="label">Dietary needs</span><input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Allergies, vegetarian..." :class="field" /></label>
                 </div>
                 </template>
 

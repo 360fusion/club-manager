@@ -110,7 +110,9 @@ class EventDetailsSync
         $removed = $existing->keys()->diff($keep);
 
         if ($removed->isNotEmpty() && collect($this->dishesInUse($event))->intersect($removed)->isNotEmpty()) {
-            throw ValidationException::withMessages(['menu_items' => 'A dish that guests have already chosen cannot be removed. Change its name or description instead.']);
+            throw ValidationException::withMessages(['menu_items' => $keep === []
+                ? 'People have already chosen their dishes, so the choice of dishes cannot be turned off.'
+                : 'A dish that guests have already chosen cannot be removed. Change its name or description instead.']);
         }
 
         EventMenuItem::whereIn('id', $removed)->delete();

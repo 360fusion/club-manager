@@ -151,6 +151,34 @@ class EventAdminFormTest extends TestCase
         $this->assertSame(2, $event->ticketTiers()->count());
     }
 
+    public function test_a_dinner_without_a_choice_of_dishes_only_asks_who_is_dining(): void
+    {
+        $this->store();
+        $event = Event::sole();
+
+        // Turning the choice of dishes off sends no dishes, which clears the menu while nobody has chosen from it.
+        $this->actingAs($this->admin)->post(route('admin.events.store', ['clubSlug' => 'club-a']), $this->payload(['id' => $event->id, 'menu_items' => [], 'ticket_tiers' => []]))->assertSessionHasNoErrors();
+        $this->assertSame(0, EventMenuItem::where('event_id', $event->id)->count());
+
+        $booking = app(EventRegistrationService::class)->register($event->fresh(), $this->join('member'), ['attendees' => [['name' => 'Me', 'attending_dining' => true], ['name' => 'My Guest', 'attending_dining' => false]]]);
+        $this->assertSame([true, false], $booking->attendees->sortBy('id')->pluck('attending_dining')->map(fn ($dining) => (bool) $dining)->values()->all());
+    }
+
+    public function test_the_choice_of_dishes_cannot_be_turned_off_once_people_have_chosen(): void
+    {
+        $this->store();
+        $event = Event::with(['menuItems', 'ticketTiers'])->sole();
+        $dishes = $event->menuItems->groupBy('category');
+        app(EventRegistrationService::class)->register($event, $this->join('member'), ['attendees' => [[
+            'name' => 'Me', 'attending_dining' => true, 'ticket_tier_id' => $event->ticketTiers->firstWhere('audience', 'member')->id,
+            'starter_item_id' => $dishes['starter'][0]->id, 'main_item_id' => $dishes['main'][0]->id, 'dessert_item_id' => $dishes['dessert'][0]->id,
+        ]]]);
+
+        $this->actingAs($this->admin)->post(route('admin.events.store', ['clubSlug' => 'club-a']), $this->payload(['id' => $event->id, 'menu_items' => [], 'ticket_tiers' => $event->ticketTiers->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'price' => $t->price, 'audience' => $t->audience])->all()]))
+            ->assertSessionHasErrors(['menu_items' => 'People have already chosen their dishes, so the choice of dishes cannot be turned off.']);
+        $this->assertSame(9, EventMenuItem::where('event_id', $event->id)->count());
+    }
+
     public function test_public_registration_needs_a_public_event(): void
     {
         $this->store(['visibility' => 'club', 'allow_public_registration' => true])->assertSessionHasErrors('allow_public_registration');

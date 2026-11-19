@@ -185,14 +185,14 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
                         <p v-if="errorFor(index, 'ticket_tier_id')" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ errorFor(index, 'ticket_tier_id') }}</p>
                     </label>
 
-                    <template v-if="hasMenu">
+                    <template v-if="event.has_dining">
                         <label class="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
                             <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded accent-blue-600" @change="setDining(person, $event.target.checked)" />
-                            {{ person.is_guest ? 'Having the meal' : 'I\'m having the meal' }}
+                            {{ person.is_guest ? 'Dining' : 'I\'m dining' }}
                             <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500 dark:text-slate-400">({{ $money(event.dining_price) }})</span>
                         </label>
 
-                        <div v-if="person.attending_dining" class="grid gap-3 sm:grid-cols-3">
+                        <div v-if="person.attending_dining && hasMenu" class="grid gap-3 sm:grid-cols-3">
                             <label v-for="course in COURSES.filter((c) => (event.menu?.[c.key] ?? []).length)" :key="course.key" class="block">
                                 <span :class="labelClass">{{ course.label }}</span>
                                 <select v-model="person[course.column]" :class="fieldClass">
