@@ -63,6 +63,7 @@ use App\Http\Controllers\MediaVersionController;
 use App\Http\Controllers\MeetingAdminController;
 use App\Http\Controllers\MeetingBusinessController;
 use App\Http\Controllers\MeetingDiningController;
+use App\Http\Controllers\MeetingSigningInController;
 use App\Http\Controllers\MeetingSummonsController;
 use App\Http\Controllers\MemberCalendarController;
 use App\Http\Controllers\MemberHomeController;
@@ -230,6 +231,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/meetings/create', [MeetingAdminController::class, 'create'])->name('admin.meetings.create');
     Route::get('/{clubSlug}/admin/meetings/{id}/edit', [MeetingAdminController::class, 'edit'])->name('admin.meetings.edit');
     Route::get('/{clubSlug}/admin/meetings/settings-json', [MeetingAdminController::class, 'settingsJson'])->name('admin.meetings.settings_json');
+    Route::get('/{clubSlug}/admin/meetings/attendance', [MeetingSigningInController::class, 'attendance'])->name('admin.meetings.attendance');
     Route::post('/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'store'])->name('admin.meetings.store');
     Route::get('/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'show'])->name('admin.meetings.show');
     Route::post('/{clubSlug}/admin/meetings/{id}/rsvp', [MeetingDiningController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
@@ -238,6 +240,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/meetings/{id}/dining/payment', [MeetingDiningController::class, 'recordDiningPayment'])->name('admin.meetings.dining.payment');
     Route::post('/{clubSlug}/admin/meetings/{id}/dining/refund', [MeetingDiningController::class, 'refundDining'])->name('admin.meetings.dining.refund');
     Route::get('/{clubSlug}/admin/meetings/{id}/dining/caterer', [MeetingDiningController::class, 'catererSheet'])->name('admin.meetings.dining.caterer');
+    Route::get('/{clubSlug}/admin/meetings/{id}/signing-in', [MeetingSigningInController::class, 'show'])->name('admin.meetings.signing_in');
+    Route::post('/{clubSlug}/admin/meetings/{id}/signing-in', [MeetingSigningInController::class, 'update'])->name('admin.meetings.signing_in.update');
+    Route::post('/{clubSlug}/admin/meetings/{id}/signing-in/visitors', [MeetingSigningInController::class, 'storeVisitor'])->name('admin.meetings.signing_in.visitors.store');
+    Route::delete('/{clubSlug}/admin/meetings/{id}/signing-in/visitors/{walkIn}', [MeetingSigningInController::class, 'destroyVisitor'])->name('admin.meetings.signing_in.visitors.destroy');
     Route::get('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingBusinessController::class, 'financialReturn'])->name('admin.meetings.financial_return.show');
     Route::post('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingBusinessController::class, 'storeFinancialReturn'])->name('admin.meetings.financial_return.store');
     Route::get('/{clubSlug}/admin/meetings/{id}/pdf', [MeetingSummonsController::class, 'pdf'])->name('admin.meetings.pdf');

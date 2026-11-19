@@ -192,6 +192,7 @@ const isPastMeeting = computed(() => {
               <Button v-if="isPastMeeting || meeting.financial_return" variant="secondary" size="sm" :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })">Financial return</Button>
               <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" :class="secondaryButton">Summons PDF</a>
               <Button variant="secondary" size="sm" :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })">Edit summons</Button>
+              <Button variant="secondary" size="sm" :href="route('admin.meetings.signing_in', { clubSlug: club.slug, id: meeting.id })">Signing-in book</Button>
               <Button variant="secondary" size="sm" @click="openManualRsvpModal(null)">Record RSVP</Button>
               <Button variant="secondary" size="sm" @click="showApologiesModal = true">Copy apologies for the minutes</Button>
             </div>

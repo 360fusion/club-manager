@@ -161,6 +161,7 @@ const duplicateMeeting = (id) => {
           </div>
           <div class="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" @click="showSeasonModal = true">Generate season / Masonic year</Button>
+            <Button variant="secondary" size="sm" :href="route('admin.meetings.attendance', { clubSlug: club.slug })">Attendance</Button>
             <Button size="sm" :href="route('admin.meetings.create', { clubSlug: club.slug })">Add a meeting</Button>
           </div>
         </div>
@@ -225,6 +226,7 @@ const duplicateMeeting = (id) => {
               </Button>
               <Button variant="secondary" size="sm" :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })">Edit summons</Button>
               <Button variant="secondary" size="sm" :href="route('admin.meetings.dining', { clubSlug: club.slug, id: meeting.id })" title="Dining list and payments">Dining</Button>
+              <Button variant="secondary" size="sm" :href="route('admin.meetings.signing_in', { clubSlug: club.slug, id: meeting.id })">Signing in</Button>
               <Button size="sm" :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })">Secretary dashboard</Button>
               <Button variant="secondary" size="sm" @click="duplicateMeeting(meeting.id)">Duplicate</Button>
               <Button variant="secondary" size="sm" @click="meetingToDelete = meeting">Delete</Button>

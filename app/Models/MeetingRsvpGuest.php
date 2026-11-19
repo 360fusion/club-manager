@@ -30,6 +30,7 @@ class MeetingRsvpGuest extends Model
         'attending_dining' => 'boolean',
         'dining_fee' => 'decimal:2',
         'paid_at' => 'datetime',
+        'attended_at' => 'datetime',
     ];
 
     /**

@@ -214,6 +214,24 @@ class MeetingReplies
     }
 
     /**
+     * Names brethren with their rank, as on the summons and in the minutes ("WBro John Smith"), from the lodge's member
+     * records; an account with no member record keeps its own name.
+     *
+     * @param  Collection<int, mixed>  $userIds
+     * @return \Closure(?User): string
+     */
+    public static function rankedNamer(int $clubId, Collection $userIds): \Closure
+    {
+        $members = Member::where('club_id', $clubId)->whereIn('user_id', $userIds->filter()->unique()->values())->get()->keyBy('user_id');
+
+        return fn (?User $user) => match (true) {
+            $user === null => 'Member',
+            $members->has($user->id) => $members[$user->id]->formatted_rank_name,
+            default => $user->name,
+        };
+    }
+
+    /**
      * Members of the lodge (not visitors) who have not answered yet.
      *
      * @return Collection<int, User>
@@ -307,13 +325,7 @@ class MeetingReplies
         $attending = $rsvps->whereIn('attendance_status', self::ATTENDING);
         $nonRepliers = $this->nonRepliers($meeting);
 
-        // Brethren are named with their rank, as on the summons and in the minutes ("WBro John Smith").
-        $members = Member::where('club_id', $meeting->club_id)->whereIn('user_id', $rsvps->pluck('user_id')->merge($nonRepliers->pluck('id')))->get()->keyBy('user_id');
-        $name = fn (?User $user) => match (true) {
-            $user === null => 'Member',
-            $members->has($user->id) => $members[$user->id]->formatted_rank_name,
-            default => $user->name,
-        };
+        $name = self::rankedNamer($meeting->club_id, $rsvps->pluck('user_id')->merge($nonRepliers->pluck('id')));
 
         $diningMembers = $attending->where('attendance_status', 'attending_dining')->count();
         $diningGuests = $attending->sum(fn (MeetingRsvp $rsvp) => $rsvp->guests->where('attending_dining', true)->count());

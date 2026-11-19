@@ -38,6 +38,7 @@ class MeetingRsvp extends Model
         'paid_at' => 'datetime',
         'responded_at' => 'datetime',
         'is_postal_printed' => 'boolean',
+        'attended_at' => 'datetime',
     ];
 
     /**
