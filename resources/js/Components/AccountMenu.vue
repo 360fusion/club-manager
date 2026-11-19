@@ -10,6 +10,8 @@ const props = defineProps({
     tone: { type: String, default: 'default' },
     // Show the "navigation position" choice; only the members layout has one.
     navChoice: { type: Boolean, default: true },
+    // The members area's pages ({key, label, href}), listed here on phones, where the bottom tabs replace the top nav.
+    links: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -48,10 +50,15 @@ const item = 'block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 ho
             <span class="hidden max-w-[120px] truncate text-xs font-semibold sm:inline">{{ user?.name }}</span>
         </button>
 
-        <div v-if="open" role="menu" class="absolute right-0 z-50 mt-2 w-64 space-y-1 rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <div v-if="open" role="menu" class="absolute right-0 z-50 mt-2 max-h-[80vh] w-64 space-y-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
                 <div class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ user?.name }}</div>
                 <div class="truncate text-[11px] text-slate-500 dark:text-slate-400">{{ user?.email }}</div>
+            </div>
+
+            <div v-if="links.length" :class="['border-b border-slate-100 pb-1 dark:border-slate-800', isNativeApp ? '' : 'md:hidden']">
+                <p class="px-3 pb-1 pt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">Go to</p>
+                <Link v-for="link in links" :key="link.key" :href="link.href" role="menuitem" :class="item" @click="open = false">{{ link.label }}</Link>
             </div>
 
             <Link v-if="isNativeApp" :href="route('members.app_settings')" role="menuitem" :class="item" @click="open = false">App settings</Link>

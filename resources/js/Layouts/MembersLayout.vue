@@ -130,11 +130,12 @@ provide('layoutHasHeading', !props.ownHeading);
                     <div class="flex items-center gap-2">
                         <Link v-if="isStaff" :href="adminHome" class="hidden rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
                         <NotificationBell tone="onDark" />
-                        <AccountMenu tone="onDark" />
+                        <AccountMenu tone="onDark" :links="nav" />
                     </div>
                 </div>
 
-                <nav v-if="!isNativeApp" class="mx-auto max-w-6xl overflow-x-auto px-4 sm:px-6" aria-label="Members">
+                <!-- Phones (the app, and the web below md) use the bottom tabs instead; the other pages are in the account menu. -->
+                <nav v-if="!isNativeApp" class="mx-auto hidden max-w-6xl overflow-x-auto px-4 sm:px-6 md:block" aria-label="Members">
                     <ul class="flex gap-1">
                         <li v-for="item in nav" :key="item.key">
                             <Link
@@ -160,7 +161,7 @@ provide('layoutHasHeading', !props.ownHeading);
                 </div>
             </div>
 
-            <main id="main-content" :class="['mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6', isNativeApp ? 'pb-28' : '']">
+            <main id="main-content" :class="['mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6', isNativeApp ? 'pb-28' : 'pb-28 md:pb-8']">
                 <h1 v-if="!ownHeading" class="sr-only">{{ title }}</h1>
                 <FlashMessages />
                 <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>
@@ -170,5 +171,5 @@ provide('layoutHasHeading', !props.ownHeading);
         </div>
     </div>
 
-    <AppTabBar v-if="isNativeApp" :club="club" :active-tab="activeTab" />
+    <AppTabBar :club="club" :active-tab="activeTab" :class="isNativeApp ? '' : 'md:hidden'" />
 </template>

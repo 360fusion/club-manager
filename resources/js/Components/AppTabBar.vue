@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
-// The app's bottom tabs (only drawn in the iOS and Android app); the web keeps the top nav.
+// The bottom tabs: always in the iOS and Android app, and on the web at phone width (wider screens keep the top nav).
 const props = defineProps({
     club: { type: Object, default: null },
     activeTab: { type: String, default: 'dashboard' },
