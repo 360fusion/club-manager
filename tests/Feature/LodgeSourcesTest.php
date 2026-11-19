@@ -158,6 +158,28 @@ class LodgeSourcesTest extends TestCase
         $this->assertNotNull($failed->content_hash);
     }
 
+    public function test_on_a_shared_list_only_the_lodge_whose_entry_changed_is_flagged(): void
+    {
+        $ashlar = $this->lodgeWithSources('ashlar', 'https://province.example/list', LodgeSource::PROVINCE_LIST);
+        $blackpool = $this->lodgeWithSources('blackpool', 'https://province.example/list', LodgeSource::PROVINCE_LIST);
+        $ashlar->update(['number' => '5154']);
+        $blackpool->update(['number' => '1476']);
+        $row = fn (string $name, string $number, string $meets) => "<tr><td>{$name}</td><td>{$number}</td><td>{$meets}</td></tr>";
+        Http::fake(['province.example/*' => Http::sequence()
+            ->push('<table>'.$row('Ashlar Lodge', '5154', 'Second Monday').$row('Blackpool Lodge', '1476', 'Second Tuesday').'</table>')
+            ->push('<p>News</p><table>'.$row('Ashlar Lodge', '5154', 'Second Monday').$row('Blackpool Lodge', '1476', 'Third Friday').'</table>')
+            ->push('<table>'.$row('Blackpool Lodge', '1476', 'Third Friday').'</table>')]);
+
+        $this->artisan('lodges:check-sources', ['--delay' => 0])->assertSuccessful();
+        $this->artisan('lodges:check-sources', ['--delay' => 0])->assertSuccessful();
+        $this->assertSame('unchanged', $ashlar->sources()->first()->last_status);
+        $this->assertSame('changed', $blackpool->sources()->first()->last_status);
+
+        $this->artisan('lodges:check-sources', ['--delay' => 0])->assertSuccessful();
+        $this->assertSame('changed', $ashlar->sources()->first()->last_status, 'A lodge dropped from the list is flagged.');
+        $this->assertSame('unchanged', $blackpool->sources()->first()->last_status);
+    }
+
     public function test_the_check_can_be_limited_and_can_be_a_dry_run(): void
     {
         $durham = Province::create(['name' => 'Province of Durham', 'code' => 'durham']);

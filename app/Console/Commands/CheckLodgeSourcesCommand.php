@@ -25,6 +25,7 @@ class CheckLodgeSourcesCommand extends Command
             ->when($this->option('province'), fn ($query, $code) => $query->whereHas('lodge.province', fn ($province) => $province->where('code', $code)))
             ->when($this->option('lodge'), fn ($query, $slug) => $query->whereHas('lodge', fn ($lodge) => $lodge->where('slug', $slug)))
             ->when($this->option('kind'), fn ($query, $kind) => $query->where('kind', $kind))
+            ->with('lodge:id,name,number')
             ->orderBy('url')
             ->get()
             ->groupBy('url');
@@ -53,9 +54,16 @@ class CheckLodgeSourcesCommand extends Command
             }
 
             $first = false;
-            [$httpStatus, $hash] = $this->fetch((string) $url);
+            [$httpStatus, $body] = $this->fetch((string) $url);
+            $numbers = $group->pluck('lodge.number')->filter()->map(fn ($number) => (string) $number)->all();
 
             foreach ($group as $source) {
+                // On a page listing several lodges, each lodge is compared by its own entry, so one lodge's change flags only that lodge.
+                $hash = match (true) {
+                    $body === null => null,
+                    $group->count() > 1 && filled($source->lodge?->number) => self::entryHash($body, (string) $source->lodge->number, $numbers),
+                    default => self::contentHash($body),
+                };
                 $status = $this->record($source, $httpStatus, $hash);
                 $counts[$status]++;
             }
@@ -69,7 +77,7 @@ class CheckLodgeSourcesCommand extends Command
     }
 
     /**
-     * @return array{0: int, 1: string|null} the HTTP status (0 when nothing came back) and a hash of the page's visible text
+     * @return array{0: int, 1: string|null} the HTTP status (0 when nothing came back) and the page, when it loaded
      */
     private function fetch(string $url): array
     {
@@ -79,7 +87,45 @@ class CheckLodgeSourcesCommand extends Command
             return [0, null];
         }
 
-        return [$response->status(), $response->successful() ? self::contentHash($response->body()) : null];
+        return [$response->status(), $response->successful() ? $response->body() : null];
+    }
+
+    /**
+     * A hash of one lodge's entry on a list page: from the line giving its number up to the next line giving
+     * another listed lodge's number. Falls back to the whole page when the number is not on it, so a lodge
+     * dropped from the list shows as changed.
+     *
+     * @param  list<string>  $numbers  every lodge number this page is a source for
+     */
+    public static function entryHash(string $page, string $number, array $numbers): string
+    {
+        $html = preg_replace('#<(script|style|noscript)\b.*?</\1>|<!--.*?-->#is', ' ', $page) ?? $page;
+        $html = preg_replace('#<(br|/p|/li|/tr|/td|/th|/dt|/dd|/div|/h[1-6])\b[^>]*>#i', "$0\n", $html) ?? $html;
+        $lines = array_values(array_filter(array_map(
+            fn ($line) => trim(preg_replace('/\s+/u', ' ', $line) ?? $line),
+            explode("\n", html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5)),
+        ), fn ($line) => $line !== ''));
+
+        $givesNumber = fn (string $line, string $n) => (bool) preg_match('/^\(?(?:No\.?\s*)?'.preg_quote($n, '/').'\)?$|\bNo\.?\s*'.preg_quote($n, '/').'\b/i', $line);
+        $others = array_diff($numbers, [$number]);
+
+        foreach ($lines as $start => $line) {
+            if (! $givesNumber($line, $number)) {
+                continue;
+            }
+
+            $entry = [$line];
+            foreach (array_slice($lines, $start + 1, 20) as $next) {
+                if (array_filter($others, fn ($other) => $givesNumber($next, $other))) {
+                    break;
+                }
+                $entry[] = $next;
+            }
+
+            return sha1(implode("\n", $entry));
+        }
+
+        return self::contentHash($page);
     }
 
     /**
