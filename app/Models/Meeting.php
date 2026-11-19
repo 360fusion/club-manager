@@ -64,6 +64,10 @@ class Meeting extends Model
         'meeting_date' => 'date',
         'summons_published_at' => 'datetime',
         'rsvp_cutoff_at' => 'datetime',
+        'replies_requested_at' => 'datetime',
+        'last_call_sent_at' => 'datetime',
+        'numbers_sent_at' => 'datetime',
+        'confirmations_sent_at' => 'datetime',
         'postal_batch_generated_at' => 'datetime',
         'dining_cost_member' => 'decimal:2',
         'dining_cost_guest' => 'decimal:2',
@@ -102,7 +106,8 @@ class Meeting extends Model
     }
 
     /**
-     * Whether replies (and dining) for this meeting have closed, by the lodge's own clock.
+     * Whether the dining deadline has passed, by the lodge's own clock. After it a member can still change their reply,
+     * but not add dining: the numbers have gone to the caterer (App\Services\Meetings\MeetingReplies::guardDining).
      */
     public function rsvpClosed(): bool
     {

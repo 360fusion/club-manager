@@ -35,6 +35,9 @@ const reply = (status) => {
 // An event with tickets or a menu is booked on its own page; once booked, say so instead of offering a fresh reply.
 const booked = () => props.item.type === 'event' && !props.item.simple && ['attending', 'tentative'].includes(props.item.reply);
 
+// A meeting past its dining deadline still takes replies; only adding dining is closed (the caterer has the numbers).
+const isDisabled = (value) => (props.item.type === 'meeting' ? props.item.closed && value === 'attending_dining' && props.item.reply !== 'attending_dining' : props.item.closed);
+
 const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) => props.item.type === 'meeting' || props.item.simple || option.value === 'declined'));
 </script>
 
@@ -46,7 +49,7 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
             size="sm"
             :variant="item.reply === option.value ? 'primary' : 'secondary'"
             :loading="busy === option.value"
-            :disabled="item.closed"
+            :disabled="isDisabled(option.value)"
             :aria-pressed="item.reply === option.value"
             @click="reply(option.value)"
         >
@@ -56,6 +59,6 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
         <Link v-if="item.type === 'event' && !item.simple && (booked() || !item.closed)" :href="route('member.events', { slug: item.slug })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
             {{ booked() ? 'View booking' : 'Choose options' }}
         </Link>
-        <span v-if="item.closed" class="text-xs text-slate-500 dark:text-slate-400">Replies closed</span>
+        <span v-if="item.closed" class="text-xs text-slate-500 dark:text-slate-400">{{ item.type === 'meeting' ? 'Dining closed' : 'Replies closed' }}</span>
     </div>
 </template>

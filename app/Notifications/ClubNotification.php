@@ -140,6 +140,19 @@ class ClubNotification extends Notification
         );
     }
 
+    /** A step of a meeting's reply schedule, opening the member's summons where they can reply or change it. */
+    public static function meetingReply(Meeting $meeting, Club $club, string $title, bool $reminder): self
+    {
+        return new self(
+            $reminder ? self::REMINDER : self::SUMMONS,
+            $title,
+            trim($meeting->meeting_date->format('j M Y').' · '.($meeting->venue ?? ''), ' ·'),
+            $club,
+            'member.meetings.summons',
+            ['slug' => $club->slug, 'id' => $meeting->id],
+        );
+    }
+
     /** The day before an event someone has booked: when and where, and their ticket one tap away. */
     public static function eventTomorrow(EventRegistration $registration, Club $club): self
     {

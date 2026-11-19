@@ -8,7 +8,10 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\ClubMemberStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Services\Meetings\MeetingDiningPayment;
+use App\Services\Meetings\MeetingReplies;
 use App\Support\ClubAccess;
+use App\Support\Currencies;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -74,6 +77,8 @@ class MemberMeetingController extends Controller
             'worshipfulMaster' => $master ? ['name' => $master->formatted_rank_name] : null,
             'memberRole' => $memberPivot->role ?? 'member',
             'isCutoffPassed' => $meeting->rsvpClosed(),
+            'owed' => $userRsvp && ($owed = MeetingReplies::owed($meeting, $userRsvp)['amount']) > 0 ? Currencies::format($owed, $club) : null,
+            'canPayByCard' => $userRsvp && app(MeetingDiningPayment::class)->canPay($userRsvp->setRelation('meeting', $meeting)),
             'charityGrants' => $charityGrants,
         ]);
     }

@@ -11,9 +11,12 @@ use App\Models\MeetingRsvp;
 use App\Services\Events\EventMailer;
 use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventRegistrationService;
+use App\Services\Meetings\MeetingDiningPayment;
+use App\Services\Meetings\MeetingReplies;
 use App\Support\ClubAccess;
 use App\Support\NativeApp;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -75,7 +78,7 @@ class MemberRsvpController extends Controller
     /**
      * Record or update meeting RSVP for authenticated member.
      */
-    public function updateMeetingRsvp(UpdateMeetingRsvpRequest $request, string $slug, int $id): RedirectResponse
+    public function updateMeetingRsvp(UpdateMeetingRsvpRequest $request, string $slug, int $id, MeetingReplies $replies): RedirectResponse
     {
         $user = Auth::user();
         $club = $this->findClub($slug);
@@ -84,17 +87,16 @@ class MemberRsvpController extends Controller
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
         abort_if($meeting->status !== 'published' && ! ClubAccess::can($user, $club, 'manage_meetings'), 404);
 
-        if ($meeting->rsvpClosed()) {
-            return redirect()->back()->withErrors(['cutoff' => 'The dining deadline for this meeting has passed. Please contact the Secretary directly.']);
-        }
-
         $validated = $request->validated();
-
-        $surname = strtoupper(last(explode(' ', $user->name)));
-        $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
+        $paymentRef = MeetingReplies::paymentReference($meeting, $user);
 
         // The emailed reply link keeps working: its token is only set when there is no reply row yet.
         $rsvp = MeetingRsvp::firstOrNew(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+        $before = MeetingReplies::before($rsvp->exists ? $rsvp : null);
+        $guests = array_key_exists('guests', $validated)
+            ? collect($validated['guests'] ?? [])->filter(fn ($g) => ! empty($g['guest_name']))->map(fn ($g) => ['attending_dining' => $g['attending_dining'] ?? true])
+            : ($rsvp->exists ? $rsvp->guests : []);
+        MeetingReplies::guardDining($meeting, $before, $validated['attendance_status'], $guests);
         if (! $rsvp->exists) {
             $rsvp->fill(['token_hash' => Str::random(40), 'token_expires_at' => Carbon::now()->addDays(30)]);
         }
@@ -109,21 +111,26 @@ class MemberRsvpController extends Controller
         )->save();
 
         if (array_key_exists('guests', $validated)) {
-            $rsvp->guests()->delete();
-            if (is_array($validated['guests'])) {
-                foreach ($validated['guests'] as $g) {
-                    if (! empty($g['guest_name'])) {
-                        $rsvp->guests()->create([
-                            'guest_name' => $g['guest_name'],
-                            'dietary_requirements' => $g['dietary_requirements'] ?? null,
-                            'attending_dining' => $g['attending_dining'] ?? true,
-                            'dining_fee' => ($g['attending_dining'] ?? true) ? $meeting->dining_cost_guest : 0,
-                        ]);
-                    }
-                }
-            }
+            MeetingReplies::syncGuests($meeting, $rsvp, is_array($validated['guests']) ? $validated['guests'] : []);
         }
 
+        $replies->afterChange($meeting, $rsvp, $before);
+
         return redirect()->back()->with('success', 'Your RSVP response has been saved.');
+    }
+
+    /**
+     * Pay for this member's meeting dining by card: off to Stripe, and back to the summons.
+     */
+    public function payMeetingDining(Request $request, string $slug, int $id, MeetingDiningPayment $payments): SymfonyResponse
+    {
+        $club = $this->findClub($slug);
+        abort_unless(ClubAccess::isActiveMember($request->user(), $club), 403, 'You are not a member of this club.');
+
+        $meeting = Meeting::where('club_id', $club->id)->where('status', 'published')->findOrFail($id);
+        $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $request->user()->id)->firstOrFail();
+        $back = route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id]);
+
+        return Inertia::location($payments->start($rsvp, NativeApp::returnUrl($request, $back.'?payment=success'), NativeApp::returnUrl($request, $back.'?payment=cancelled')));
     }
 }

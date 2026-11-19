@@ -555,6 +555,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/{slug}/events/{id}/rsvp', [MemberRsvpController::class, 'updateRsvp'])->name('member.rsvp');
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
     Route::post('/members/{slug}/meetings/{id}/rsvp', [MemberRsvpController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
+    Route::post('/members/{slug}/meetings/{id}/pay', [MemberRsvpController::class, 'payMeetingDining'])->name('member.meetings.pay');
     Route::get('/members/{slug}/meetings/{id}/pdf', [MemberMeetingController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
     Route::get('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'show'])->name('member.signatures.show');
     Route::post('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'store'])->name('member.signatures.store');

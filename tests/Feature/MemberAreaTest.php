@@ -345,14 +345,14 @@ class MemberAreaTest extends TestCase
         $this->assertSame('Vegetarian', MeetingRsvp::where('meeting_id', $meeting->id)->first()->dietary_requirements);
     }
 
-    public function test_one_tap_replies_are_refused_after_the_cutoff_and_for_other_clubs(): void
+    public function test_one_tap_dining_is_refused_after_the_cutoff_and_any_reply_for_other_clubs(): void
     {
         $closed = $this->meeting($this->oxford, ['rsvp_cutoff_at' => now()->subDay()]);
         $elsewhere = $this->meeting($this->bath);
 
         $this->actingAs($this->member);
 
-        $this->post(route('member.meetings.quick_rsvp', ['slug' => 'oxford-lodge', 'id' => $closed->id]), ['attendance_status' => 'apologies'])->assertSessionHasErrors('cutoff');
+        $this->post(route('member.meetings.quick_rsvp', ['slug' => 'oxford-lodge', 'id' => $closed->id]), ['attendance_status' => 'attending_dining'])->assertSessionHasErrors('cutoff');
         $this->assertDatabaseCount('meeting_rsvps', 0);
 
         $this->post(route('member.meetings.quick_rsvp', ['slug' => 'bath-lodge', 'id' => $elsewhere->id]), ['attendance_status' => 'apologies'])->assertNotFound();

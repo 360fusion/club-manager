@@ -9,6 +9,7 @@ use App\Models\EventPaymentLog;
 use App\Models\EventPaymentMethod;
 use App\Models\EventRegistration;
 use App\Models\PlatformPayment;
+use App\Services\Meetings\MeetingDiningPayment;
 use App\Services\Payment\PayPalGateway;
 use App\Services\Payment\PlatformFees;
 use App\Services\Payment\StripeConnectGateway;
@@ -281,6 +282,11 @@ class EventOnlinePayment
 
         if (($session->payment_status ?? null) !== 'paid') {
             return 'not paid yet';
+        }
+
+        // Meeting dining paid by card arrives on the same webhooks.
+        if (isset($session->metadata->meeting_rsvp_id)) {
+            return app(MeetingDiningPayment::class)->recordCheckoutSession($club, $session, $account);
         }
 
         $registration = EventRegistration::with(['event.club', 'paymentMethod'])->find((int) ($session->metadata->registration_id ?? 0));

@@ -2,68 +2,146 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MeetingRsvpGuest;
+use App\Models\MeetingRsvp;
+use App\Services\Meetings\MeetingDiningPayment;
+use App\Services\Meetings\MeetingReplies;
 use App\Services\RsvpTokenService;
+use App\Support\Currencies;
+use App\Support\NativeApp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
+/**
+ * A member's reply page without signing in, reached two ways: the summons email's token link, or the signed links in
+ * the reply schedule's emails (MeetingReplies::replyUrl), which can arrive with an answer already picked.
+ */
 class PasswordlessRsvpController extends Controller
 {
-    /**
-     * Display passwordless RSVP page for a given signed raw token.
-     */
-    public function show(string $token, RsvpTokenService $tokenService): Response
+    public function show(string $token, RsvpTokenService $tokenService, MeetingDiningPayment $payments): Response
     {
         $rsvp = $tokenService->validateToken($token);
 
-        if (! $rsvp) {
-            return Inertia::render('Summons/Expired', [
-                'message' => 'This RSVP link is invalid or has expired. Please contact your Secretary for assistance.',
-            ]);
+        return $rsvp
+            ? $this->page($rsvp, route('summons.rsvp.store', ['token' => $token]), route('summons.rsvp.pay', ['token' => $token]), null, $payments)
+            : $this->expired();
+    }
+
+    public function store(Request $request, string $token, RsvpTokenService $tokenService, MeetingReplies $replies): RedirectResponse
+    {
+        $rsvp = $tokenService->validateToken($token);
+
+        return $rsvp ? $this->save($request, $rsvp, $replies) : redirect()->back()->withErrors(['token' => 'Token has expired or is invalid.']);
+    }
+
+    public function pay(Request $request, string $token, RsvpTokenService $tokenService, MeetingDiningPayment $payments): HttpResponse
+    {
+        $rsvp = $tokenService->validateToken($token);
+
+        abort_unless($rsvp !== null, 403);
+
+        $back = route('summons.rsvp.show', ['token' => $token]);
+
+        return Inertia::location($payments->start($rsvp, NativeApp::returnUrl($request, $back.'?payment=success'), NativeApp::returnUrl($request, $back.'?payment=cancelled')));
+    }
+
+    public function showSigned(Request $request, int $rsvp, MeetingReplies $replies, MeetingDiningPayment $payments): Response
+    {
+        $reply = $this->activeReply($rsvp);
+
+        if (! $reply) {
+            return $this->expired();
         }
 
+        $expires = $replies->linkExpiry($reply->meeting);
+        $answer = in_array($request->query('answer'), MeetingReplies::ANSWERS, true) ? $request->query('answer') : null;
+
+        return $this->page(
+            $reply,
+            URL::temporarySignedRoute('summons.reply.store', $expires, ['rsvp' => $reply->id]),
+            URL::temporarySignedRoute('summons.reply.pay', $expires, ['rsvp' => $reply->id]),
+            $answer,
+            $payments,
+        );
+    }
+
+    public function storeSigned(Request $request, int $rsvp, MeetingReplies $replies): RedirectResponse
+    {
+        $reply = $this->activeReply($rsvp);
+
+        return $reply ? $this->save($request, $reply, $replies) : redirect()->back()->withErrors(['token' => 'This link has expired or is invalid.']);
+    }
+
+    public function paySigned(Request $request, int $rsvp, MeetingReplies $replies, MeetingDiningPayment $payments): HttpResponse
+    {
+        $reply = $this->activeReply($rsvp);
+
+        abort_unless($reply !== null, 403);
+
+        // Each way back is signed with its own outcome, as any extra query would break the link's signature.
+        $back = fn (string $outcome) => NativeApp::returnUrl($request, URL::temporarySignedRoute('summons.reply', $replies->linkExpiry($reply->meeting), ['rsvp' => $reply->id, 'payment' => $outcome]));
+
+        return Inertia::location($payments->start($reply, $back('success'), $back('cancelled')));
+    }
+
+    /**
+     * The reply a signed link points at, while its person is still an active member or registered visitor of the lodge.
+     */
+    private function activeReply(int $id): ?MeetingRsvp
+    {
+        $rsvp = MeetingRsvp::with(['meeting.club', 'user', 'guests'])->find($id);
+
+        $isActive = $rsvp?->user && $rsvp->user->clubs()->where('clubs.id', $rsvp->meeting->club_id)->wherePivot('status', 'active')->exists();
+
+        return $isActive ? $rsvp : null;
+    }
+
+    private function expired(): Response
+    {
+        return Inertia::render('Summons/Expired', [
+            'message' => 'This RSVP link is invalid or has expired. Please contact your Secretary for assistance.',
+        ]);
+    }
+
+    private function page(MeetingRsvp $rsvp, string $submitUrl, string $payUrl, ?string $answer, MeetingDiningPayment $payments): Response
+    {
         $meeting = $rsvp->meeting;
         $club = $meeting->club;
         $user = $rsvp->user;
-        $isCutoffPassed = $meeting->rsvpClosed();
         $clubUser = $user->clubs()->where('club_id', $club->id)->first()?->pivot;
         $isVisitor = $clubUser && $clubUser->role === 'visitor';
         $visitorHomeClub = $isVisitor ? trim(($clubUser->home_club_name ?? '').($clubUser->home_club_number ? ' No '.$clubUser->home_club_number : '')) : null;
+        $owed = MeetingReplies::owed($meeting, $rsvp->load('guests'));
 
         return Inertia::render('Summons/Rsvp', [
-            'token' => $token,
+            'submitUrl' => $submitUrl,
+            'payUrl' => $payUrl,
+            'answer' => $isVisitor && $answer === 'apologies' ? null : $answer,
             // Only what the page shows: the link is in an email, so nothing else about the person, lodge or meeting goes with it.
             'club' => ['name' => $club->name],
             'user' => ['name' => $user->name],
             'meeting' => $meeting->only(['id', 'title', 'meeting_date', 'starts_at', 'rehearsal_starts_at', 'venue', 'dress_code', 'dining_cost_member', 'bank_sort_code', 'bank_account_number', 'payment_link']),
-            'rsvp' => $rsvp->load('guests')->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_reference', 'guests']),
-            'isCutoffPassed' => $isCutoffPassed,
+            'rsvp' => $rsvp->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_reference', 'payment_status', 'guests']),
+            'owed' => $owed['amount'] > 0 ? Currencies::format($owed['amount'], $club) : null,
+            'canPayByCard' => $payments->canPay($rsvp),
+            'isCutoffPassed' => $meeting->rsvpClosed(),
             'isVisitor' => $isVisitor,
             'visitorHomeClub' => $visitorHomeClub,
         ]);
     }
 
     /**
-     * Submit attendance response, guest additions, dietary notes, & payment details.
+     * Save attendance, guests and dietary notes. After the dining deadline dining can be dropped but not added.
      */
-    public function store(Request $request, string $token, RsvpTokenService $tokenService): RedirectResponse
+    private function save(Request $request, MeetingRsvp $rsvp, MeetingReplies $replies): RedirectResponse
     {
-        $rsvp = $tokenService->validateToken($token);
-
-        if (! $rsvp) {
-            return redirect()->back()->withErrors(['token' => 'Token has expired or is invalid.']);
-        }
-
         $meeting = $rsvp->meeting;
         $user = $rsvp->user;
         $club = $meeting->club;
-
-        if ($meeting->rsvpClosed()) {
-            return redirect()->back()->withErrors(['cutoff' => 'The dining deadline has passed. Please contact the Secretary directly.']);
-        }
 
         $clubUser = $user->clubs()->where('club_id', $club->id)->first()?->pivot;
         $isVisitor = $clubUser && $clubUser->role === 'visitor';
@@ -82,32 +160,20 @@ class PasswordlessRsvpController extends Controller
             'guests.*.dietary_requirements' => 'nullable|string|max:1000',
         ]);
 
-        $surname = strtoupper(last(explode(' ', $rsvp->user->name)));
-        $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
+        $before = MeetingReplies::before($rsvp);
+        MeetingReplies::guardDining($meeting, $before, $validated['attendance_status'], $validated['guests'] ?? []);
 
         $rsvp->update([
             'attendance_status' => $validated['attendance_status'],
             'apology_reason' => $validated['apology_reason'] ?? null,
             'dietary_requirements' => $validated['dietary_requirements'] ?? null,
-            'payment_reference' => $paymentRef,
+            'payment_reference' => MeetingReplies::paymentReference($meeting, $user),
             'responded_at' => Carbon::now(),
         ]);
 
-        // Sync Guests
-        MeetingRsvpGuest::where('meeting_rsvp_id', $rsvp->id)->delete();
-        if (! empty($validated['guests'])) {
-            foreach ($validated['guests'] as $g) {
-                MeetingRsvpGuest::create([
-                    'meeting_rsvp_id' => $rsvp->id,
-                    'guest_name' => $g['guest_name'],
-                    'guest_title_rank' => $g['guest_title_rank'] ?? null,
-                    'home_club_lodge' => $g['home_club_lodge'] ?? null,
-                    'attending_dining' => $g['attending_dining'],
-                    'dietary_requirements' => $g['dietary_requirements'] ?? null,
-                    'dining_fee' => $g['attending_dining'] ? $meeting->dining_cost_guest : 0.00,
-                ]);
-            }
-        }
+        MeetingReplies::syncGuests($meeting, $rsvp, $validated['guests'] ?? []);
+
+        $replies->afterChange($meeting, $rsvp, $before);
 
         return redirect()->back()->with('success', 'Your RSVP response has been submitted successfully.');
     }

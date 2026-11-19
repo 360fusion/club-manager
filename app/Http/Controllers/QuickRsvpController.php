@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Services\Events\EventRegistrationService;
+use App\Services\Meetings\MeetingReplies;
 use App\Support\MemberScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -19,25 +20,23 @@ use Illuminate\Support\Str;
  */
 class QuickRsvpController extends Controller
 {
-    public function meeting(MeetingRequest $request, string $slug, int $id): RedirectResponse
+    public function meeting(MeetingRequest $request, string $slug, int $id, MeetingReplies $replies): RedirectResponse
     {
         $validated = $request->validated();
 
         $scope = MemberScope::for($request->user(), $slug);
         $meeting = Meeting::where('club_id', $scope->club->id)->where('status', 'published')->findOrFail($id);
 
-        if ($meeting->rsvpClosed()) {
-            return back()->withErrors(['cutoff' => 'Replies for this meeting have closed. Please contact the Secretary.']);
-        }
-
         $user = $request->user();
         $rsvp = MeetingRsvp::firstOrNew(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
+        $before = MeetingReplies::before($rsvp->exists ? $rsvp : null);
+        MeetingReplies::guardDining($meeting, $before, $validated['attendance_status'], $rsvp->exists ? $rsvp->guests : []);
 
         if (! $rsvp->exists) {
             $rsvp->forceFill([
                 'token_hash' => Str::random(40),
                 'token_expires_at' => now()->addDays(30),
-                'payment_reference' => ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.strtoupper(last(explode(' ', $user->name))),
+                'payment_reference' => MeetingReplies::paymentReference($meeting, $user),
             ]);
         }
 
@@ -46,6 +45,8 @@ class QuickRsvpController extends Controller
             'dietary_requirements' => $rsvp->dietary_requirements ?? $scope->memberClubs->firstWhere('id', $scope->club->id)?->pivot?->dietary_notes,
             'responded_at' => now(),
         ])->save();
+
+        $replies->afterChange($meeting, $rsvp, $before);
 
         return back()->with('success', 'Your reply to '.$meeting->title.' has been saved.');
     }

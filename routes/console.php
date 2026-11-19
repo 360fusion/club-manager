@@ -15,6 +15,8 @@ Artisan::command('inspire', function () {
 Schedule::command('app:send-event-payment-reminders')->dailyAt('09:00')->withoutOverlapping();
 // The day before an event, a reminder to everyone booked (from 9am lodge time; each booking once).
 Schedule::command('app:send-event-day-reminders')->hourly()->withoutOverlapping();
+// Each meeting's reply schedule from 9am lodge time: ask who has not replied, last call, the Secretary's numbers, the reminder.
+Schedule::command('app:send-meeting-replies')->hourly()->withoutOverlapping();
 // Reminds people whose account invitation is still unanswered, once, after the number of days each club sets.
 // Deletes uploaded member spreadsheets that were never imported, and old import records (personal data).
 Schedule::command('app:prune-member-imports')->dailyAt('03:30')->withoutOverlapping();

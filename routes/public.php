@@ -71,6 +71,11 @@ Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->
 // Passwordless Summons Email RSVP Routes
 Route::get('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'show'])->name('summons.rsvp.show');
 Route::post('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'store'])->name('summons.rsvp.store')->middleware('throttle:public-forms');
+Route::post('/summons/rsvp/{token}/pay', [PasswordlessRsvpController::class, 'pay'])->name('summons.rsvp.pay')->middleware('throttle:public-forms');
+// The reply schedule's emails link here: signed, working until the end of the meeting day, optionally with an answer picked.
+Route::get('/summons/reply/{rsvp}', [PasswordlessRsvpController::class, 'showSigned'])->whereNumber('rsvp')->middleware('signed')->name('summons.reply');
+Route::post('/summons/reply/{rsvp}', [PasswordlessRsvpController::class, 'storeSigned'])->whereNumber('rsvp')->middleware(['signed', 'throttle:public-forms'])->name('summons.reply.store');
+Route::post('/summons/reply/{rsvp}/pay', [PasswordlessRsvpController::class, 'paySigned'])->whereNumber('rsvp')->middleware(['signed', 'throttle:public-forms'])->name('summons.reply.pay');
 
 // Signature requests: no login, the emailed link's token is the credential.
 Route::get('/sign/{token}', [SignatureController::class, 'show'])->name('sign.show')->middleware('throttle:auth-forms');

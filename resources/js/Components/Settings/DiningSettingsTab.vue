@@ -17,8 +17,14 @@ defineProps({
         </template>
 
         <div class="space-y-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <Input v-model.number="form.dining_rsvp_cutoff_hours" type="number" min="0" max="168" label="Catering RSVP cutoff (hours before)" hint="Locks meal selections for kitchen headcount preparation." />
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Meeting replies</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Sent automatically at 9am, by email and to the app. Members can change their reply up to the meeting, but once the numbers have gone to the Secretary they can only drop dining, not add it.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <Input v-model.number="form.meeting_ask_days" type="number" min="1" max="30" label="Ask for replies (days before)" :error="form.errors.meeting_ask_days" hint="To members who have not replied yet." />
+              <Input v-model.number="form.meeting_deadline_days" type="number" min="1" max="14" label="Dining numbers (days before)" :error="form.errors.meeting_deadline_days" hint="Dining replies close at midnight before; a last call goes that morning." />
+              <Input v-model.number="form.meeting_confirm_days" type="number" min="0" max="7" label="Reminder to confirm (days before)" :error="form.errors.meeting_confirm_days" hint="To everyone coming, with a link to change their reply or pay." />
+            </div>
           </div>
 
           <div class="space-y-3">

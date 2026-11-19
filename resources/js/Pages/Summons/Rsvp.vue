@@ -1,7 +1,8 @@
 <script setup>
+import { ref } from 'vue';
 import { useClipboard } from '@/Composables/useClipboard';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Badge from '@/Components/Ui/Badge.vue';
@@ -9,7 +10,11 @@ import Button from '@/Components/Ui/Button.vue';
 import Input from '@/Components/Ui/Input.vue';
 
 const props = defineProps({
-  token: String,
+  submitUrl: { type: String, required: true },
+  payUrl: { type: String, required: true },
+  answer: { type: String, default: null },
+  owed: { type: String, default: null },
+  canPayByCard: Boolean,
   club: Object,
   user: Object,
   meeting: Object,
@@ -19,8 +24,14 @@ const props = defineProps({
   visitorHomeClub: String,
 });
 
+// After the dining deadline dining can be dropped but not added, so it stays open only to someone already dining.
+const wasDining = props.rsvp.attendance_status === 'attending_dining';
+const diningLocked = props.isCutoffPassed && !wasDining;
+const saved = props.rsvp.attendance_status !== 'pending' ? props.rsvp.attendance_status : null;
+const picked = props.answer && !(diningLocked && props.answer === 'attending_dining') ? props.answer : null;
+
 const form = useForm({
-  attendance_status: props.rsvp.attendance_status !== 'pending' ? props.rsvp.attendance_status : 'attending_dining',
+  attendance_status: picked ?? saved ?? (diningLocked ? 'attending_meeting_only' : 'attending_dining'),
   apology_reason: props.rsvp.apology_reason || '',
   dietary_requirements: props.rsvp.dietary_requirements || '',
   guests: props.rsvp.guests || [],
@@ -41,8 +52,12 @@ const removeGuest = (index) => {
 };
 
 const submit = () => {
-  form.post(route('summons.rsvp.store', { token: props.token }));
+  form.post(props.submitUrl, { preserveScroll: true });
 };
+
+const paying = ref(false);
+const payByCard = () => router.post(props.payUrl, {}, { onStart: () => { paying.value = true; }, onFinish: () => { paying.value = false; } });
+const paymentOutcome = new URLSearchParams(window.location.search).get('payment');
 
 const { copied: refCopied, copy } = useClipboard();
 const copyBankRef = () => copy(props.rsvp.payment_reference || `SUMMONS-${props.meeting.id}-${props.user.name.split(' ').pop().toUpperCase()}`);
@@ -95,18 +110,29 @@ const showsPayment = () => form.attendance_status === 'attending_dining' || form
           </div>
         </dl>
 
-        <Alert v-if="isCutoffPassed" variant="warning" title="Dining cut-off passed">
-          The deadline for festive board catering has passed. Please contact the Secretary directly for last-minute changes.
+        <Alert v-if="paymentOutcome === 'success'" variant="success" title="Thank you">Your card payment has gone through. It can take a minute to show as paid.</Alert>
+        <Alert v-else-if="paymentOutcome === 'cancelled'" variant="info">The card payment was cancelled, and nothing was taken.</Alert>
+
+        <Alert v-if="isCutoffPassed" variant="warning" title="Dining numbers have gone to the caterer">
+          You can still change your reply, or drop dining, but not add dining here. To dine now, please ask the Secretary.
         </Alert>
 
+        <!-- Dining still to pay -->
+        <div v-if="owed" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
+          <span class="text-amber-900 dark:text-amber-200">Dining still to pay: <strong>{{ owed }}</strong></span>
+          <Button v-if="canPayByCard" size="sm" :loading="paying" @click="payByCard">Pay by card</Button>
+        </div>
+        <Badge v-else-if="rsvp.payment_status === 'paid'" variant="success">Dining paid</Badge>
+        <Alert v-if="$page.props.errors?.payment" variant="danger" role="alert">{{ $page.props.errors.payment }}</Alert>
+
         <!-- RSVP form -->
-        <form v-else class="space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
           <Alert v-if="form.errors.cutoff || form.errors.token" variant="danger" role="alert">{{ form.errors.cutoff || form.errors.token }}</Alert>
 
           <fieldset class="space-y-2">
             <legend class="mb-2 block text-xs font-medium text-slate-700 dark:text-slate-300">Your attendance</legend>
 
-            <label :class="tileClass('attending_dining')">
+            <label v-if="!diningLocked" :class="tileClass('attending_dining')">
               <input v-model="form.attendance_status" type="radio" value="attending_dining" class="sr-only" />
               <span class="text-sm">
                 <span class="block font-medium">Attending meeting and dining</span>
@@ -146,7 +172,7 @@ const showsPayment = () => form.attendance_status === 'attending_dining' || form
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <h3 class="text-xs font-medium text-slate-700 dark:text-slate-300">Visiting brethren or guests</h3>
-                <Button variant="secondary" size="sm" @click="addGuest">Add a guest</Button>
+                <Button v-if="!isCutoffPassed" variant="secondary" size="sm" @click="addGuest">Add a guest</Button>
               </div>
 
               <div v-for="(g, idx) in form.guests" :key="idx" class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">

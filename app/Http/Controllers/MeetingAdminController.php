@@ -12,6 +12,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\RecurringRule;
 use App\Models\User;
+use App\Services\Meetings\MeetingReplies;
 use App\Support\ImageDownscaler;
 use App\Support\OfficersYear;
 use Illuminate\Http\JsonResponse;
@@ -192,7 +193,7 @@ class MeetingAdminController extends Controller
         unset($validated['front_page_logo_file']);
 
         $validated['club_id'] = $club->id;
-        $validated['rsvp_cutoff_at'] = Carbon::parse($validated['meeting_date'])->subDays(5)->endOfDay();
+        $validated['rsvp_cutoff_at'] = MeetingReplies::defaultCutoff($club, $validated['meeting_date']);
 
         $agendaData = $validated['agenda_items'] ?? [];
         unset($validated['agenda_items']);
@@ -251,7 +252,7 @@ class MeetingAdminController extends Controller
 
         // Calculate awaiting RSVPs strictly for subscribing members (0 until invites dispatched)
         $awaitingSubscribingMembers = ($meeting->status === 'published')
-            ? max(0, $subscribingMembers->count() - $memberRsvps->count())
+            ? max(0, $subscribingMembers->count() - $memberRsvps->whereIn('attendance_status', MeetingReplies::ANSWERS)->count())
             : 0;
 
         // Caterer & Guest headcount calculations
@@ -315,9 +316,24 @@ class MeetingAdminController extends Controller
             'rank' => $u->pivot->rank ?? '',
         ])->values();
 
+        $days = MeetingReplies::days($club);
+        $numbers = app(MeetingReplies::class)->numbers($meeting);
+        $local = fn ($moment) => $moment?->setTimezone($club->timezone())->format('j M Y, H:i');
+        $replySchedule = [
+            'steps' => [
+                ['label' => 'Ask members who have not replied', 'due' => $meeting->meeting_date->copy()->subDays($days['ask'])->format('j M Y'), 'sent' => $local($meeting->replies_requested_at)],
+                ['label' => 'Last call for dining', 'due' => $meeting->rsvp_cutoff_at?->format('j M Y'), 'sent' => $local($meeting->last_call_sent_at)],
+                ['label' => 'Dining numbers to the Secretary', 'due' => $meeting->rsvp_cutoff_at?->copy()->addDay()->format('j M Y'), 'sent' => $local($meeting->numbers_sent_at)],
+                ['label' => 'Reminder to those coming', 'due' => $meeting->meeting_date->copy()->subDays($days['confirm'])->format('j M Y'), 'sent' => $local($meeting->confirmations_sent_at)],
+            ],
+            'unpaid_heads' => $numbers['unpaid_heads'],
+            'outstanding' => $numbers['outstanding'],
+        ];
+
         return Inertia::render('Admin/Meetings/Dashboard', [
             'club' => $club,
             'meeting' => $meeting,
+            'replySchedule' => $replySchedule,
             'rsvps' => $rsvps,
             'visitorsList' => $visitorsList,
             'allClubUsers' => $allClubUsers,
@@ -355,6 +371,10 @@ class MeetingAdminController extends Controller
 
         $newMeeting = $original->replicate([
             'summons_published_at',
+            'replies_requested_at',
+            'last_call_sent_at',
+            'numbers_sent_at',
+            'confirmations_sent_at',
             'created_at',
             'updated_at',
         ]);
@@ -362,7 +382,7 @@ class MeetingAdminController extends Controller
         $newMeeting->title = $original->title ? ($original->title.' (Copy)') : ('Meeting Copy - '.Carbon::parse($original->meeting_date)->format('jS F Y'));
         $newMeeting->status = 'draft';
         $newMeeting->meeting_date = Carbon::parse($original->meeting_date)->addMonth()->format('Y-m-d');
-        $newMeeting->rsvp_cutoff_at = Carbon::parse($newMeeting->meeting_date)->subDays(5)->endOfDay();
+        $newMeeting->rsvp_cutoff_at = MeetingReplies::defaultCutoff($club, $newMeeting->meeting_date);
         $newMeeting->save();
 
         // Duplicate Agenda Items

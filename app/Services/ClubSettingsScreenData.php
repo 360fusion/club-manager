@@ -137,6 +137,9 @@ class ClubSettingsScreenData
 
             // Dining & Catering
             'dining_rsvp_cutoff_hours' => 48,
+            'meeting_ask_days' => 7,
+            'meeting_deadline_days' => 3,
+            'meeting_confirm_days' => 1,
             'require_dietary_allergens' => true,
             'allow_guest_meals' => true,
 

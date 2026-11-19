@@ -1,7 +1,8 @@
 <script setup>
-import { formatLocal } from '@/Utils/localDateTime';
+import { formatEventTime } from '@/Utils/localDateTime';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
 import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -10,7 +11,7 @@ import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
 import StatCard from '@/Components/Ui/StatCard.vue';
 
-defineProps({
+const props = defineProps({
   club: { type: Object, required: true },
   meeting: { type: Object, required: true },
   members: { type: Array, default: () => [] },
@@ -19,10 +20,19 @@ defineProps({
   worshipfulMaster: { type: Object, default: null },
   memberRole: { type: String, default: 'member' },
   isCutoffPassed: { type: Boolean, default: false },
+  owed: { type: String, default: null },
+  canPayByCard: { type: Boolean, default: false },
   charityGrants: { type: Array, default: () => [] },
 });
 
 const showRsvpModal = ref(false);
+
+const paying = ref(false);
+const payByCard = () => router.post(route('member.meetings.pay', { slug: props.club.slug, id: props.meeting.id }), {}, {
+  onStart: () => { paying.value = true; },
+  onFinish: () => { paying.value = false; },
+});
+const paymentOutcome = new URLSearchParams(window.location.search).get('payment');
 
 const openRsvpModal = () => {
   showRsvpModal.value = true;
@@ -186,7 +196,16 @@ const linkButtonClass = 'inline-flex items-center justify-center rounded-xl bord
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard label="Member dining fee" :value="$money(meeting.dining_cost_member)" />
             <StatCard label="Guest dining fee" :value="$money(meeting.dining_cost_guest)" />
-            <StatCard label="Dining cut-off" :value="meeting.rsvp_cutoff_at ? formatLocal(meeting.rsvp_cutoff_at) : '5 days before the meeting'" />
+            <StatCard label="Dining replies close" :value="meeting.rsvp_cutoff_at ? formatEventTime(meeting.rsvp_cutoff_at) : 'Not set'" />
+          </div>
+
+          <Alert v-if="paymentOutcome === 'success'" variant="success" title="Thank you">Your card payment has gone through. It can take a minute to show as paid.</Alert>
+          <Alert v-else-if="paymentOutcome === 'cancelled'" variant="info">The card payment was cancelled, and nothing was taken.</Alert>
+          <Alert v-if="isCutoffPassed" variant="warning">Dining numbers have gone to the caterer. You can still change your reply or drop dining, but to add dining please ask the Secretary.</Alert>
+          <Alert v-if="$page.props.errors?.payment" variant="danger" role="alert">{{ $page.props.errors.payment }}</Alert>
+          <div v-if="owed" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
+            <span class="text-amber-900 dark:text-amber-200">Dining still to pay: <strong>{{ owed }}</strong></span>
+            <Button v-if="canPayByCard" size="sm" :loading="paying" @click="payByCard">Pay by card</Button>
           </div>
 
           <!-- Bank details and payment reference -->

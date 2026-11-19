@@ -23,6 +23,7 @@ const props = defineProps({
   visitorsList: Array,
   allClubUsers: Array,
   stats: Object,
+  replySchedule: { type: Object, default: null },
 });
 
 const activeTab = ref('all');
@@ -207,6 +208,19 @@ const isPastMeeting = computed(() => {
         <StatCard label="Visitors attending" :value="stats.visiting_attending" caption="Visiting brethren and guests" />
         <StatCard label="Awaiting RSVP" :value="stats.awaiting" :caption="meeting.status === 'published' ? 'Emailed members pending' : 'Invites not sent yet'" />
       </div>
+
+      <Card v-if="replySchedule && meeting.status === 'published'">
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Replies and reminders</h2>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Sent automatically from 9am. The days are set under Settings, Dining.</p>
+        <ul class="mt-3 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+          <li v-for="step in replySchedule.steps" :key="step.label" class="flex flex-wrap items-center justify-between gap-2 py-2">
+            <span class="text-slate-700 dark:text-slate-200">{{ step.label }}</span>
+            <Badge v-if="step.sent" variant="success">Sent {{ step.sent }}</Badge>
+            <span v-else-if="step.due" class="text-xs text-slate-500 dark:text-slate-400">Due {{ step.due }}</span>
+          </li>
+        </ul>
+        <p v-if="replySchedule.unpaid_heads" class="mt-3 text-sm text-amber-700 dark:text-amber-400">Dining unpaid: {{ replySchedule.unpaid_heads }} ({{ $money(replySchedule.outstanding) }})</p>
+      </Card>
 
       <Card>
         <div class="space-y-4">
