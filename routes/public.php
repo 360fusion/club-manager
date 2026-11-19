@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\TwoFactorAuthController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\ClubDomainAllowedController;
+use App\Http\Controllers\DeviceSignInController;
 use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\EventOnlinePaymentController;
 use App\Http\Controllers\EventQuoteController;
@@ -126,6 +127,8 @@ Route::get('/site/{clubSlug}/news/{postSlug}', [PublicSiteController::class, 'sh
 Route::post('/site/{clubSlug}/events/{eventSlug}/quote', [EventQuoteController::class, 'guest'])->name('public.event.quote')->middleware('throttle:public-forms');
 Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
 Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
+// Face ID or fingerprint sign-in from the iOS and Android app (DeviceSignInController).
+Route::post('/login/device', [DeviceSignInController::class, 'signIn'])->middleware(['guest', 'throttle:10,1'])->name('login.device');
 Route::post('/site/{clubSlug}/booking/{token}/pay', [EventOnlinePaymentController::class, 'guest'])->name('public.event.booking.pay')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/said-paid', [EventOnlinePaymentController::class, 'guestSaidPaid'])->name('public.event.booking.said_paid')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/booking/{token}/paypal-return', [EventOnlinePaymentController::class, 'guestPayPalReturn'])->name('public.event.booking.paypal_return')->middleware('throttle:auth-forms');

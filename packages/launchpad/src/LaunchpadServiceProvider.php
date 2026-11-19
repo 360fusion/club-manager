@@ -55,8 +55,8 @@ use Launchpad\Http\Controllers\Api\ApiDocsController;
 use Launchpad\Http\Controllers\Billing\StripeWebhookController;
 use Launchpad\Http\Controllers\LocaleController;
 use Launchpad\Http\Middleware\AuthenticateApiToken;
-use Launchpad\Http\Middleware\EnsureAccountIsOpen;
 use Launchpad\Http\Middleware\EnforceMeter;
+use Launchpad\Http\Middleware\EnsureAccountIsOpen;
 use Launchpad\Http\Middleware\EnsureEmailIsVerifiedByPolicy;
 use Launchpad\Http\Middleware\EnsureMcpAccess;
 use Launchpad\Http\Middleware\ForceJsonResponses;
@@ -64,11 +64,11 @@ use Launchpad\Http\Middleware\GuardImpersonation;
 use Launchpad\Http\Middleware\Idempotent;
 use Launchpad\Http\Middleware\PublicRoute;
 use Launchpad\Http\Middleware\ResolveWorkspace;
-use Launchpad\Http\Middleware\TeamSubdomains;
-use Launchpad\Mcp\LaunchpadServer;
 use Launchpad\Http\Middleware\SetLocale;
+use Launchpad\Http\Middleware\TeamSubdomains;
 use Launchpad\Jobs\QueueHeartbeat;
 use Launchpad\Mail\Renderer;
+use Launchpad\Mcp\LaunchpadServer;
 use Launchpad\Models\AccountEvent;
 use Launchpad\Models\ApiToken;
 use Launchpad\Models\ApiTokenUsage;
@@ -86,8 +86,8 @@ use Launchpad\Sync\Sync;
 use Launchpad\Workspaces\Ability;
 use Launchpad\Workspaces\Activity;
 use Launchpad\Workspaces\CurrentWorkspace;
-use Launchpad\Workspaces\TeamAddresses;
 use Launchpad\Workspaces\Invitations;
+use Launchpad\Workspaces\TeamAddresses;
 use Launchpad\Workspaces\Workspaces;
 use Throwable;
 
@@ -364,7 +364,12 @@ class LaunchpadServiceProvider extends ServiceProvider
     /** Each sign-in goes on the person's Activity page (not before the migration that makes its table has run) */
     private function accountEvents(): void
     {
-        Event::listen(Login::class, fn (Login $event) => ! Impersonation::active() && Schema::hasTable('account_events') && AccountEvent::record($event->user, 'signed_in'));
+        // A block, not an arrow: a listener that returns false stops every later sign-in listener from running.
+        Event::listen(Login::class, function (Login $event): void {
+            if (! Impersonation::active() && Schema::hasTable('account_events')) {
+                AccountEvent::record($event->user, 'signed_in');
+            }
+        });
     }
 
     private function workspaceEvents(): void

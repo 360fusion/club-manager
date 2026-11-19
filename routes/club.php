@@ -41,6 +41,7 @@ use App\Http\Controllers\ClubController;
 use App\Http\Controllers\ClubDirectoryController;
 use App\Http\Controllers\ClubEmailTemplateController;
 use App\Http\Controllers\ClubSettingsController;
+use App\Http\Controllers\DeviceSignInController;
 use App\Http\Controllers\EventAdminController;
 use App\Http\Controllers\EventGuestListController;
 use App\Http\Controllers\EventOnlinePaymentController;
@@ -549,6 +550,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
     Route::post('/members/push-devices', [NativeAppController::class, 'storeDevice'])->middleware('throttle:30,1')->name('members.push_devices.store');
+    Route::post('/members/sign-in-keys', [DeviceSignInController::class, 'store'])->middleware('throttle:10,1')->name('members.sign_in_keys.store');
+    Route::delete('/members/sign-in-keys/{id}', [DeviceSignInController::class, 'destroy'])->whereNumber('id')->middleware('throttle:30,1')->name('members.sign_in_keys.destroy');
     Route::delete('/members/push-devices', [NativeAppController::class, 'destroyDevice'])->middleware('throttle:30,1')->name('members.push_devices.destroy');
     Route::post('/members/push-settings', [NativeAppController::class, 'updatePushSettings'])->middleware('throttle:30,1')->name('members.push_settings.update');
     // Before /members/{slug}: "app" is a reserved club slug.

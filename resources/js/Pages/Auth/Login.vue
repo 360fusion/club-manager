@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { biometricSignIn, signInWithBiometrics } from '@/Support/nativeApp';
 import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -19,6 +20,21 @@ const form = useForm({
     password: props.demoCredentials?.password ?? '',
     remember: true,
 });
+
+// In the app, a phone that turned on Face ID or fingerprint sign-in shows a button for it (DeviceSignInController).
+const biometric = ref(null);
+const refreshBiometric = async () => {
+    const state = await biometricSignIn();
+    biometric.value = state.available && state.owner ? state : null;
+};
+onMounted(refreshBiometric);
+const biometricLabel = computed(() => (biometric.value?.kind === 'face' ? 'Sign in with Face ID' : 'Sign in with your fingerprint'));
+const biometricBusy = ref(false);
+const useBiometrics = () => {
+    biometricBusy.value = true;
+    // Afterwards the button is checked again: a key the phone or the server dropped hides it.
+    signInWithBiometrics({ onFinish: () => { biometricBusy.value = false; refreshBiometric(); } });
+};
 
 const submit = () => {
     form.post('/login', {
@@ -43,6 +59,12 @@ const submit = () => {
             </div>
 
             <Alert v-if="notice" variant="success">{{ notice }}</Alert>
+            <Alert v-if="page.props.errors?.device_key" variant="warning" role="alert">{{ page.props.errors.device_key }}</Alert>
+
+            <div v-if="biometric" class="flex flex-col gap-2">
+                <Button size="lg" block :loading="biometricBusy" @click="useBiometrics">{{ biometricLabel }}</Button>
+                <p class="text-center text-xs text-slate-500 dark:text-slate-400">As {{ biometric.owner.name }}. Or sign in with your password below.</p>
+            </div>
 
             <!-- Demo credentials, only sent on a local install -->
             <Alert v-if="demoCredentials" variant="info" title="Demo admin credentials">

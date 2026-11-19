@@ -28,5 +28,8 @@ class ResetUserPassword implements ResetsUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        // A new password signs every phone out of Face ID and fingerprint sign-in, so a lost phone stops working too.
+        $user->deviceSignInKeys()->delete();
     }
 }

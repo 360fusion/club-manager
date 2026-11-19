@@ -19,11 +19,13 @@ use App\Models\PaddleSubscriptionItem;
 use App\Support\Currencies;
 use App\Support\ReservedClubSlugs;
 use App\Support\SafeFileAdder;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -62,6 +64,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // When someone last signed in on this session: turning on Face ID sign-in soon after needs no password again.
+        Event::listen(Login::class, fn () => session()->put('auth.signed_in_at', time()));
+
         // `composer dev`'s worker runs the email and newsletter queues too (the default one only takes `default`). Not
         // `sites`: a website build refuses to run while the Vite dev server does, so start that worker by hand.
         DevCommands::artisan('queue:listen --queue=transactional,default,bulk --tries=1 --timeout=0', 'queue');

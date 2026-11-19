@@ -8,6 +8,7 @@ import ClubSwitcher from '@/Components/ClubSwitcher.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import { navMode } from '@/Utils/navMode';
 import AppTabBar from '@/Components/AppTabBar.vue';
+import BiometricSignInOffer from '@/Components/BiometricSignInOffer.vue';
 import { isNativeApp } from '@/Support/nativeApp';
 
 const props = defineProps({
@@ -172,4 +173,5 @@ provide('layoutHasHeading', !props.ownHeading);
     </div>
 
     <AppTabBar :club="club" :active-tab="activeTab" :class="isNativeApp ? '' : 'md:hidden'" />
+    <BiometricSignInOffer v-if="isNativeApp" />
 </template>

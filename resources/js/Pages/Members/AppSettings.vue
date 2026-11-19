@@ -1,9 +1,11 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
-import { appLockOn, appLockSupport, setAppLock } from '@/Support/nativeApp';
+import Input from '@/Components/Ui/Input.vue';
+import Button from '@/Components/Ui/Button.vue';
+import { appLockOn, appLockSupport, biometricSignIn, setAppLock, turnOffBiometricSignIn, turnOnBiometricSignIn } from '@/Support/nativeApp';
 
 const props = defineProps({
     pushMuted: { type: Array, default: () => [] },
@@ -29,6 +31,39 @@ const lockError = ref('');
 onMounted(async () => {
     lockSupport.value = await appLockSupport();
 });
+// Face ID / fingerprint sign-in: the key is on this phone, so its state is read from the phone too.
+const user = usePage().props.auth?.user;
+const signIn = ref(null);
+const signInPassword = ref('');
+const signInNeedsPassword = ref(false);
+const signInError = ref('');
+const signInBusy = ref(false);
+const refreshSignIn = async () => {
+    signIn.value = await biometricSignIn();
+};
+onMounted(refreshSignIn);
+const signInOn = () => signIn.value?.owner?.id === user?.id;
+const signInName = () => (signIn.value?.kind === 'face' ? 'Face ID' : 'fingerprint');
+const toggleSignIn = async (on) => {
+    signInError.value = '';
+    signInBusy.value = true;
+    try {
+        if (on) {
+            await turnOnBiometricSignIn(user, signInNeedsPassword.value ? signInPassword.value : null);
+            signInNeedsPassword.value = false;
+            signInPassword.value = '';
+        } else {
+            await turnOffBiometricSignIn(user);
+        }
+    } catch (errors) {
+        signInNeedsPassword.value = Boolean(errors?.password);
+        signInError.value = errors?.password ?? errors?.key ?? 'That did not work.';
+    } finally {
+        signInBusy.value = false;
+        await refreshSignIn();
+    }
+};
+
 const toggleLock = async (on) => {
     lockError.value = '';
     try {
@@ -55,6 +90,20 @@ const toggleLock = async (on) => {
                         {{ kind.label }}
                     </label>
                 </div>
+            </Card>
+
+            <Card v-if="signIn?.available">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Sign in with {{ signInName() }}</h3>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Sign back in with your {{ signInName() === 'Face ID' ? 'face' : 'fingerprint' }} instead of your password. It stops working if you change your password or add a new face or fingerprint to this phone.</p>
+                <label class="mt-3 flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-200">
+                    <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600" :checked="signInOn()" :disabled="signInBusy" @change="toggleSignIn($event.target.checked)" />
+                    Sign in with {{ signInName() }} on this phone
+                </label>
+                <form v-if="signInNeedsPassword" class="mt-3 flex items-end gap-2" @submit.prevent="toggleSignIn(true)">
+                    <Input v-model="signInPassword" type="password" label="Your password" autocomplete="current-password" class="flex-1" />
+                    <Button type="submit" :loading="signInBusy">Turn on</Button>
+                </form>
+                <p v-if="signInError" class="mt-2 text-xs text-rose-700 dark:text-rose-400" role="alert">{{ signInError }}</p>
             </Card>
 
             <Card v-if="lockSupport?.available">

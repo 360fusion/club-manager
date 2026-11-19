@@ -81,6 +81,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PushDevice::class);
     }
 
+    /** @return HasMany<DeviceSignInKey, $this> */
+    public function deviceSignInKeys(): HasMany
+    {
+        return $this->hasMany(DeviceSignInKey::class);
+    }
+
     /**
      * The provinces whose lodge listings this user looks after (see Province::admins).
      *
