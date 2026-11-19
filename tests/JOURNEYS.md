@@ -77,5 +77,23 @@ options and `EVENTS_ONLINE_PAYMENTS=true`.
 | D4 sign out removes this phone's push registration | Pass |
 | Header | Fixed: the Admin button overlapped the lodge name |
 
-Not run on screen: Android (the emulator was in use by another session), a real Stripe or PayPal payment, the
-camera scanning a ticket on a second device (the QR was decoded from a screenshot instead).
+Not run on screen: a real Stripe or PayPal payment, the camera scanning a ticket on a second device (the QR was
+decoded from a screenshot instead).
+
+### 19 Nov 2026, Android 15 emulator (WebView 124), local dev server
+
+Run headless and read-only (`emulator -read-only -no-window`), so nothing is saved to the image. The headless
+emulator's own screen stops redrawing parts of the page; screenshots came from the web view through its debugger.
+
+| Step | Result |
+|---|---|
+| A1 sign in, tabs | Pass after fix: the status bar stayed white with dark icons above the navy bar |
+| Bookings tab | Fixed: a booked dinner still offered "Can't go / Choose options"; it now says Booked, View booking |
+| Events page, dashboard | Fixed: "Checked in at 2026-11-19T12:30:46+00:00" shown raw; now "Checked in 19 Nov 2026, 12:30" |
+| A5 Add to calendar | Pass: opens the Google Calendar app (no Google account on the emulator, so not saved) |
+| A8 ticket QR, names, checked in | Pass |
+| B5 + D5 `clubmanager://` link to the signed door page | Pass; a changed link answers 403 |
+| B7 Member area link from admin | Pass |
+| D1 switch off News | Pass (saved on the server) |
+| D2 fingerprint lock: on, locked at launch, unknown finger stays locked, right finger unlocks, open again within a minute, locked after 65 s | Pass after fix: signing in with a password then also asked for a fingerprint |
+| D4 log out | Pass (push is not registered on Android locally, as there is no google-services.json) |

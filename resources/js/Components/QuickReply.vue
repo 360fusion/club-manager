@@ -32,7 +32,10 @@ const reply = (status) => {
     );
 };
 
-const options = () => OPTIONS[props.item.type].filter((option) => props.item.type === 'meeting' || props.item.simple || option.value === 'declined');
+// An event with tickets or a menu is booked on its own page; once booked, say so instead of offering a fresh reply.
+const booked = () => props.item.type === 'event' && !props.item.simple && ['attending', 'tentative'].includes(props.item.reply);
+
+const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) => props.item.type === 'meeting' || props.item.simple || option.value === 'declined'));
 </script>
 
 <template>
@@ -49,8 +52,9 @@ const options = () => OPTIONS[props.item.type].filter((option) => props.item.typ
         >
             {{ option.label }}
         </Button>
-        <Link v-if="item.type === 'event' && !item.simple && !item.closed" :href="route('member.events', { slug: item.slug })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
-            Choose options
+        <span v-if="booked()" class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Booked</span>
+        <Link v-if="item.type === 'event' && !item.simple && (booked() || !item.closed)" :href="route('member.events', { slug: item.slug })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
+            {{ booked() ? 'View booking' : 'Choose options' }}
         </Link>
         <span v-if="item.closed" class="text-xs text-slate-500 dark:text-slate-400">Replies closed</span>
     </div>

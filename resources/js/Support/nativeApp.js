@@ -109,7 +109,9 @@ async function unlock() {
 function startAppLock(App) {
     let leftAt = null;
 
-    if (appLockOn()) lock();
+    // Arriving straight from the sign-in form, the password was just typed: that counts as unlocking.
+    const justSignedIn = /\/(login|two-factor-challenge)$/.test(document.referrer.split('?')[0]);
+    if (appLockOn() && !justSignedIn) lock();
 
     App.addListener('appStateChange', ({ isActive }) => {
         if (!appLockOn() || locked) return;
@@ -135,6 +137,11 @@ export async function startNativeApp(firstPage) {
     if (!isNativeApp || started) return;
     started = true;
     document.documentElement.classList.add('native-app');
+
+    // The clock and battery sit on the navy strip, so they are drawn light (iOS does this itself).
+    if (isAndroidApp) {
+        import('@capacitor/core').then(({ SystemBars }) => SystemBars.setStyle({ style: 'DARK', bar: 'StatusBar' })).catch(() => {});
+    }
 
     const [{ App }, { PushNotifications }] = await Promise.all([import('@capacitor/app'), import('@capacitor/push-notifications')]);
 

@@ -1,5 +1,6 @@
 <script setup>
 import { formatMeetingDate } from '@/Utils/lodgeDates';
+import { formatLocal } from '@/Utils/localDateTime';
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { formatMoney } from '@/Utils/currency';
@@ -169,7 +170,7 @@ const filterClass = (isActive) => [
               <div class="space-y-1.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <Badge v-if="event.user_rsvp?.checked_in_at" variant="success">
-                    <UiIcon name="check" /> Checked in at {{ event.user_rsvp.checked_in_at }}
+                    <UiIcon name="check" /> Checked in {{ formatLocal(event.user_rsvp.checked_in_at) }}
                   </Badge>
                   <Badge v-else-if="event.user_rsvp?.attendance_status === 'attending'" variant="success">
                     <UiIcon name="check" /> RSVP confirmed

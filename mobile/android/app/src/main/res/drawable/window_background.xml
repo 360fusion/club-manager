@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shows only where the web view leaves a gap: behind the status bar on WebViews older than 140, which Capacitor
+     pads instead of drawing under the bar. Navy at the top to match the app's top bar, white below for the gesture bar. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" />
+    <item android:gravity="top" android:height="96dp">
+        <color android:color="#17264d" />
+    </item>
+</layer-list>

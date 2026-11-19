@@ -1,5 +1,6 @@
 <script setup>
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
+import { formatLocal } from '@/Utils/localDateTime';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
@@ -160,7 +161,7 @@ const openMeetingRsvpModal = (meeting) => {
                 <div class="space-y-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <Badge v-if="event.user_rsvp?.checked_in_at" variant="success">
-                      <UiIcon name="check" /> Checked in at {{ event.user_rsvp.checked_in_at }}
+                      <UiIcon name="check" /> Checked in {{ formatLocal(event.user_rsvp.checked_in_at) }}
                     </Badge>
                     <Badge v-else-if="event.user_rsvp?.attendance_status === 'attending'" variant="success">
                       <UiIcon name="check" /> RSVP confirmed
