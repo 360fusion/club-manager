@@ -56,3 +56,26 @@ On one phone or simulator at a time (this Mac runs short of memory with two), si
 in this order: A1, A2, A4, A5, A8, then as an organiser B2, B5 (scan the ticket on a second screen, or open its door
 link), B7, then D1, D2, D5 and D4. Take a screenshot at each step. D3 needs Stripe test keys in the lodge's payment
 options and `EVENTS_ONLINE_PAYMENTS=true`.
+
+## Run log
+
+### 19 Nov 2026, iPhone 17 simulator (iOS 27), local dev server
+
+| Step | Result |
+|---|---|
+| A1 sign in, tabs, navy strip | Pass |
+| A4 book self and a guest (£70 total, bank reference shown) | Pass after fix: the page stayed zoomed in after typing |
+| A5 Add to calendar | Pass after fix: an .ics address opened a calendar subscription instead of one event |
+| A7 push "Tomorrow: …" with icon badge; tap opens the ticket | Pass |
+| A8 ticket QR (decoded: the signed door link for that booking) | Pass |
+| B5 door page from the scanned link; Check in everyone (2) | Pass |
+| A9 the member's ticket then shows Checked in | Pass |
+| B7 Member area link from admin | Pass |
+| D1 switch off News (saved on the server) | Pass |
+| D2 Face ID lock: on, locked at launch, wrong face stays locked, right face unlocks | Pass after two fixes: the lock never appeared, and a failed Face ID left it unlocked |
+| D3 return from payment opens the app on the events page | Pass (return page only; no Stripe test keys) |
+| D4 sign out removes this phone's push registration | Pass |
+| Header | Fixed: the Admin button overlapped the lodge name |
+
+Not run on screen: Android (the emulator was in use by another session), a real Stripe or PayPal payment, the
+camera scanning a ticket on a second device (the QR was decoded from a screenshot instead).
