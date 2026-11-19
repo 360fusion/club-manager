@@ -37,9 +37,16 @@ async function saveToken(token) {
 const LOCK_SETTING = 'cm-app-lock';
 const LOCK_AFTER_MS = 60_000;
 
+let appLockPlugin = null;
+
+// Handed back inside an object: Capacitor's plugin proxy answers every property, `then` too, so awaiting the plugin
+// itself would wait forever.
 async function lockPlugin() {
-    const { registerPlugin } = await import('@capacitor/core');
-    return registerPlugin('AppLock');
+    if (!appLockPlugin) {
+        const { registerPlugin } = await import('@capacitor/core');
+        appLockPlugin = registerPlugin('AppLock');
+    }
+    return { AppLock: appLockPlugin };
 }
 
 export function appLockOn() {
@@ -53,12 +60,12 @@ export function appLockOn() {
 /** Whether this phone can lock the app, and with what ("face", "fingerprint" or "passcode"). */
 export async function appLockSupport() {
     if (!isNativeApp) return { available: false };
-    return (await lockPlugin()).isAvailable().catch(() => ({ available: false }));
+    return (await lockPlugin()).AppLock.isAvailable().catch(() => ({ available: false }));
 }
 
 /** Turning it on asks once, so nobody locks themselves out with a face or finger the phone doesn't know. */
 export async function setAppLock(on) {
-    if (on) await (await lockPlugin()).authenticate({ reason: 'Turn on the app lock' });
+    if (on) await (await lockPlugin()).AppLock.authenticate({ reason: 'Turn on the app lock' });
     try {
         on ? localStorage.setItem(LOCK_SETTING, '1') : localStorage.removeItem(LOCK_SETTING);
     } catch {
@@ -79,9 +86,20 @@ function cover() {
     return el;
 }
 
+// Only a passed check unlocks. Showing the Face ID prompt itself sends the app inactive and back, so the
+// "back within a minute" rule below must never lift a lock that is waiting on it.
+let locked = false;
+
+function lock() {
+    locked = true;
+    cover();
+    unlock();
+}
+
 async function unlock() {
     try {
-        await (await lockPlugin()).authenticate({ reason: 'Unlock Club Manager' });
+        await (await lockPlugin()).AppLock.authenticate({ reason: 'Unlock Club Manager' });
+        locked = false;
         document.getElementById('app-lock')?.remove();
     } catch {
         // Still locked: the button asks again.
@@ -91,13 +109,10 @@ async function unlock() {
 function startAppLock(App) {
     let leftAt = null;
 
-    if (appLockOn()) {
-        cover();
-        unlock();
-    }
+    if (appLockOn()) lock();
 
     App.addListener('appStateChange', ({ isActive }) => {
-        if (!appLockOn()) return;
+        if (!appLockOn() || locked) return;
         if (!isActive) {
             // Covered straight away, so the app switcher's snapshot shows nothing private.
             leftAt = Date.now();
@@ -105,7 +120,7 @@ function startAppLock(App) {
             return;
         }
         if (leftAt && Date.now() - leftAt > LOCK_AFTER_MS) {
-            unlock();
+            lock();
         } else {
             document.getElementById('app-lock')?.remove();
         }

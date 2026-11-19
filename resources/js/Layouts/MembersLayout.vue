@@ -126,7 +126,7 @@ provide('layoutHasHeading', true);
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <Link v-if="isStaff" :href="adminHome" :class="isNativeApp ? 'block' : 'hidden sm:block'" class="rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
+                        <Link v-if="isStaff" :href="adminHome" class="hidden rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
                         <NotificationBell tone="onDark" />
                         <AccountMenu tone="onDark" />
                     </div>

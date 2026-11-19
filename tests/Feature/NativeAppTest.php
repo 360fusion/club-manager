@@ -230,6 +230,12 @@ class NativeAppTest extends TestCase
         Queue::assertPushed(SendPushNotification::class, 1);
     }
 
+    public function test_the_app_stops_ios_zooming_into_text_boxes_but_the_website_still_lets_people_zoom(): void
+    {
+        $this->withHeaders(['User-Agent' => 'Mozilla/5.0 (iPhone) ClubManagerApp'])->get('/login')->assertSee('viewport-fit=cover, maximum-scale=1', false);
+        $this->flushHeaders()->get('/login')->assertSee('viewport-fit=cover">', false)->assertDontSee('maximum-scale', false);
+    }
+
     public function test_the_app_settings_page_shows_which_alerts_are_off(): void
     {
         $user = User::factory()->create(['push_muted' => ['news']]);

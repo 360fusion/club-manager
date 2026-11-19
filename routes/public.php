@@ -103,7 +103,8 @@ Route::get('/lodges/{slug}', [LodgeDirectoryController::class, 'show'])->middlew
 // The iOS and Android app's way back in after paying in the phone's browser.
 Route::get('/app/return', [NativeAppController::class, 'return'])->middleware('throttle:60,1')->name('app.return');
 // "Add to calendar" for one event: signed and short-lived, because the phone's browser opens it without the app's sign-in.
-Route::get('/calendar/events/{event}.ics', [EventCalendarController::class, 'show'])->whereNumber('event')->middleware(['signed', 'throttle:60,1'])->name('events.calendar');
+// No .ics ending: iOS hands an .ics link to Calendar as a subscription, while this one opens as a single event.
+Route::get('/calendar/events/{event}', [EventCalendarController::class, 'show'])->whereNumber('event')->middleware(['signed', 'throttle:60,1'])->name('events.calendar');
 Route::get('/site/newsletter/{token}', [NewsletterPublicController::class, 'view'])->middleware('throttle:60,1')->name('newsletters.view');
 Route::get('/site/oxford-boating', function () {
     $activeSlug = Club::first()?->slug ?? 'lodge-of-fraternity';
