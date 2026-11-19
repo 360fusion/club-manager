@@ -75,11 +75,12 @@ class MemberLodgePageTest extends TestCase
             ]);
     }
 
-    public function test_a_treasurer_only_gets_the_event_tools_and_no_links_to_missing_events(): void
+    public function test_a_treasurer_gets_the_event_tools_and_the_accounts_and_no_links_to_missing_events(): void
     {
         $this->lodgePage($this->person(ClubRole::Treasurer, LodgeOffice::Treasurer))
             ->where('organiserTools.links', [
                 ['key' => 'add_booking', 'label' => 'Add booking', 'href' => route('admin.events.index', ['clubSlug' => $this->club->slug])],
+                ['key' => 'accounts', 'label' => 'Accounts', 'href' => route('member.accounts', ['slug' => $this->club->slug])],
             ]);
     }
 

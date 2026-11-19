@@ -399,6 +399,25 @@ class Member extends Model
     }
 
     /**
+     * Whether this user holds one of these offices in the lodge (roster or member record), whatever their login role.
+     *
+     * @param  list<LodgeOffice>  $offices
+     */
+    public static function userHoldsOffice(Club $club, ?User $user, array $offices): bool
+    {
+        $member = $user ? self::where('club_id', $club->id)->where('user_id', $user->id)->active()->first() : null;
+        if (! $member) {
+            return false;
+        }
+
+        self::loadActiveOffices([$member]);
+
+        return collect($member->active_offices)
+            ->map(fn ($office) => $office instanceof LodgeOffice ? $office : LodgeOffice::tryFrom((string) $office))
+            ->contains(fn (?LodgeOffice $office) => in_array($office, $offices, true));
+    }
+
+    /**
      * The lodge's officers as its own records have them (the confirmed roster, else each member's office), in the
      * order a summons lists them, leaving out plain members and committee members.
      *

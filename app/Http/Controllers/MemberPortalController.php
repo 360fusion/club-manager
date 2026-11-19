@@ -15,6 +15,7 @@ use App\Models\Page;
 use App\Models\Post;
 use App\Models\User;
 use App\Services\Events\EventPayload;
+use App\Services\LodgeAccountsOverview;
 use App\Services\Meetings\MeetingCollections;
 use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
@@ -185,6 +186,10 @@ class MemberPortalController extends Controller
 
         if (ClubAccess::can($user, $club, 'manage_events')) {
             $links[] = ['key' => 'add_booking', 'label' => 'Add booking', 'href' => route('admin.events.index', ['clubSlug' => $club->slug])];
+        }
+
+        if (LodgeAccountsOverview::canView($user, $club)) {
+            $links[] = ['key' => 'accounts', 'label' => 'Accounts', 'href' => route('member.accounts', ['slug' => $club->slug])];
         }
 
         if (ClubAccess::can($user, $club, 'send_newsletters')) {

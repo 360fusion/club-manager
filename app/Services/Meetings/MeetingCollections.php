@@ -50,15 +50,7 @@ class MeetingCollections
             return true;
         }
 
-        $member = $user ? Member::where('club_id', $club->id)->where('user_id', $user->id)->active()->first() : null;
-        if (! $member) {
-            return false;
-        }
-
-        Member::loadActiveOffices([$member]);
-        $offices = collect($member->active_offices)->map(fn ($office) => $office instanceof LodgeOffice ? $office : LodgeOffice::tryFrom((string) $office));
-
-        return $offices->contains(fn (?LodgeOffice $office) => in_array($office, self::OFFICES, true));
+        return Member::userHoldsOffice($club, $user, self::OFFICES);
     }
 
     /**
