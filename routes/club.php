@@ -48,6 +48,7 @@ use App\Http\Controllers\EventOrganiserBookingController;
 use App\Http\Controllers\EventPaymentController;
 use App\Http\Controllers\EventQuoteController;
 use App\Http\Controllers\EventRegistrationAdminController;
+use App\Http\Controllers\EventTicketController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LodgeClaimController;
 use App\Http\Controllers\LodgeCorrectionController;
@@ -543,6 +544,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/{slug}/events/{id}/quote', [EventQuoteController::class, 'member'])->name('member.events.quote');
     Route::post('/members/{slug}/events/{id}/quick-rsvp', [QuickRsvpController::class, 'event'])->name('member.events.quick_rsvp');
     Route::get('/members/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');
+    Route::get('/members/{slug}/events/{id}/ticket', [EventTicketController::class, 'show'])->name('member.events.ticket');
     Route::get('/members/{slug}/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
     Route::get('/members/{slug}/dues', [MemberProfileController::class, 'dues'])->name('member.dues');
     Route::get('/members/{slug}/profile', [MemberProfileController::class, 'profile'])->name('member.profile');
@@ -563,6 +565,8 @@ Route::middleware(['auth'])->group(function () {
     // Admin Attendance Check-In Routes
     Route::get('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
     Route::post('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
+    // Opened by scanning a member's ticket; the signature shows the link came from a real ticket.
+    Route::get('/{clubSlug}/admin/events/{id}/ticket/{registration}', [EventTicketController::class, 'door'])->name('admin.events.ticket')->middleware('signed');
     Route::get('/{clubSlug}/admin/email-templates', [ClubEmailTemplateController::class, 'index'])->name('admin.email_templates.index');
     Route::put('/{clubSlug}/admin/email-templates/{key}', [ClubEmailTemplateController::class, 'update'])->name('admin.email_templates.update');
     Route::delete('/{clubSlug}/admin/email-templates/{key}', [ClubEmailTemplateController::class, 'destroy'])->name('admin.email_templates.destroy');

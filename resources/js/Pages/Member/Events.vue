@@ -192,16 +192,24 @@ const filterClass = (isActive) => [
                 <p v-if="event.description" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{{ event.description }}</p>
               </div>
 
-              <Button
-                v-if="!event.is_booking_closed"
-                size="sm"
-                :variant="event.user_rsvp ? 'secondary' : 'primary'"
-                class="self-start sm:self-auto"
-                @click="openRsvpModal(event)"
-              >
-                {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
-              </Button>
-              <Badge v-else class="self-start sm:self-auto">Bookings closed</Badge>
+              <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <Button
+                  v-if="['attending', 'tentative'].includes(event.user_rsvp?.attendance_status)"
+                  size="sm"
+                  :href="route('member.events.ticket', { slug: club.slug, id: event.id })"
+                >
+                  <UiIcon name="ticket" /> Show ticket
+                </Button>
+                <Button
+                  v-if="!event.is_booking_closed"
+                  size="sm"
+                  :variant="event.user_rsvp ? 'secondary' : 'primary'"
+                  @click="openRsvpModal(event)"
+                >
+                  {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
+                </Button>
+                <Badge v-else>Bookings closed</Badge>
+              </div>
             </div>
           </Card>
         </div>

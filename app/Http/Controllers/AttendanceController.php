@@ -50,7 +50,7 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Mark one person as checked in or undo it.
+     * Mark one person, or everyone in a booking, as checked in or undo it.
      */
     public function checkIn(CheckInRequest $request, string $clubSlug, int $eventId): RedirectResponse
     {
@@ -59,11 +59,19 @@ class AttendanceController extends Controller
 
         $validated = $request->validated();
 
-        $attendee = EventAttendee::whereHas('registration', fn ($q) => $q->where('event_id', $event->id))->findOrFail($validated['attendee_id']);
+        $inEvent = EventAttendee::whereHas('registration', fn ($q) => $q->where('event_id', $event->id));
+        $attendees = isset($validated['attendee_id'])
+            ? collect([$inEvent->findOrFail($validated['attendee_id'])])
+            : $inEvent->where('registration_id', $validated['registration_id'])->get();
+        abort_if($attendees->isEmpty(), 404);
 
-        $attendee->update(['checked_in_at' => $validated['action'] === 'checkin' ? now() : null]);
+        EventAttendee::whereKey($attendees->pluck('id'))->update(['checked_in_at' => $validated['action'] === 'checkin' ? now() : null]);
 
-        return redirect()->back()->with('success', $validated['action'] === 'checkin' ? $attendee->name.' checked in.' : 'Check-in undone.');
+        if ($validated['action'] === 'undo') {
+            return redirect()->back()->with('success', 'Check-in undone.');
+        }
+
+        return redirect()->back()->with('success', $attendees->count() === 1 ? $attendees->first()->name.' checked in.' : $attendees->count().' people checked in.');
     }
 
     /**

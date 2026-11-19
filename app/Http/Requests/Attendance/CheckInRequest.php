@@ -15,9 +15,10 @@ class CheckInRequest extends ClubRequest
     public function rules(): array
     {
         return [
-            'attendee_id' => 'required|integer',
+            // One person, or everyone in a booking (a scanned ticket).
+            'attendee_id' => 'required_without:registration_id|integer',
+            'registration_id' => 'required_without:attendee_id|integer',
             'action' => 'required|in:checkin,undo',
-
         ];
     }
 }
