@@ -6,24 +6,12 @@ import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import { isNativeApp } from '@/Support/nativeApp';
 
-const props = defineProps({
+defineProps({
     notifications: { type: Object, required: true },
     unreadCount: { type: Number, default: 0 },
     filters: { type: Object, default: () => ({ category: '', unread: false }) },
-    pushMuted: { type: Array, default: () => [] },
 });
 
-// In the app: which kinds ping the phone. Payments, signatures and membership news always do (ClubNotification::PUSH_OPTIONAL).
-const PUSH_KINDS = [
-    { value: 'summons', label: 'Summonses' },
-    { value: 'event', label: 'New events' },
-    { value: 'news', label: 'News' },
-    { value: 'notice', label: 'Notices' },
-    { value: 'reminder', label: 'Event reminders' },
-];
-const togglePush = (kind, on) => router.post(route('members.push_settings.update'), {
-    muted: on ? props.pushMuted.filter((muted) => muted !== kind) : [...props.pushMuted, kind],
-}, { preserveScroll: true });
 
 const CATEGORIES = [
     { value: '', label: 'All' },
@@ -82,16 +70,9 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
             </Card>
             <Card v-else><p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ filters.unread || filters.category ? 'Nothing matches those filters.' : "No notifications yet. Summonses, news and notices from your clubs will appear here." }}</p></Card>
 
-            <Card v-if="isNativeApp">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Phone notifications</h3>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose what this app alerts you about. Everything still arrives here, and payments, signatures and membership news always alert you.</p>
-                <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                    <label v-for="kind in PUSH_KINDS" :key="kind.value" class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-200">
-                        <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600" :checked="!pushMuted.includes(kind.value)" @change="togglePush(kind.value, $event.target.checked)" />
-                        {{ kind.label }}
-                    </label>
-                </div>
-            </Card>
+            <p v-if="isNativeApp" class="text-center text-xs text-slate-500 dark:text-slate-400">
+                <Link :href="route('members.app_settings')" class="font-medium text-blue-600 hover:underline dark:text-blue-400">Choose which notifications alert this phone</Link>
+            </p>
 
             <div v-if="notifications.prev_page_url || notifications.next_page_url" class="flex justify-between">
                 <Link v-if="notifications.prev_page_url" :href="notifications.prev_page_url" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">← Newer</Link><span v-else />

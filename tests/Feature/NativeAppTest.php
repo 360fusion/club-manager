@@ -230,6 +230,15 @@ class NativeAppTest extends TestCase
         Queue::assertPushed(SendPushNotification::class, 1);
     }
 
+    public function test_the_app_settings_page_shows_which_alerts_are_off(): void
+    {
+        $user = User::factory()->create(['push_muted' => ['news']]);
+
+        $this->actingAs($user)->get(route('members.app_settings'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Members/AppSettings')->where('pushMuted', ['news']));
+    }
+
     public function test_payment_and_signature_alerts_cannot_be_switched_off(): void
     {
         $this->actingAs(User::factory()->create())

@@ -30,7 +30,6 @@ class NotificationController extends Controller
             'notifications' => $notifications,
             'unreadCount' => $user->unreadNotifications()->count(),
             'filters' => ['category' => in_array($category, self::CATEGORIES, true) ? $category : '', 'unread' => $unreadOnly],
-            'pushMuted' => $user->push_muted ?? [],
         ]);
     }
 

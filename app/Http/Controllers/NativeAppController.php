@@ -10,6 +10,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * What only the iOS and Android app needs: the way back into it after paying in the phone's
@@ -58,6 +60,12 @@ class NativeAppController extends Controller
         $request->user()->pushDevices()->where('token', $validated['token'])->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    /** The app's own settings: which notifications reach the phone, and the Face ID or fingerprint lock (kept on the phone). */
+    public function settings(Request $request): Response
+    {
+        return Inertia::render('Members/AppSettings', ['pushMuted' => $request->user()->push_muted ?? []]);
     }
 
     /** Which kinds of inbox notification stay off the person's phones. They still reach the inbox. */

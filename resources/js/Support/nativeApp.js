@@ -32,6 +32,86 @@ async function saveToken(token) {
     });
 }
 
+// The optional app lock: Face ID, a fingerprint or the phone's PIN (the AppLock plugin in mobile/ios and mobile/android).
+// It is a screen over the app, kept on this phone only; the sign-in itself is the site's as usual.
+const LOCK_SETTING = 'cm-app-lock';
+const LOCK_AFTER_MS = 60_000;
+
+async function lockPlugin() {
+    const { registerPlugin } = await import('@capacitor/core');
+    return registerPlugin('AppLock');
+}
+
+export function appLockOn() {
+    try {
+        return localStorage.getItem(LOCK_SETTING) === '1';
+    } catch {
+        return false;
+    }
+}
+
+/** Whether this phone can lock the app, and with what ("face", "fingerprint" or "passcode"). */
+export async function appLockSupport() {
+    if (!isNativeApp) return { available: false };
+    return (await lockPlugin()).isAvailable().catch(() => ({ available: false }));
+}
+
+/** Turning it on asks once, so nobody locks themselves out with a face or finger the phone doesn't know. */
+export async function setAppLock(on) {
+    if (on) await (await lockPlugin()).authenticate({ reason: 'Turn on the app lock' });
+    try {
+        on ? localStorage.setItem(LOCK_SETTING, '1') : localStorage.removeItem(LOCK_SETTING);
+    } catch {
+        // Without storage the lock simply stays off.
+    }
+}
+
+function cover() {
+    let el = document.getElementById('app-lock');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'app-lock';
+    el.className = 'cm-nav fixed inset-0 z-[300] flex flex-col items-center justify-center gap-6 bg-slate-800 text-white';
+    el.innerHTML = '<div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-black" aria-hidden="true">CM</div>'
+        + '<button type="button" class="min-h-11 rounded-xl bg-white px-6 text-sm font-semibold text-slate-900">Unlock Club Manager</button>';
+    el.querySelector('button').addEventListener('click', unlock);
+    document.body.appendChild(el);
+    return el;
+}
+
+async function unlock() {
+    try {
+        await (await lockPlugin()).authenticate({ reason: 'Unlock Club Manager' });
+        document.getElementById('app-lock')?.remove();
+    } catch {
+        // Still locked: the button asks again.
+    }
+}
+
+function startAppLock(App) {
+    let leftAt = null;
+
+    if (appLockOn()) {
+        cover();
+        unlock();
+    }
+
+    App.addListener('appStateChange', ({ isActive }) => {
+        if (!appLockOn()) return;
+        if (!isActive) {
+            // Covered straight away, so the app switcher's snapshot shows nothing private.
+            leftAt = Date.now();
+            cover();
+            return;
+        }
+        if (leftAt && Date.now() - leftAt > LOCK_AFTER_MS) {
+            unlock();
+        } else {
+            document.getElementById('app-lock')?.remove();
+        }
+    });
+}
+
 let started = false;
 
 // Called with the first page the app loads; push is only set up once someone is signed in.
@@ -54,6 +134,7 @@ export async function startNativeApp(firstPage) {
     });
 
     const props = firstPage?.props ?? {};
+    if (props.auth?.user) startAppLock(App);
     if (!props.auth?.user || (isAndroidApp && !props.androidPush)) return;
 
     PushNotifications.addListener('registration', ({ value }) => saveToken(value));

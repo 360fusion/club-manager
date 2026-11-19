@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import { orderColour } from '@/Utils/orderColour';
 import { navMode, setNavMode } from '@/Utils/navMode';
+import { isNativeApp } from '@/Support/nativeApp';
 
 const props = defineProps({
     tone: { type: String, default: 'default' },
@@ -53,6 +54,7 @@ const item = 'block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 ho
                 <div class="truncate text-[11px] text-slate-500 dark:text-slate-400">{{ user?.email }}</div>
             </div>
 
+            <Link v-if="isNativeApp" :href="route('members.app_settings')" role="menuitem" :class="item" @click="open = false">App settings</Link>
             <Link :href="route('profile.edit')" role="menuitem" :class="item" @click="open = false">Profile and photo</Link>
             <Link :href="route('admin.profile.two-factor')" role="menuitem" :class="item" @click="open = false">Password and 2FA</Link>
             <Link :href="route('portal.subscriptions')" role="menuitem" :class="item" @click="open = false">Email subscriptions</Link>
