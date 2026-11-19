@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\MeetingFinancialReturn;
 use App\Models\Club;
 use App\Models\Meeting;
+use App\Services\Meetings\MeetingCollections;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -35,8 +37,8 @@ class MeetingFinancialReturns
             $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
             $kitchenVendor = ! empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
 
-            $raffleAmount = (float) ($data['raffle_amount'] ?? 0);
-            $almsAmount = (float) ($data['alms_amount'] ?? 0);
+            // Alms and raffle entered on the phone are already in the books (MeetingCollections): shown here, not posted again.
+            [$raffleAmount, $almsAmount, $fromPhone] = $this->collections($meeting, $data);
             $donationsAmount = (float) ($data['donations_amount'] ?? 0);
             $bequestAmount = (float) ($data['bequest_amount'] ?? 0);
 
@@ -46,6 +48,7 @@ class MeetingFinancialReturns
             $netDiningSurplus = round($totalDiningRevenue - $totalKitchenBill, 2);
             $totalCharity = round($raffleAmount + $almsAmount + $donationsAmount + $bequestAmount, 2);
             $netBankDeposit = round($totalDiningRevenue + $totalCharity, 2);
+            $postedDeposit = $fromPhone ? round($netBankDeposit - $raffleAmount - $almsAmount, 2) : $netBankDeposit;
 
             $returnDate = ! empty($meeting->meeting_date) ? date('Y-m-d', strtotime((string) $meeting->meeting_date)) : date('Y-m-d');
 
@@ -69,17 +72,17 @@ class MeetingFinancialReturns
             $almsAcc = $this->accounting->getAccount($club, '4400');
             $donationsAcc = $this->accounting->getAccount($club, '4500');
 
-            if ($netBankDeposit > 0) {
-                $journalItems[] = ['account_id' => $bankAcc->id, 'debit' => $netBankDeposit, 'credit' => 0, 'memo' => "Meeting Collections Deposit ({$meeting->title})"];
+            if ($postedDeposit > 0) {
+                $journalItems[] = ['account_id' => $bankAcc->id, 'debit' => $postedDeposit, 'credit' => 0, 'memo' => "Meeting Collections Deposit ({$meeting->title})"];
             }
 
             if ($totalDiningRevenue > 0) {
                 $journalItems[] = ['account_id' => $diningRevenueAcc->id, 'debit' => 0, 'credit' => $totalDiningRevenue, 'memo' => "Dining Receipts ({$paidDiners} paid diners)"];
             }
-            if ($raffleAmount > 0) {
+            if ($raffleAmount > 0 && ! $fromPhone) {
                 $journalItems[] = ['account_id' => $raffleAcc->id, 'debit' => 0, 'credit' => $raffleAmount, 'memo' => 'Raffle Ticket Sales'];
             }
-            if ($almsAmount > 0) {
+            if ($almsAmount > 0 && ! $fromPhone) {
                 $journalItems[] = ['account_id' => $almsAcc->id, 'debit' => 0, 'credit' => $almsAmount, 'memo' => 'Alms Box Collection'];
             }
             if ($donationsAmount > 0) {
@@ -145,8 +148,7 @@ class MeetingFinancialReturns
         $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
         $kitchenVendor = ! empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
 
-        $raffleAmount = (float) ($data['raffle_amount'] ?? 0);
-        $almsAmount = (float) ($data['alms_amount'] ?? 0);
+        [$raffleAmount, $almsAmount] = $this->collections($meeting, $data);
         $donationsAmount = (float) ($data['donations_amount'] ?? 0);
         $bequestAmount = (float) ($data['bequest_amount'] ?? 0);
 
@@ -191,5 +193,27 @@ class MeetingFinancialReturns
                 'notes' => $data['notes'] ?? null,
             ]
         );
+    }
+
+    /**
+     * The raffle and alms for a return: from the phone entries when there are any (and then already in the books),
+     * otherwise as typed on the return.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{0: float, 1: float, 2: bool}
+     */
+    private function collections(Meeting $meeting, array $data): array
+    {
+        $entries = app(MeetingCollections::class)->forMeeting($meeting);
+
+        if (collect($entries)->filter()->isEmpty()) {
+            return [(float) ($data['raffle_amount'] ?? 0), (float) ($data['alms_amount'] ?? 0), false];
+        }
+
+        return [
+            round((float) ($entries[CollectionType::Raffle->value]->total_amount ?? 0), 2),
+            round((float) ($entries[CollectionType::AlmsPlate->value]->total_amount ?? 0), 2),
+            true,
+        ];
     }
 }

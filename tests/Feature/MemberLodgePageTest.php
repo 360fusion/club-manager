@@ -69,6 +69,7 @@ class MemberLodgePageTest extends TestCase
             ->where('organiserTools.links', [
                 ['key' => 'event_night', 'label' => 'Event night', 'href' => route('admin.events.checkin', ['clubSlug' => $this->club->slug, 'id' => $event->id])],
                 ['key' => 'catering', 'label' => 'Catering', 'href' => route('admin.meetings.dining', ['clubSlug' => $this->club->slug, 'id' => $meeting->id])],
+                ['key' => 'collections', 'label' => 'Alms and raffle', 'href' => route('member.meetings.collections', ['slug' => $this->club->slug, 'id' => $meeting->id])],
                 ['key' => 'add_booking', 'label' => 'Add booking', 'href' => route('admin.events.index', ['clubSlug' => $this->club->slug])],
                 ['key' => 'send_notice', 'label' => 'Send notice', 'href' => route('admin.notices.index', ['clubSlug' => $this->club->slug])],
             ]);

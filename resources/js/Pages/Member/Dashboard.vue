@@ -27,7 +27,7 @@ const props = defineProps({
   newsletters: { type: Array, default: () => [] },
 });
 
-const toolIcons = { event_night: 'check', catering: 'clipboard', add_booking: 'user-add', send_notice: 'mail' };
+const toolIcons = { event_night: 'check', catering: 'clipboard', collections: 'heart', add_booking: 'user-add', send_notice: 'mail' };
 
 const SUBSCRIPTION_BADGES = {
   paid: { variant: 'success', label: 'Paid' },

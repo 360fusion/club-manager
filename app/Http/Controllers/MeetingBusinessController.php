@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\Member;
@@ -10,6 +11,7 @@ use App\Http\Requests\MeetingBusiness\StoreOfficerElectionRequest;
 use App\Models\Meeting;
 use App\Services\AccountingService;
 use App\Services\MeetingFinancialReturns;
+use App\Services\Meetings\MeetingCollections;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -51,6 +53,12 @@ class MeetingBusinessController extends Controller
             'meeting' => $meeting,
             'confirmedDiningCount' => $totalConfirmedDiners,
             'financialReturn' => $meeting->financialReturn,
+            // Alms and raffle entered on the phone: shown on the return, already in the books.
+            'phoneCollections' => ($entries = collect(app(MeetingCollections::class)->forMeeting($meeting))->filter())->isEmpty() ? null : [
+                'raffle' => round((float) ($entries->get(CollectionType::Raffle->value)->total_amount ?? 0), 2),
+                'alms' => round((float) ($entries->get(CollectionType::AlmsPlate->value)->total_amount ?? 0), 2),
+                'url' => route('member.meetings.collections', ['slug' => $club->slug, 'id' => $meeting->id]),
+            ],
         ]);
     }
 

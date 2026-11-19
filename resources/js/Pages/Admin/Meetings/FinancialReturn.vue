@@ -13,6 +13,11 @@ import Textarea from '@/Components/Ui/Textarea.vue';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
 import { formatMoney } from '@/Utils/currency';
 const props = defineProps({
+  // Alms and raffle entered on the phone (already in the books): { raffle, alms, url }, or null.
+  phoneCollections: {
+    type: Object,
+    default: null,
+  },
   club: {
     type: Object,
     required: true,
@@ -52,8 +57,8 @@ const form = useForm({
   kitchen_cost_per_head: props.financialReturn ? parseFloat(props.financialReturn.kitchen_cost_per_head) : 28.00,
   waived_diners_count: props.financialReturn ? props.financialReturn.waived_diners_count : 0,
   waived_reason: props.financialReturn?.waived_reason || 'Official Guests / Visiting Speakers',
-  raffle_amount: props.financialReturn ? parseFloat(props.financialReturn.raffle_amount) : 0,
-  alms_amount: props.financialReturn ? parseFloat(props.financialReturn.alms_amount) : 0,
+  raffle_amount: props.phoneCollections ? props.phoneCollections.raffle : (props.financialReturn ? parseFloat(props.financialReturn.raffle_amount) : 0),
+  alms_amount: props.phoneCollections ? props.phoneCollections.alms : (props.financialReturn ? parseFloat(props.financialReturn.alms_amount) : 0),
   donations_amount: props.financialReturn ? parseFloat(props.financialReturn.donations_amount) : 0,
   bequest_amount: props.financialReturn ? parseFloat(props.financialReturn.bequest_amount) : 0,
   notes: props.financialReturn?.notes || '',
@@ -191,9 +196,13 @@ const submit = () => {
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">Meeting charity and almoner collections</h2>
           </template>
           <div class="space-y-5">
+            <p v-if="phoneCollections" class="text-sm text-slate-600 dark:text-slate-300">
+              The raffle and alms were entered on the night and are already in the books, so they are shown here and not posted again.
+              <a :href="phoneCollections.url" class="font-medium text-blue-600 hover:underline dark:text-blue-400">See or change them</a>
+            </p>
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <Input v-model.number="form.raffle_amount" type="number" step="0.01" min="0" label="Raffle collection" :prefix="$cs" :error="form.errors.raffle_amount" />
-              <Input v-model.number="form.alms_amount" type="number" step="0.01" min="0" label="Alms box collection" :prefix="$cs" :error="form.errors.alms_amount" />
+              <Input v-model.number="form.raffle_amount" type="number" step="0.01" min="0" label="Raffle collection" :prefix="$cs" :disabled="Boolean(phoneCollections)" :error="form.errors.raffle_amount" />
+              <Input v-model.number="form.alms_amount" type="number" step="0.01" min="0" label="Alms box collection" :prefix="$cs" :disabled="Boolean(phoneCollections)" :error="form.errors.alms_amount" />
               <Input v-model.number="form.donations_amount" type="number" step="0.01" min="0" label="Donations" :prefix="$cs" :error="form.errors.donations_amount" />
               <Input v-model.number="form.bequest_amount" type="number" step="0.01" min="0" label="Bequests" :prefix="$cs" :error="form.errors.bequest_amount" />
             </div>

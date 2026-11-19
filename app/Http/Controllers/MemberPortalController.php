@@ -15,6 +15,7 @@ use App\Models\Page;
 use App\Models\Post;
 use App\Models\User;
 use App\Services\Events\EventPayload;
+use App\Services\Meetings\MeetingCollections;
 use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -169,6 +170,16 @@ class MemberPortalController extends Controller
 
             if ($meeting) {
                 $links[] = ['key' => 'catering', 'label' => 'Catering', 'href' => route('admin.meetings.dining', ['clubSlug' => $club->slug, 'id' => $meeting->id])];
+            }
+        }
+
+        if (MeetingCollections::canRecord($user, $club)) {
+            // Counted on the night: tonight's meeting or the last one held, else the next.
+            $meeting = Meeting::where('club_id', $club->id)->where('status', 'published')->where('meeting_date', '<=', now()->toDateString())->latest('meeting_date')->first()
+                ?? Meeting::where('club_id', $club->id)->where('status', 'published')->orderBy('meeting_date')->first();
+
+            if ($meeting) {
+                $links[] = ['key' => 'collections', 'label' => 'Alms and raffle', 'href' => route('member.meetings.collections', ['slug' => $club->slug, 'id' => $meeting->id])];
             }
         }
 

@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\ClubMemberStatus;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Services\Meetings\MeetingCollections;
 use App\Services\Meetings\MeetingDiningPayment;
 use App\Services\Meetings\MeetingReplies;
 use App\Support\ClubAccess;
@@ -80,6 +81,7 @@ class MemberMeetingController extends Controller
             'owed' => $userRsvp && ($owed = MeetingReplies::owed($meeting, $userRsvp)['amount']) > 0 ? Currencies::format($owed, $club) : null,
             'payWith' => $userRsvp ? app(MeetingDiningPayment::class)->providers($userRsvp->setRelation('meeting', $meeting)) : [],
             'takesBank' => MeetingDiningPayment::takesBank($meeting),
+            'canRecordCollections' => MeetingCollections::canRecord($user, $club),
             'saidPaidAt' => $userRsvp?->said_paid_at?->format('j M Y'),
             'charityGrants' => $charityGrants,
         ]);

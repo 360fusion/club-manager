@@ -50,7 +50,10 @@ const rowClass = (signedIn) => [
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Signing-in book</h2>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ meeting.title }} · {{ meeting.meeting_date }}</p>
           </div>
-          <Button variant="secondary" size="sm" :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })">Back to the meeting</Button>
+          <div class="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" :href="route('member.meetings.collections', { slug: club.slug, id: meeting.id })">Alms and raffle</Button>
+            <Button variant="secondary" size="sm" :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })">Back to the meeting</Button>
+          </div>
         </div>
       </Card>
 

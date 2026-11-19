@@ -22,6 +22,7 @@ const props = defineProps({
   owed: { type: String, default: null },
   payWith: { type: Array, default: () => [] },
   takesBank: { type: Boolean, default: false },
+  canRecordCollections: { type: Boolean, default: false },
   saidPaidAt: { type: String, default: null },
   charityGrants: { type: Array, default: () => [] },
 });
@@ -214,6 +215,15 @@ const grantStatusLabel = (grantStatus) => {
           <div>Account no: <strong class="text-slate-900 dark:text-white">{{ meeting.bank_account_number }}</strong></div>
           <div>Reference prefix: <strong class="text-blue-600 dark:text-blue-400">{{ meeting.payment_reference_prefix || 'SUMMONS' }}</strong></div>
         </div>
+      </Card>
+
+      <!-- For the Charity Steward, Almoner, Treasurer or Secretary: the counted money on the night -->
+      <Card v-if="canRecordCollections" padding="sm" class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 :class="overline">Alms and raffle</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Enter what was collected tonight.</p>
+        </div>
+        <Link :href="route('member.meetings.collections', { slug: club.slug, id: meeting.id })" class="inline-flex min-h-11 items-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-500">Enter amounts</Link>
       </Card>
 
       <!-- Charitable donation proposals -->

@@ -22,6 +22,7 @@ class CharityCollection extends Model
         'collection_type',
         'cash_amount',
         'cheque_amount',
+        'card_amount',
         'counted_by_member_id',
         'witnessed_by_member_id',
         'donor_member_id',
@@ -32,6 +33,7 @@ class CharityCollection extends Model
         'gift_aid_reconciled_at',
         'bank_transaction_id',
         'notes',
+        'entered_by_user_id',
     ];
 
     protected function casts(): array
@@ -40,6 +42,7 @@ class CharityCollection extends Model
             'collection_type' => CollectionType::class,
             'cash_amount' => 'decimal:2',
             'cheque_amount' => 'decimal:2',
+            'card_amount' => 'decimal:2',
             'is_gift_aid_eligible' => 'boolean',
             'gift_aid_amount' => 'decimal:2',
             'gift_aid_reconciled_at' => 'datetime',
@@ -52,7 +55,7 @@ class CharityCollection extends Model
     protected function totalAmount(): Attribute
     {
         return Attribute::make(
-            get: fn () => (float) $this->cash_amount + (float) $this->cheque_amount
+            get: fn () => (float) $this->cash_amount + (float) $this->cheque_amount + (float) $this->card_amount
         );
     }
 

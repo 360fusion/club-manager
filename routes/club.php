@@ -63,6 +63,7 @@ use App\Http\Controllers\MediaTrashController;
 use App\Http\Controllers\MediaVersionController;
 use App\Http\Controllers\MeetingAdminController;
 use App\Http\Controllers\MeetingBusinessController;
+use App\Http\Controllers\MeetingCollectionController;
 use App\Http\Controllers\MeetingDiningController;
 use App\Http\Controllers\MeetingSigningInController;
 use App\Http\Controllers\MeetingSummonsController;
@@ -576,6 +577,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/{slug}/profile', [MemberProfileController::class, 'updateProfile'])->name('member.profile.update');
     Route::post('/members/{slug}/events/{id}/rsvp', [MemberRsvpController::class, 'updateRsvp'])->name('member.rsvp');
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
+    Route::get('/members/{slug}/meetings/{id}/collections', [MeetingCollectionController::class, 'show'])->whereNumber('id')->name('member.meetings.collections');
+    Route::post('/members/{slug}/meetings/{id}/collections', [MeetingCollectionController::class, 'store'])->whereNumber('id')->middleware('throttle:30,1')->name('member.meetings.collections.store');
     Route::post('/members/{slug}/meetings/{id}/rsvp', [MemberRsvpController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
     Route::post('/members/{slug}/meetings/{id}/pay', [MemberRsvpController::class, 'payMeetingDining'])->name('member.meetings.pay');
     Route::post('/members/{slug}/meetings/{id}/said-paid', [MemberRsvpController::class, 'meetingSaidPaid'])->middleware('throttle:20,1')->name('member.meetings.said_paid');

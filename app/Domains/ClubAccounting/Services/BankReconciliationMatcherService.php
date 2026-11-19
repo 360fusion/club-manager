@@ -18,6 +18,7 @@ use App\Models\MeetingRsvp;
 use App\Models\MeetingRsvpGuest;
 use App\Services\AccountingService;
 use App\Services\Events\EventPaymentService;
+use App\Services\Meetings\MeetingCollections;
 use App\Services\Meetings\MeetingReplies;
 use App\Support\Currencies;
 use Illuminate\Support\Carbon;
@@ -297,6 +298,7 @@ class BankReconciliationMatcherService
 
         if ($amount > 0) {
             array_push($matches, ...$this->diningMatches($clubId, $desc, $ref, $amount));
+            array_push($matches, ...$this->collectionMatches($clubId, $desc, $amount));
         }
 
         // 2. Outgoing Debits (- amount) -> Match against Unpaid Supplier Bills in Accounts Payable
@@ -432,6 +434,16 @@ class BankReconciliationMatcherService
                 $this->payDining($rsvp, abs($amount), $lineDate, $transaction);
                 $note .= ' [Meeting dining: '.$rsvp->meeting->title.']';
                 $targetCode = '4200'; // Bar & Dining Sales
+            } elseif ($matchType === 'meeting_collections') {
+                // The alms and raffle cash entered at meetings (MeetingCollections): money awaiting banking moves to the bank.
+                $collections = app(MeetingCollections::class);
+                $meetingIds = (int) $targetId === 0
+                    ? $collections->unbanked($transaction->club_id)->map(fn (array $group) => $group['meeting']->id)->all()
+                    : [(int) $targetId];
+                $collections->markBanked($transaction->club_id, $meetingIds, $transaction->id, abs($amount));
+                MeetingCollections::awaitingBanking($club);
+                $targetCode = MeetingCollections::AWAITING_BANKING;
+                $note .= ' [Alms and raffle paid in]';
             } elseif ($matchType === 'supplier_bill') {
                 $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
@@ -614,6 +626,49 @@ class BankReconciliationMatcherService
                 'confidence_level' => $score >= 90 ? 'high' : 'medium',
                 'match_reason' => $reason,
                 'record' => $rsvp,
+            ];
+        }
+
+        return $matches;
+    }
+
+    /**
+     * A paying-in line for the alms and raffle cash entered at meetings: one meeting's amount, or everything still
+     * waiting when several meetings were paid in together. Words such as "alms", "cash" or "paid in" rank it higher.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function collectionMatches(int $clubId, string $desc, float $amount): array
+    {
+        $groups = app(MeetingCollections::class)->unbanked($clubId);
+        $bonus = preg_match('/alms|raffle|collect|charity|cash|cheque|paid in|deposit|counter|lodgement/i', $desc) ? 10 : 0;
+        $matches = [];
+
+        foreach ($groups as $group) {
+            if (abs($group['amount'] - $amount) < 0.01) {
+                $matches[] = [
+                    'match_type' => 'meeting_collections',
+                    'target_id' => $group['meeting']->id,
+                    'target_title' => 'Alms and raffle: '.$group['meeting']->title.' ('.$group['meeting']->meeting_date->format('j M').')',
+                    'target_amount' => $group['amount'],
+                    'confidence_score' => 80 + $bonus,
+                    'confidence_level' => 80 + $bonus >= 90 ? 'high' : 'medium',
+                    'match_reason' => 'The cash and cheques from that meeting'.($bonus ? ', and the line looks like a paying-in' : ''),
+                    'record' => null,
+                ];
+            }
+        }
+
+        if ($groups->count() > 1 && abs($groups->sum('amount') - $amount) < 0.01) {
+            $matches[] = [
+                'match_type' => 'meeting_collections',
+                'target_id' => 0,
+                'target_title' => 'Alms and raffle from '.$groups->count().' meetings',
+                'target_amount' => round($groups->sum('amount'), 2),
+                'confidence_score' => 75 + $bonus,
+                'confidence_level' => 'medium',
+                'match_reason' => 'All the alms and raffle cash still waiting to be paid in',
+                'record' => null,
             ];
         }
 
