@@ -5,6 +5,7 @@
     "ios": { "path": "mobile/ios" },
     "android": { "path": "mobile/android" },
     "appendUserAgent": "ClubManagerApp",
+    "backgroundColor": "#17264d",
     "server": {
         "url": "http://club-manager.test/members/dashboard",
         "allowNavigation": ["club-manager.test"],
