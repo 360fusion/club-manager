@@ -17,6 +17,8 @@ const props = defineProps({
     activeTab: { type: String, default: 'dashboard' },
     // Kept so pages written for the old member layout can pass it unchanged.
     memberRole: { type: String, default: 'member' },
+    // The page renders its own <h1> (the lodge directory pages), so the layout leaves its hidden one out.
+    ownHeading: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -30,7 +32,7 @@ const isStaff = computed(() => Boolean(props.club) && !['member', 'visitor'].inc
 const adminHome = computed(() => (currentRole.value === 'coach' ? route('admin.events.index', { clubSlug: slug.value }) : route('admin.analytics', { slug: slug.value })));
 
 // Only the notices that no form field shows itself; field errors stay next to their fields.
-const NOTICE_KEYS = ['cutoff', 'booking_closed', 'rsvp'];
+const NOTICE_KEYS = ['cutoff', 'booking_closed', 'rsvp', 'follow'];
 const errors = computed(() => NOTICE_KEYS.map((key) => page.props.errors?.[key]).filter(Boolean));
 
 const ICONS = {
@@ -75,7 +77,7 @@ const nav = computed(() => (slug.value
     }))));
 
 // This layout renders the page's <h1>, so PageHeader titles become <h2>.
-provide('layoutHasHeading', true);
+provide('layoutHasHeading', !props.ownHeading);
 </script>
 
 <template>
@@ -159,7 +161,7 @@ provide('layoutHasHeading', true);
             </div>
 
             <main id="main-content" :class="['mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6', isNativeApp ? 'pb-28' : '']">
-                <h1 class="sr-only">{{ title }}</h1>
+                <h1 v-if="!ownHeading" class="sr-only">{{ title }}</h1>
                 <FlashMessages />
                 <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>
 

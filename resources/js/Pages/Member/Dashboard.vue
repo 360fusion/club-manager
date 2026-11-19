@@ -166,7 +166,7 @@ const openMeetingRsvpModal = (meeting) => {
                     <Badge v-else-if="event.user_rsvp?.attendance_status === 'attending'" variant="success">
                       <UiIcon name="check" /> RSVP confirmed
                     </Badge>
-                    <Badge v-if="event.has_dining" variant="info">3-course dining</Badge>
+                    <Badge v-if="event.has_dining" variant="info">Dinner</Badge>
                   </div>
                   <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-1">{{ event.title }}</h3>
                   <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
@@ -176,7 +176,7 @@ const openMeetingRsvpModal = (meeting) => {
                 </div>
 
                 <Button size="sm" :variant="event.user_rsvp ? 'secondary' : 'primary'" class="self-start sm:self-auto" @click="openRsvpModal(event)">
-                  {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
+                  {{ event.user_rsvp ? 'Change booking' : 'Book a place' }}
                 </Button>
               </div>
             </Card>

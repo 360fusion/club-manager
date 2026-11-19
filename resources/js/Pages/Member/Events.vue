@@ -70,7 +70,7 @@ const filterClass = (isActive) => [
               <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings, events and training</h2>
               <Badge variant="info">{{ totalScheduleCount }} scheduled</Badge>
             </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">See lodge meeting summonses, reply for the meeting and dining, choose your menu and download summons PDFs.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">See lodge meeting summonses, reply for the meeting and dining, book events and download summons PDFs.</p>
           </div>
 
           <!-- Filter Tab Pill Buttons -->
@@ -175,7 +175,7 @@ const filterClass = (isActive) => [
                   <Badge v-else-if="event.user_rsvp?.attendance_status === 'attending'" variant="success">
                     <UiIcon name="check" /> RSVP confirmed
                   </Badge>
-                  <Badge v-if="event.has_dining" variant="info">3-course dining</Badge>
+                  <Badge v-if="event.has_dining" variant="info">Dinner</Badge>
                   <Badge v-if="event.booking_cutoff_days" :variant="event.is_booking_closed ? 'danger' : 'warning'">
                     <UiIcon :name="event.is_booking_closed ? 'lock' : 'clock'" />
                     {{ event.is_booking_closed ? 'Bookings closed' : `Bookings close ${event.booking_cutoff_days} days before` }}
@@ -212,7 +212,7 @@ const filterClass = (isActive) => [
                   :variant="event.user_rsvp ? 'secondary' : 'primary'"
                   @click="openRsvpModal(event)"
                 >
-                  {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
+                  {{ event.user_rsvp ? 'Change booking' : 'Book a place' }}
                 </Button>
                 <Badge v-else>Bookings closed</Badge>
               </div>
@@ -228,7 +228,7 @@ const filterClass = (isActive) => [
 
     </div>
 
-    <!-- Social Event RSVP & 3-Course Dining Modal -->
+    <!-- Social Event booking modal -->
     <EventBookingModal v-if="showDinnerModal && selectedEvent" :key="selectedEvent.id" :event="selectedEvent" :club-slug="club.slug" @close="showDinnerModal = false" />
 
     <!-- Member Meeting Summons RSVP Modal -->

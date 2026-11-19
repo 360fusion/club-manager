@@ -174,7 +174,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
             <div v-if="activeTab === 'events'" class="space-y-6">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Event ticketing and QR passes</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Multiple ticket types, capacity limits, promo codes, 3-course dining, and scannable digital QR passes.</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Multiple ticket types, capacity limits, promo codes, dinner with or without a choice of dishes, and scannable digital QR passes.</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -183,7 +183,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
                             <div>
                                 <div class="flex flex-wrap items-center gap-2 mb-1">
                                     <Badge v-if="event.ticket_tiers.length > 0" variant="info">{{ event.ticket_tiers.length }} ticket types</Badge>
-                                    <Badge v-if="event.has_dining" variant="info">3-course dining</Badge>
+                                    <Badge v-if="event.has_dining" variant="info">Dinner</Badge>
                                 </div>
                                 <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ event.title }}</h3>
                                 <p class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">

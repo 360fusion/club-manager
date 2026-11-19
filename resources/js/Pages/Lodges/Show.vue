@@ -20,6 +20,12 @@ function follow() {
     router.post(route('lodges.follow', props.lodge.slug), {}, { preserveScroll: true });
 }
 
+const today = new Date().toISOString().slice(0, 10);
+const visited = useForm({ lodge_slug: props.lodge.slug, visited_on: today, note: '' });
+function recordVisit() {
+    visited.post(route('members.visits.store'), { preserveScroll: true, onSuccess: () => visited.reset('note') });
+}
+
 function unfollow() {
     router.delete(route('lodges.unfollow', props.lodge.slug), { preserveScroll: true });
 }
@@ -192,6 +198,19 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                             <a :href="lodge.ics_url" class="text-blue-600 hover:underline dark:text-blue-400">Download .ics</a>
                         </p>
                     </div>
+                </section>
+
+                <section v-if="signedIn" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="visited-heading">
+                    <h2 id="visited-heading" class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Your visits</h2>
+                    <p v-if="lodge.visited_on.length" class="mt-2 text-sm text-slate-700 dark:text-slate-300">You visited on {{ lodge.visited_on.join(', ') }}.</p>
+                    <form class="mt-3 flex flex-wrap items-end gap-2" @submit.prevent="recordVisit">
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Date
+                            <input v-model="visited.visited_on" type="date" :max="today" required class="mt-1 block rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                        </label>
+                        <input v-model="visited.note" type="text" maxlength="500" placeholder="Note, only you see it (optional)" aria-label="Note" class="min-w-[12rem] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                        <button type="submit" :disabled="visited.processing" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800">I visited this lodge</button>
+                    </form>
+                    <p v-for="(error, field) in visited.errors" :key="field" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ error }}</p>
                 </section>
 
                 <section v-if="lodge.is_managed && (lodge.news.length || lodge.bulletins.length)" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">

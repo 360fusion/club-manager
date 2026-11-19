@@ -20,12 +20,16 @@ const props = defineProps({
 const avatarPreview = ref(props.user?.avatar_url || null);
 const fileInput = ref(null);
 
+// The postal address is kept on the lodge's roster (for summonses and returns), so it only shows once the Secretary has a record for you.
+const ADDRESS_FIELDS = [['address_line_1', 'Address line 1'], ['address_line_2', 'Address line 2'], ['city', 'Town or city'], ['county', 'County'], ['postcode', 'Postcode']];
+
 const profileForm = useForm({
   name: props.user?.name || '',
   email: props.user?.email || '',
   phone: props.memberProfile?.phone || '',
   emergency_contact: props.memberProfile?.emergency_contact || '',
   dietary_notes: props.memberProfile?.dietary_notes || '',
+  ...Object.fromEntries(ADDRESS_FIELDS.map(([key]) => [key, props.memberProfile?.address?.[key] || ''])),
   avatar_url: props.user?.avatar_url || '',
   avatar: null,
   current_password: '',
@@ -59,6 +63,7 @@ const submitProfile = () => {
       phone: profileForm.phone,
       emergency_contact: profileForm.emergency_contact,
       dietary_notes: profileForm.dietary_notes,
+      ...Object.fromEntries(ADDRESS_FIELDS.map(([key]) => [key, profileForm[key]])),
       current_password: profileForm.current_password,
       avatar: profileForm.avatar,
     }, {
@@ -172,6 +177,14 @@ const submitProfile = () => {
               label="Dietary requirements and allergies (for dining RSVPs)"
               placeholder="e.g. vegetarian, gluten-free, peanut allergy..."
             />
+
+            <fieldset v-if="memberProfile?.address" class="space-y-3">
+              <legend class="text-sm font-medium text-slate-900 dark:text-white">Postal address</legend>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <Input v-for="[key, label] in ADDRESS_FIELDS" :key="key" v-model="profileForm[key]" :label="label" :error="profileForm.errors[key]" maxlength="255" />
+              </div>
+            </fieldset>
+            <p class="text-xs text-slate-500 dark:text-slate-400">The Secretary is told when you change your phone, emergency contact or address.</p>
           </div>
 
           <div class="pt-2">

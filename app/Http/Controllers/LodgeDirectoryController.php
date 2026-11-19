@@ -10,6 +10,7 @@ use App\Models\ClubVisitRequest;
 use App\Models\Lodge;
 use App\Models\LodgeSchedule;
 use App\Models\MasonicHall;
+use App\Models\MemberVisit;
 use App\Models\Post;
 use App\Models\Province;
 use App\Models\User;
@@ -160,6 +161,7 @@ class LodgeDirectoryController extends Controller
                 'is_managed' => $lodge->isManaged(),
                 'can_claim' => ! $lodge->isManaged(),
                 'claim' => $request->user() ? $this->claimFor($lodge, $request->user()->id) : null,
+                'visited_on' => $viewer ? MemberVisit::where('user_id', $viewer->id)->where('lodge_id', $lodge->id)->orderByDesc('visited_on')->limit(10)->get(['visited_on'])->map(fn (MemberVisit $visit) => $visit->visited_on->format('j M Y'))->all() : [],
                 'correction_waiting' => $viewer !== null && $lodge->corrections()->where('user_id', $viewer->id)->open()->exists(),
                 'last_verified_at' => $lodge->last_verified_at?->toDateString(),
                 // The managing lodge's secretary, owners and admins can confirm the listing is right.

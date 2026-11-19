@@ -26,7 +26,10 @@ const notSeen = computed(() => props.attendance.members.filter((member) => membe
               The last 12 months, from the signing-in book: {{ attendance.meetings }} {{ attendance.meetings === 1 ? 'meeting' : 'meetings' }} where it was used.
             </p>
           </div>
-          <Button variant="secondary" size="sm" :href="route('admin.meetings.index', { clubSlug: club.slug })">All meetings</Button>
+          <div class="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" :href="route('admin.meetings.visiting', { clubSlug: club.slug })">Visiting</Button>
+            <Button variant="secondary" size="sm" :href="route('admin.meetings.index', { clubSlug: club.slug })">All meetings</Button>
+          </div>
         </div>
       </Card>
 

@@ -6,13 +6,14 @@ use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use App\Models\LodgeCorrection;
 use App\Models\LodgeSchedule;
+use App\Models\MemberVisit;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * "My lodges": the lodges a member follows, and whether each one is in their calendar.
+ * "My lodges": the lodges a member follows, whether each one is in their calendar, and the lodges they have visited.
  */
 class MemberLodgesController extends Controller
 {
@@ -83,7 +84,17 @@ class MemberLodgesController extends Controller
 
         $provinces = $request->user()->administeredProvinces()->get(['provinces.id', 'provinces.name']);
 
+        $visits = MemberVisit::where('user_id', $user->id)->with('lodge:id,slug')->orderByDesc('visited_on')->orderByDesc('id')->limit(100)->get()
+            ->map(fn (MemberVisit $visit) => [
+                'id' => $visit->id,
+                'lodge' => $visit->lodge_name,
+                'lodge_slug' => $visit->lodge?->slug,
+                'visited_on' => $visit->visited_on->format('j M Y'),
+                'note' => $visit->note,
+            ]);
+
         return Inertia::render('Members/Lodges', [
+            'visits' => $visits->values(),
             'claims' => $claims->values(),
             'corrections' => $corrections->values(),
             'lodges' => $lodges->values(),

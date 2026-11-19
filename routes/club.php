@@ -77,6 +77,7 @@ use App\Http\Controllers\MemberRsvpController;
 use App\Http\Controllers\MemberSignatureController;
 use App\Http\Controllers\MemberStatusAdminController;
 use App\Http\Controllers\MemberSubscriptionsController;
+use App\Http\Controllers\MemberVisitController;
 use App\Http\Controllers\NativeAppController;
 use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterTypeAdminController;
@@ -232,6 +233,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/meetings/{id}/edit', [MeetingAdminController::class, 'edit'])->name('admin.meetings.edit');
     Route::get('/{clubSlug}/admin/meetings/settings-json', [MeetingAdminController::class, 'settingsJson'])->name('admin.meetings.settings_json');
     Route::get('/{clubSlug}/admin/meetings/attendance', [MeetingSigningInController::class, 'attendance'])->name('admin.meetings.attendance');
+    Route::get('/{clubSlug}/admin/meetings/visiting', [MemberVisitController::class, 'lodgeIndex'])->name('admin.meetings.visiting');
     Route::post('/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'store'])->name('admin.meetings.store');
     Route::get('/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'show'])->name('admin.meetings.show');
     Route::post('/{clubSlug}/admin/meetings/{id}/rsvp', [MeetingDiningController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
@@ -313,6 +315,8 @@ Route::middleware(['auth'])->group(function () {
 
     // National Directory & Member Subscriptions Hub Routes
     Route::get('/members/lodges', [MemberLodgesController::class, 'index'])->name('members.lodges');
+    Route::post('/members/visits', [MemberVisitController::class, 'store'])->middleware('throttle:30,1')->name('members.visits.store');
+    Route::delete('/members/visits/{id}', [MemberVisitController::class, 'destroy'])->middleware('throttle:60,1')->name('members.visits.destroy');
     // A provincial admin's queue of suggested fixes to their province's lodges (the superadmin screen, scoped).
     Route::get('/members/lodges/fixes', [ProvinceLodgeCorrectionController::class, 'index'])->name('members.lodges.fixes.index');
     Route::post('/members/lodges/fixes/{id}/apply', [ProvinceLodgeCorrectionController::class, 'apply'])->name('members.lodges.fixes.apply');

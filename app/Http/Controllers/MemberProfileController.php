@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\Member;
+use App\Mail\LodgeClaimMail;
 use App\Models\Club;
 use App\Models\Invoice;
+use App\Models\User;
 use App\Support\ClubAccess;
 use App\Support\EmailChange;
 use App\Support\ImageDownscaler;
@@ -12,6 +14,7 @@ use App\Support\UploadRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,6 +24,9 @@ use Inertia\Response;
  */
 class MemberProfileController extends Controller
 {
+    /** The postal address on the lodge's roster, which a member keeps up to date themselves. */
+    private const ADDRESS_FIELDS = ['address_line_1', 'address_line_2', 'city', 'county', 'postcode'];
+
     /**
      * Display member dues & invoices page inside member portal.
      */
@@ -98,6 +104,7 @@ class MemberProfileController extends Controller
                 'phone' => $memberPivot->phone ?? '',
                 'emergency_contact' => $memberPivot->emergency_contact ?? '',
                 'dietary_notes' => $memberPivot->dietary_notes ?? '',
+                'address' => $accMember?->only(self::ADDRESS_FIELDS),
                 'masonic_rank' => $accMember?->masonic_rank ?? 'Bro',
                 'grand_rank' => $accMember?->grand_rank ?? null,
                 'provincial_rank' => $accMember?->provincial_rank ?? null,
@@ -134,7 +141,11 @@ class MemberProfileController extends Controller
             'phone' => ['nullable', 'string', 'max:100'],
             'emergency_contact' => ['nullable', 'string', 'max:255'],
             'dietary_notes' => ['nullable', 'string', 'max:1000'],
+            ...array_fill_keys(self::ADDRESS_FIELDS, ['nullable', 'string', 'max:255']),
         ]);
+
+        $roster = Member::where('club_id', $club->id)->where('user_id', $user->id)->first();
+        $before = $this->contactDetails($user, $club, $roster);
 
         $user->fill($request->only('name'));
         $emailHeld = strcasecmp((string) $request->input('email'), (string) $user->email) !== 0 && EmailChange::request($user, (string) $request->input('email'));
@@ -160,6 +171,53 @@ class MemberProfileController extends Controller
             'dietary_notes' => $request->input('dietary_notes'),
         ]);
 
+        // The roster is the Secretary's record, so the phone and address are kept there too.
+        $roster?->update(['phone' => $request->input('phone')] + $request->only(self::ADDRESS_FIELDS));
+        $this->tellSecretary($club, $user, $before, $this->contactDetails($user->fresh(), $club, $roster?->fresh()));
+
         return redirect()->back()->with('success', $emailHeld ? "We sent a link to {$user->pending_email}. Your sign-in email stays {$user->email} until you open it." : 'Profile and club membership preferences updated successfully.');
+    }
+
+    /**
+     * The details the Secretary keeps for the lodge's records, by the label used in the email.
+     *
+     * @return array<string, string>
+     */
+    private function contactDetails(User $user, Club $club, ?Member $roster): array
+    {
+        $pivot = $user->clubs()->where('clubs.id', $club->id)->first()?->pivot;
+        $address = $roster ? implode(', ', array_filter($roster->only(self::ADDRESS_FIELDS))) : '';
+
+        return array_filter([
+            'Name' => $user->name,
+            'Phone' => (string) ($pivot->phone ?? ''),
+            'Emergency contact' => (string) ($pivot->emergency_contact ?? ''),
+            'Address' => $roster ? $address : null,
+        ], fn ($value) => $value !== null);
+    }
+
+    /**
+     * Email the Secretary what a member changed, so the lodge's records and returns stay right. A Secretary changing
+     * their own details is not told.
+     *
+     * @param  array<string, string>  $before
+     * @param  array<string, string>  $after
+     */
+    private function tellSecretary(Club $club, User $user, array $before, array $after): void
+    {
+        $changes = collect($after)->filter(fn ($value, $label) => ($before[$label] ?? '') !== $value)
+            ->map(fn ($value, $label) => "{$label}: ".(($before[$label] ?? '') ?: '(none)').' → '.($value ?: '(none)'));
+        $secretary = (Member::summonsSecretary($club)['email'] ?? null) ?: $club->email;
+
+        if ($changes->isEmpty() || ! $secretary || strcasecmp($secretary, (string) $user->email) === 0) {
+            return;
+        }
+
+        Mail::to($secretary)->queue(new LodgeClaimMail(
+            "{$user->name} updated their details",
+            "{$user->name} changed their details for {$club->name}:\n\n".$changes->implode("\n"),
+            'Open their record',
+            route('admin.users.show', ['clubSlug' => $club->slug, 'userId' => $user->id]),
+        ));
     }
 }

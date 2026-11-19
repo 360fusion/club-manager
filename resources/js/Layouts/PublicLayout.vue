@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 defineProps({
     title: { type: String, required: true },
@@ -15,6 +16,14 @@ const followError = computed(() => page.props.errors?.follow ?? null);
 </script>
 
 <template>
+    <!-- Signed in, the directory sits inside the member area (its menu, and the tab bar in the app) under My lodges. -->
+    <MembersLayout v-if="user" :title="title" active-tab="lodges" own-heading>
+        <Head v-if="description"><meta name="description" :content="description" /></Head>
+        <slot />
+        <p class="pt-4 text-xs text-slate-500 dark:text-slate-400">Meeting times shown as "expected" are worked out from the lodge's published pattern and may change. Always confirm with the lodge before you travel.</p>
+    </MembersLayout>
+
+    <template v-else>
     <Head :title="`${title} - ClubManager`">
         <meta v-if="description" name="description" :content="description" />
     </Head>
@@ -50,4 +59,5 @@ const followError = computed(() => page.props.errors?.follow ?? null);
             Meeting times shown as "expected" are worked out from the lodge's published pattern and may change. Always confirm with the lodge before you travel.
         </footer>
     </div>
+    </template>
 </template>
