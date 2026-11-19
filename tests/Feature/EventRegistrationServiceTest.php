@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Events\EventRegistrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -282,8 +283,10 @@ class EventRegistrationServiceTest extends TestCase
         $this->assertSame(hash('sha256', $registration->plainToken), $registration->token_hash);
     }
 
-    public function test_existing_member_replies_are_copied_into_registrations_by_the_migration(): void
+    public function test_existing_member_replies_are_copied_into_registrations_before_the_old_table_is_dropped(): void
     {
+        $drop = require database_path('migrations/2026_11_19_142612_drop_event_user_table.php');
+        $drop->down();
         $event = $this->event();
         $user = $this->member('Old Reply');
         $tier = EventTicketTier::create(['event_id' => $event->id, 'name' => 'General', 'price' => 10, 'max_quantity' => 0]);
@@ -294,8 +297,17 @@ class EventRegistrationServiceTest extends TestCase
             'payment_status' => 'paid', 'amount_paid' => 10, 'ticket_tier_id' => $tier->id, 'checked_in_at' => now(), 'created_at' => now(), 'updated_at' => now(),
         ]);
 
+        try {
+            $drop->up();
+            $this->fail('The old table was dropped while a reply had not been copied.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('1 rows in event_user', $e->getMessage());
+        }
+
         (require database_path('migrations/2026_09_21_164733_copy_event_user_into_registrations.php'))->up();
         (require database_path('migrations/2026_09_21_164733_copy_event_user_into_registrations.php'))->up();
+        $drop->up();
+        $this->assertFalse(Schema::hasTable('event_user'));
 
         $registration = EventRegistration::with('attendees')->where('event_id', $event->id)->sole();
 
