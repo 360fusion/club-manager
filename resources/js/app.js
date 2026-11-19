@@ -30,7 +30,7 @@ createInertiaApp({
 
         app.directive('focus-trap', focusTrap);
 
-        startNativeApp(Boolean(props.initialPage?.props?.auth?.user), Boolean(props.initialPage?.props?.androidPush));
+        startNativeApp(props.initialPage);
 
         return app
             .use(plugin)

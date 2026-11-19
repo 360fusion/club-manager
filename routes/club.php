@@ -532,6 +532,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
     Route::post('/members/push-devices', [NativeAppController::class, 'storeDevice'])->middleware('throttle:30,1')->name('members.push_devices.store');
     Route::delete('/members/push-devices', [NativeAppController::class, 'destroyDevice'])->middleware('throttle:30,1')->name('members.push_devices.destroy');
+    Route::post('/members/push-settings', [NativeAppController::class, 'updatePushSettings'])->middleware('throttle:30,1')->name('members.push_settings.update');
     Route::get('/members/signed-documents', [MemberSignatureController::class, 'history'])->name('members.signed_documents');
 
     Route::get('/members/{slug}', [MemberPortalController::class, 'show'])->name('member.dashboard');

@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_super_admin' => 'boolean',
             'closure_requested_at' => 'datetime',
             'purged_at' => 'datetime',
+            'push_muted' => 'array',
         ];
     }
 

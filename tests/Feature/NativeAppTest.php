@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\SendPushNotification;
 use App\Models\Club;
+use App\Models\Event;
 use App\Models\PushDevice;
 use App\Models\User;
 use App\Notifications\ClubNotification;
@@ -149,6 +150,8 @@ class NativeAppTest extends TestCase
     {
         $publicKey = $this->configureApns();
         $device = PushDevice::factory()->create(['token' => 'iphone-token']);
+        Queue::fake([SendPushNotification::class]);
+        $device->user->notify(ClubNotification::membershipApproved(Club::factory()->create()));
         Http::preventStrayRequests();
         Http::fake(['https://api.sandbox.push.apple.com/3/device/iphone-token' => Http::response()]);
 
@@ -159,6 +162,7 @@ class NativeAppTest extends TestCase
 
             return $request->header('apns-topic')[0] === 'uk.clubmanager.app'
                 && $request['aps']['alert'] === ['title' => 'Dining closes Friday', 'body' => 'Book by Friday.']
+                && $request['aps']['badge'] === 1
                 && $request['url'] === '/members/notifications/1/open'
                 && json_decode($this->base64urlDecode($claims), true)['iss'] === 'TEAM123456'
                 && openssl_verify("{$header}.{$claims}", $this->joseToDer($this->base64urlDecode($signature)), $publicKey, OPENSSL_ALGO_SHA256) === 1;
@@ -194,6 +198,43 @@ class NativeAppTest extends TestCase
             && $request['message']['token'] === 'old-android'
             && $request['message']['data'] === ['url' => '/members/dashboard']);
         $this->assertModelMissing($device);
+    }
+
+    public function test_an_android_push_without_a_link_or_unread_count_sends_no_empty_fields(): void
+    {
+        $this->configureFcm();
+        $device = PushDevice::factory()->android()->create();
+        Http::fake(['https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'ya29.test']), 'https://fcm.googleapis.com/*' => Http::response(['name' => 'sent'])]);
+
+        (new SendPushNotification($device->user_id, 'Hello', 'World'))->handle(app(PushSender::class));
+
+        // FCM wants objects for these; an empty PHP array would be sent as [] and refused.
+        Http::assertSent(fn (Request $request) => str_contains($request->url(), 'messages:send')
+            && ! array_key_exists('data', $request['message'])
+            && ! array_key_exists('android', $request['message']));
+    }
+
+    public function test_a_member_can_stop_some_kinds_of_notification_reaching_their_phone(): void
+    {
+        $device = PushDevice::factory()->create();
+        $club = Club::factory()->create();
+        Queue::fake([SendPushNotification::class]);
+
+        $this->actingAs($device->user)->post(route('members.push_settings.update'), ['muted' => ['event']])->assertRedirect();
+        $event = Event::create(['club_id' => $club->id, 'title' => 'Ladies Night', 'slug' => 'ladies-night', 'starts_at' => now()->addWeek(), 'status' => 'upcoming']);
+        $device->user->refresh()->notify(ClubNotification::event($event, $club));
+        Queue::assertNothingPushed();
+        $this->assertSame(1, $device->user->notifications()->count());
+
+        $device->user->notify(ClubNotification::membershipApproved($club));
+        Queue::assertPushed(SendPushNotification::class, 1);
+    }
+
+    public function test_payment_and_signature_alerts_cannot_be_switched_off(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('members.push_settings.update'), ['muted' => ['payment']])
+            ->assertSessionHasErrors('muted.0');
     }
 
     public function test_nothing_is_sent_while_push_is_not_set_up(): void

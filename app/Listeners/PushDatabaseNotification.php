@@ -17,11 +17,11 @@ class PushDatabaseNotification
             return;
         }
 
-        if (! $event->notifiable->pushDevices()->exists()) {
+        $data = $event->response->data;
+
+        if (in_array($data['category'] ?? null, $event->notifiable->push_muted ?? [], true) || ! $event->notifiable->pushDevices()->exists()) {
             return;
         }
-
-        $data = $event->response->data;
 
         SendPushNotification::dispatch(
             $event->notifiable->id,

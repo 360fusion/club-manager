@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PushDevice;
+use App\Notifications\ClubNotification;
 use App\Support\NativeApp;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -56,5 +58,18 @@ class NativeAppController extends Controller
         $request->user()->pushDevices()->where('token', $validated['token'])->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    /** Which kinds of inbox notification stay off the person's phones. They still reach the inbox. */
+    public function updatePushSettings(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'muted' => ['nullable', 'array'],
+            'muted.*' => [Rule::in(ClubNotification::PUSH_OPTIONAL)],
+        ]);
+
+        $request->user()->forceFill(['push_muted' => array_values(array_unique($validated['muted'] ?? []))])->save();
+
+        return back()->with('success', 'Phone notification settings saved.');
     }
 }

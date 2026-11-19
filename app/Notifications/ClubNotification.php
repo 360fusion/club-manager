@@ -34,6 +34,11 @@ class ClubNotification extends Notification
 
     public const SIGNATURE = 'signature';
 
+    public const REMINDER = 'reminder';
+
+    /** The kinds someone may stop being sent to their phone; payments, signatures and membership decisions always are. */
+    public const PUSH_OPTIONAL = [self::SUMMONS, self::EVENT, self::NEWS, self::NOTICE, self::REMINDER];
+
     /**
      * @param  array<string, mixed>  $params  route parameters for the link
      */
@@ -132,6 +137,21 @@ class ClubNotification extends Notification
             'member.events',
             ['slug' => $club->slug],
             true,
+        );
+    }
+
+    /** The day before an event someone has booked: when and where, and their ticket one tap away. */
+    public static function eventTomorrow(EventRegistration $registration, Club $club): self
+    {
+        $event = $registration->event;
+
+        return new self(
+            self::REMINDER,
+            'Tomorrow: '.$event->title,
+            trim($event->starts_at->format('H:i').' · '.($event->formatted_location ?: $event->location ?? ''), ' ·'),
+            $club,
+            'member.events.ticket',
+            ['slug' => $club->slug, 'id' => $event->id],
         );
     }
 

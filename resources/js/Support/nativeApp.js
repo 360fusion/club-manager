@@ -34,9 +34,9 @@ async function saveToken(token) {
 
 let started = false;
 
-// Called on every page load in the app; push is only set up once someone is signed in.
+// Called with the first page the app loads; push is only set up once someone is signed in.
 // shortcut: on Android, push needs google-services.json in the app; the server's androidPush flag stands in for it, so ship both together.
-export async function startNativeApp(signedIn, androidPush) {
+export async function startNativeApp(firstPage) {
     if (!isNativeApp || started) return;
     started = true;
     document.documentElement.classList.add('native-app');
@@ -53,7 +53,8 @@ export async function startNativeApp(signedIn, androidPush) {
         if (path) router.visit(path);
     });
 
-    if (!signedIn || (window.Capacitor.getPlatform() === 'android' && !androidPush)) return;
+    const props = firstPage?.props ?? {};
+    if (!props.auth?.user || (isAndroidApp && !props.androidPush)) return;
 
     PushNotifications.addListener('registration', ({ value }) => saveToken(value));
 
@@ -63,5 +64,12 @@ export async function startNativeApp(signedIn, androidPush) {
     }
     if (receive === 'granted') {
         await PushNotifications.register();
+
+        // Each push sets the icon badge to the unread count; once the inbox is all read, clear it (and the stale alerts).
+        const clearWhenRead = (page) => {
+            if (page?.props?.bell?.unread === 0) PushNotifications.removeAllDeliveredNotifications().catch(() => {});
+        };
+        clearWhenRead(firstPage);
+        router.on('navigate', (event) => clearWhenRead(event.detail.page));
     }
 }

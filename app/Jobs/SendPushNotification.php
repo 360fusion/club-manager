@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\PushDevice;
+use App\Models\User;
 use App\Services\Push\PushSender;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,8 +29,10 @@ class SendPushNotification implements ShouldQueue
 
     public function handle(PushSender $sender): void
     {
-        PushDevice::where('user_id', $this->userId)->get()->each(function (PushDevice $device) use ($sender) {
-            if ($sender->send($device, $this->title, $this->body, $this->url) === PushSender::GONE) {
+        $badge = User::find($this->userId)?->unreadNotifications()->count();
+
+        PushDevice::where('user_id', $this->userId)->get()->each(function (PushDevice $device) use ($sender, $badge) {
+            if ($sender->send($device, $this->title, $this->body, $this->url, $badge) === PushSender::GONE) {
                 $device->delete();
             }
         });

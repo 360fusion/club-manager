@@ -10,7 +10,7 @@ use Inertia\Response;
 
 class NotificationController extends Controller
 {
-    private const CATEGORIES = ['summons', 'news', 'event', 'notice', 'membership', 'signature'];
+    private const CATEGORIES = ['summons', 'news', 'event', 'reminder', 'notice', 'membership', 'signature'];
 
     public function index(Request $request): Response
     {
@@ -30,6 +30,7 @@ class NotificationController extends Controller
             'notifications' => $notifications,
             'unreadCount' => $user->unreadNotifications()->count(),
             'filters' => ['category' => in_array($category, self::CATEGORIES, true) ? $category : '', 'unread' => $unreadOnly],
+            'pushMuted' => $user->push_muted ?? [],
         ]);
     }
 

@@ -25,14 +25,15 @@ class PushSender
     /**
      * @return self::SENT|self::SKIPPED|self::GONE
      */
-    public function send(PushDevice $device, string $title, string $body, ?string $url = null): string
+    public function send(PushDevice $device, string $title, string $body, ?string $url = null, ?int $badge = null): string
     {
         return $device->platform === 'ios'
-            ? $this->sendApns($device->token, $title, $body, $url)
-            : $this->sendFcm($device->token, $title, $body, $url);
+            ? $this->sendApns($device->token, $title, $body, $url, $badge)
+            : $this->sendFcm($device->token, $title, $body, $url, $badge);
     }
 
-    private function sendApns(string $token, string $title, string $body, ?string $url): string
+    /** $badge is the number shown on the app icon: the person's unread inbox count. */
+    private function sendApns(string $token, string $title, string $body, ?string $url, ?int $badge): string
     {
         $config = config('services.apns');
         if (! $config['key_id'] || ! $config['team_id'] || ! $config['key_path']) {
@@ -45,7 +46,7 @@ class PushSender
             ->withToken($this->apnsJwt($config), 'bearer')
             ->withHeaders(['apns-topic' => $config['bundle_id'], 'apns-push-type' => 'alert'])
             ->post("{$host}/3/device/{$token}", [
-                'aps' => ['alert' => ['title' => $title, 'body' => $body], 'sound' => 'default'],
+                'aps' => array_filter(['alert' => ['title' => $title, 'body' => $body], 'sound' => 'default', 'badge' => $badge], fn ($value) => $value !== null),
                 'url' => $url,
             ]);
 
@@ -56,7 +57,7 @@ class PushSender
         return $this->checked($response, 'APNs');
     }
 
-    private function sendFcm(string $token, string $title, string $body, ?string $url): string
+    private function sendFcm(string $token, string $title, string $body, ?string $url, ?int $badge): string
     {
         $path = config('services.fcm.credentials_path');
         if (! $path || ! is_readable($path)) {
@@ -70,7 +71,10 @@ class PushSender
                 'message' => [
                     'token' => $token,
                     'notification' => ['title' => $title, 'body' => $body],
-                    'data' => array_filter(['url' => $url]),
+                    // Both left out when empty: FCM wants an object, and an empty PHP array is sent as [].
+                    ...($url ? ['data' => ['url' => $url]] : []),
+                    // Launchers that show a count on the icon use this one.
+                    ...($badge ? ['android' => ['notification' => ['notification_count' => $badge]]] : []),
                 ],
             ]);
 
