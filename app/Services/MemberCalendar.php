@@ -41,7 +41,8 @@ class MemberCalendar
 
         $meetingReplies = MeetingRsvp::whereIn('meeting_id', $meetings->pluck('id'))
             ->where('user_id', $user->id)
-            ->pluck('attendance_status', 'meeting_id');
+            ->get(['meeting_id', 'attendance_status', 'payment_status', 'said_paid_at'])
+            ->keyBy('meeting_id');
 
         $events = Event::with('club')->whereIn('club_id', $clubIds)
             ->published()
@@ -52,10 +53,12 @@ class MemberCalendar
 
         $eventReplies = EventRegistration::whereIn('event_id', $events->pluck('id'))
             ->where('user_id', $user->id)
-            ->pluck('status', 'event_id');
+            ->get(['event_id', 'status', 'total', 'amount_paid', 'payment_status', 'said_paid_at'])
+            ->keyBy('event_id');
 
         $items = $meetings->map(function (Meeting $meeting) use ($scope, $meetingReplies) {
             $club = $scope->clubFor($meeting->club_id);
+            $rsvp = $meetingReplies[$meeting->id] ?? null;
             $start = $meeting->starts_at
                 ? $meeting->meeting_date->copy()->setTimeFromTimeString((string) $meeting->starts_at)
                 : $meeting->meeting_date->copy()->startOfDay();
@@ -70,13 +73,17 @@ class MemberCalendar
                 'start' => $start,
                 'end' => $start->copy()->addHours(self::MEETING_HOURS),
                 'where' => $meeting->venue,
-                'reply' => $meetingReplies[$meeting->id] ?? null,
+                'reply' => $rsvp?->attendance_status,
+                // The same rule as the inbox's dining payment reminder.
+                'unpaid' => $rsvp?->attendance_status === 'attending_dining' && in_array($rsvp->payment_status, [null, 'unpaid'], true) && (float) $meeting->dining_cost_member > 0,
+                'said_paid' => $rsvp?->said_paid_at !== null,
                 'closed' => $meeting->rsvpClosed(),
                 'simple' => true,
                 'url' => route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false),
             ];
         })->concat($events->map(function (Event $event) use ($scope, $eventReplies) {
             $club = $scope->clubFor($event->club_id);
+            $registration = $eventReplies[$event->id] ?? null;
 
             return [
                 'key' => 'event-'.$event->id,
@@ -87,7 +94,9 @@ class MemberCalendar
                 'start' => $event->starts_at,
                 'end' => $event->ends_at ?? $event->starts_at->copy()->addHours(self::EVENT_HOURS),
                 'where' => $event->location,
-                'reply' => $eventReplies[$event->id] ?? null,
+                'reply' => $registration?->status,
+                'unpaid' => $registration?->isGoing() && in_array($registration->statusFromAmounts(), ['unpaid', 'part_paid'], true),
+                'said_paid' => $registration?->said_paid_at !== null,
                 'closed' => (bool) $event->is_booking_closed,
                 'simple' => $event->allowsQuickReply(),
                 'url' => route('member.events', ['slug' => $club->slug], false),
@@ -135,6 +144,8 @@ class MemberCalendar
                     'all_day' => $schedule->start_time === null,
                     'where' => $lodge->masonicHall ? trim($lodge->masonicHall->name.', '.$lodge->masonicHall->fullAddress(), ', ') : null,
                     'reply' => null,
+                    'unpaid' => false,
+                    'said_paid' => false,
                     'closed' => false,
                     'simple' => false,
                     'url' => route('lodges.show', ['slug' => $lodge->slug], false),

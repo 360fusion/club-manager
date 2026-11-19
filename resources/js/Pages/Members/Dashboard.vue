@@ -36,13 +36,33 @@ const TYPES = {
 };
 
 const REPLIES = {
-    attending: 'Going',
     tentative: 'Maybe',
     declined: 'Not going',
-    attending_dining: 'Going, dining',
-    attending_meeting_only: 'Going',
+    waitlisted: 'Waiting list',
     apologies: 'Apologies',
 };
+
+const ATTENDING = ['attending', 'attending_dining', 'attending_meeting_only'];
+
+// The chip beside each coming-up item: what is owed first, then the member's reply, then an invitation to answer.
+const status = (item) => {
+    if (item.owes && item.said_paid) return { label: 'Payment sent', variant: 'info' };
+    if (item.owes) return { label: 'Unpaid', variant: 'warning' };
+    if (ATTENDING.includes(item.reply)) return { label: 'Attending', variant: 'success' };
+    if (item.reply) return { label: REPLIES[item.reply] ?? item.reply, variant: 'neutral' };
+    if (item.closed) return null;
+
+    return { label: item.type === 'event' ? 'Book' : 'Reply', variant: 'info' };
+};
+
+// The soonest booking that still owes money, shown on its own above everything else.
+// Not one they have said they paid by bank transfer: that waits for the Treasurer to see it in the bank.
+const nextBooking = computed(() => props.upNext.find((item) => item.owes && !item.said_paid) ?? null);
+
+// Its dining payment is already the highlighted card, so it is not listed again.
+const attention = computed(() => props.inbox.filter((item) => !(item.kind === 'dining_payment' && item.url === nextBooking.value?.url)));
+
+const subtitle = computed(() => (props.clubs.length === 1 ? props.clubs[0].name : props.clubs.length ? `You belong to ${props.clubs.length} clubs` : 'You are not a member of any club yet'));
 
 const clubFilter = ref('all');
 const typeFilter = ref('all');
@@ -71,38 +91,46 @@ const dayParts = (iso) => {
     const date = new Date(iso);
 
     return {
-        month: date.toLocaleDateString('en-GB', { month: 'short' }),
-        day: date.getDate(),
+        weekday: date.toLocaleDateString('en-GB', { weekday: 'long' }),
+        long: date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }),
         time: date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
     };
 };
+
+const company = (guests) => (guests ? `you and ${guests} ${guests === 1 ? 'guest' : 'guests'}` : 'just you');
 
 const KIND_LABELS = { meeting_rsvp: 'Summons', dining_payment: 'Payment', dues: 'Dues', event_rsvp: 'Event', approvals: 'Admin', signature: 'Sign' };
 const severityVariant = (severity) => (severity >= 3 ? 'danger' : severity === 2 ? 'warning' : 'info');
 
 const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
-const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium transition-colors', active ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'];
+const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-full border px-3.5 text-xs font-medium transition-colors sm:min-h-8', active ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'];
 </script>
 
 <template>
-    <MembersLayout title="Dashboard" active-tab="dashboard">
-        <div class="space-y-6">
-            <div class="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ greeting }}, {{ firstName }}</h2>
-                    <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                        <template v-if="clubs.length">You belong to {{ clubs.length }} {{ clubs.length === 1 ? 'club' : 'clubs' }}.</template>
-                        <template v-else>You are not a member of any club yet.</template>
-                    </p>
-                </div>
+    <MembersLayout title="Home" active-tab="dashboard">
+        <div class="space-y-4 sm:space-y-6">
+            <div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ subtitle }}</p>
+                <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ greeting }}, {{ firstName }}</h2>
             </div>
 
-            <Card v-if="inbox.length" padding="none" aria-labelledby="inbox-heading">
+            <section v-if="nextBooking" aria-labelledby="next-booking-heading" class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-800/40 dark:bg-amber-950/30 lg:max-w-xl">
+                <div class="flex items-start gap-3">
+                    <div class="min-w-0 flex-1">
+                        <h3 id="next-booking-heading" class="text-sm font-semibold text-slate-900 dark:text-white">{{ nextBooking.title }}</h3>
+                        <p class="text-xs text-slate-700 dark:text-slate-300">{{ dayParts(nextBooking.at).long }} · {{ company(nextBooking.guests) }}<template v-if="clubs.length > 1"> · {{ nextBooking.club_name }}</template></p>
+                    </div>
+                    <Badge variant="warning">Payment due</Badge>
+                </div>
+                <Button block :href="nextBooking.url">Pay {{ nextBooking.owes }}</Button>
+            </section>
+
+            <Card v-if="attention.length" padding="none" aria-labelledby="inbox-heading">
                 <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                    <h2 id="inbox-heading" class="text-sm font-semibold text-slate-900 dark:text-white">Needs your attention ({{ inbox.length }})</h2>
+                    <h3 id="inbox-heading" class="text-sm font-semibold text-slate-900 dark:text-white">Needs your attention ({{ attention.length }})</h3>
                 </div>
                 <ul>
-                    <li v-for="item in inbox" :key="`${item.kind}-${item.club.slug}-${item.title}`" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                    <li v-for="item in attention" :key="`${item.kind}-${item.club.slug}-${item.title}`" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                             <Badge :variant="severityVariant(item.severity)">{{ KIND_LABELS[item.kind] ?? 'Action' }}</Badge>
                             <ClubChip :name="item.club.name" :colour="item.club.colour" />
@@ -125,98 +153,96 @@ const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium tra
 
             <Card v-if="!clubs.length && !pendingClubs.length">
                 <div class="py-6 text-center">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Find your club</h2>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Find your club</h3>
                     <p class="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Browse the directory to see public meetings and events, and ask to join a club.</p>
                     <Button class="mt-4" :href="route('directory.index')">Open the directory</Button>
                 </div>
             </Card>
 
-            <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-                <section aria-labelledby="feed-heading" class="min-w-0 space-y-3">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h2 id="feed-heading" class="mr-2 text-sm font-medium text-slate-500 dark:text-slate-400">From your clubs</h2>
-                        <button v-for="option in [{ slug: 'all', name: 'All clubs' }, ...clubs]" :key="option.slug" type="button" :class="chip(clubFilter === option.slug)" @click="clubFilter = option.slug">{{ option.name }}</button>
+            <!-- Phones read top to bottom: coming up, club news, clubs. Wide screens put the news on the left. -->
+            <div v-else class="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:items-start">
+                <section aria-labelledby="next-heading" class="min-w-0 space-y-2 lg:col-start-2 lg:row-start-1">
+                    <h3 id="next-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Coming up</h3>
+                    <Card padding="sm">
+                        <ul v-if="upNext.length" class="-mt-3">
+                            <li v-for="item in upNext" :key="`${item.type}-${item.id}`" class="border-t border-slate-200 first:border-t-0 dark:border-slate-800">
+                                <Link :href="item.url" class="flex min-h-11 items-center gap-3 py-3">
+                                    <DateTile :date="item.at" :colour="item.club_colour" size="sm" />
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate text-sm font-semibold text-slate-900 dark:text-white">{{ item.title }}</span>
+                                        <span class="block truncate text-xs text-slate-500 dark:text-slate-400">{{ dayParts(item.at).weekday }}, {{ dayParts(item.at).time }}<template v-if="item.where"> · {{ item.where }}</template><template v-if="clubs.length > 1"> · {{ item.club_name }}</template></span>
+                                    </span>
+                                    <Badge v-if="status(item)" :variant="status(item).variant">{{ status(item).label }}</Badge>
+                                </Link>
+                            </li>
+                        </ul>
+                        <p v-else class="text-sm text-slate-500 dark:text-slate-400">No meetings or events coming up.</p>
+                        <Link :href="route('members.calendar')" class="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400">See the full calendar</Link>
+                    </Card>
+                </section>
+
+                <section aria-labelledby="feed-heading" class="min-w-0 space-y-2 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+                    <h3 id="feed-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">From your clubs</h3>
+
+                    <div v-if="clubs.length > 1" class="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+                        <button v-for="option in [{ slug: 'all', name: 'All clubs' }, ...clubs]" :key="option.slug" type="button" :class="chip(clubFilter === option.slug)" :aria-pressed="clubFilter === option.slug" @click="clubFilter = option.slug">{{ option.name }}</button>
                     </div>
 
-                    <div v-if="feedTypes.length > 1" class="flex flex-wrap gap-2">
-                        <button v-for="type in ['all', ...feedTypes]" :key="type" type="button" :class="chip(typeFilter === type)" @click="typeFilter = type">{{ type === 'all' ? 'Everything' : TYPES[type]?.label }}</button>
+                    <div v-if="feedTypes.length > 1" class="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+                        <button v-for="type in ['all', ...feedTypes]" :key="type" type="button" :class="chip(typeFilter === type)" :aria-pressed="typeFilter === type" @click="typeFilter = type">{{ type === 'all' ? 'Everything' : TYPES[type]?.label }}</button>
                     </div>
 
                     <Deferred data="feed">
                         <template #fallback>
                             <Card padding="none">
                                 <div v-for="n in 3" :key="n" class="flex animate-pulse gap-3 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
-                                    <div class="h-8 w-8 shrink-0 rounded-lg bg-slate-200 dark:bg-slate-800" />
-                                    <div class="flex-1 space-y-2"><div class="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-800" /><div class="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-800" /><div class="h-3 w-full rounded bg-slate-200 dark:bg-slate-800" /></div>
+                                    <div class="flex-1 space-y-2"><div class="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-800" /><div class="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-800" /></div>
                                 </div>
                             </Card>
                         </template>
 
                         <Card v-if="filteredFeed.length" padding="none">
                             <ul>
-                                <li v-for="item in filteredFeed" :key="item.key" class="border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
-                                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                        <Badge v-if="item.important" variant="danger">Important</Badge>
-                                        <Badge :variant="TYPES[item.type]?.variant ?? 'neutral'">{{ TYPES[item.type]?.label ?? item.type }}</Badge>
-                                        <ClubChip :name="item.club.name" :colour="item.club.colour" />
-                                        <span aria-hidden="true">·</span>
-                                        <time :datetime="item.at">{{ ago(item.at) }}</time>
-                                    </div>
-                                    <Link :href="route(item.link.name, item.link.params)" class="mt-1.5 block text-sm font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ item.title }}</Link>
-                                    <p v-if="item.excerpt" class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ item.excerpt }}</p>
+                                <li v-for="item in filteredFeed" :key="item.key" class="border-b border-slate-200 last:border-b-0 dark:border-slate-800">
+                                    <Link :href="route(item.link.name, item.link.params)" class="block min-h-11 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                        <span class="flex items-start gap-2">
+                                            <span class="min-w-0 flex-1 text-sm font-semibold text-slate-900 dark:text-white">{{ item.title }}</span>
+                                            <Badge v-if="item.important" variant="danger">Important</Badge>
+                                        </span>
+                                        <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ TYPES[item.type]?.label ?? item.type }} · {{ item.club.name }} · <time :datetime="item.at">{{ ago(item.at) }}</time></span>
+                                        <span v-if="item.excerpt" class="mt-1 line-clamp-2 block text-sm text-slate-600 dark:text-slate-300">{{ item.excerpt }}</span>
+                                    </Link>
                                 </li>
                             </ul>
                         </Card>
 
-                        <Card v-else>
-                            <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your clubs will show up here.' }}</p>
+                        <Card v-else padding="sm">
+                            <p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your clubs will show up here.' }}</p>
                         </Card>
                     </Deferred>
                 </section>
 
-                <aside class="min-w-0 space-y-6">
-                    <section aria-labelledby="next-heading" class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <h2 id="next-heading" class="text-sm font-medium text-slate-500 dark:text-slate-400">Up next</h2>
-                            <Link :href="route('members.calendar')" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Open calendar</Link>
-                        </div>
-                        <Card v-if="upNext.length" padding="none">
-                            <ul>
-                                <li v-for="item in upNext" :key="`${item.type}-${item.club_slug}-${item.title}-${item.at}`" class="flex gap-3 border-b border-slate-200 p-3 last:border-b-0 dark:border-slate-800">
-                                    <DateTile :date="item.at" :colour="item.club_colour" size="sm" />
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ item.title }}</p>
-                                        <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ item.club_name }} · {{ dayParts(item.at).time }}<template v-if="item.where"> · {{ item.where }}</template></p>
-                                        <Badge v-if="item.reply" class="mt-1.5" variant="success">{{ REPLIES[item.reply] ?? item.reply }}</Badge>
+                <section aria-labelledby="clubs-heading" class="min-w-0 space-y-2 lg:col-start-2 lg:row-start-2">
+                    <h3 id="clubs-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your clubs</h3>
+                    <Card padding="none">
+                        <ul>
+                            <li v-for="club in clubs" :key="club.id" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <p class="flex items-center gap-2 truncate text-sm font-semibold text-slate-900 dark:text-white"><span :class="['h-2 w-2 shrink-0 rounded-full', orderColour(club.colour).dot]" aria-hidden="true" />{{ club.name }}</p>
+                                        <p class="truncate text-xs text-slate-500 dark:text-slate-400"><template v-if="club.type_name">{{ club.type_name }}</template><template v-if="club.member_number"> · {{ club.member_number }}</template></p>
                                     </div>
-                                </li>
-                            </ul>
-                        </Card>
-                        <Card v-else><p class="text-sm text-slate-500 dark:text-slate-400">No meetings or events coming up.</p></Card>
-                    </section>
-
-                    <section aria-labelledby="clubs-heading" class="space-y-2">
-                        <h2 id="clubs-heading" class="text-sm font-medium text-slate-500 dark:text-slate-400">Your clubs</h2>
-                        <Card padding="none">
-                            <ul>
-                                <li v-for="club in clubs" :key="club.id" class="space-y-2 border-b border-slate-200 p-3 last:border-b-0 dark:border-slate-800">
-                                    <div class="flex items-start justify-between gap-2">
-                                        <div class="min-w-0">
-                                            <p class="flex items-center gap-2 truncate text-sm font-semibold text-slate-900 dark:text-white"><span :class="['h-2 w-2 shrink-0 rounded-full', orderColour(club.colour).dot]" aria-hidden="true" />{{ club.name }}</p>
-                                            <p class="truncate text-xs text-slate-500 dark:text-slate-400"><template v-if="club.type_name">{{ club.type_name }}</template><template v-if="club.member_number"> · {{ club.member_number }}</template></p>
-                                        </div>
-                                        <Badge :variant="club.is_staff ? 'info' : 'neutral'">{{ roleLabel(club.role) }}</Badge>
-                                    </div>
-                                    <div class="flex flex-wrap gap-2">
-                                        <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: club.slug })">Open</Button>
-                                        <Button v-if="club.is_staff" size="sm" variant="secondary" :href="route('admin.analytics', { slug: club.slug })">Admin</Button>
-                                        <Button size="sm" variant="ghost" :href="route('public.site', { clubSlug: club.slug })">Website</Button>
-                                    </div>
-                                </li>
-                            </ul>
-                        </Card>
-                    </section>
-                </aside>
+                                    <Badge :variant="club.is_staff ? 'info' : 'neutral'">{{ roleLabel(club.role) }}</Badge>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: club.slug })">Open</Button>
+                                    <Button v-if="club.is_staff" size="sm" variant="secondary" :href="route('admin.analytics', { slug: club.slug })">Admin</Button>
+                                    <Button size="sm" variant="ghost" :href="route('public.site', { clubSlug: club.slug })">Website</Button>
+                                </div>
+                            </li>
+                        </ul>
+                    </Card>
+                </section>
             </div>
         </div>
     </MembersLayout>

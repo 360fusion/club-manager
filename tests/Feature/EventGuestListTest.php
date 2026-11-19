@@ -101,6 +101,23 @@ class EventGuestListTest extends TestCase
         $this->assertStringNotContainsString('Wendy Waiting', $html, 'waiting-list people are not catered for yet');
     }
 
+    public function test_the_catering_page_counts_covers_by_members_guests_and_visitors_and_dishes_per_course(): void
+    {
+        $this->event->update(['capacity' => 10]);
+        $this->seedBookings();
+        $dish = fn (string $name) => EventMenuItem::where('name', $name)->sole()->id;
+        app(EventRegistrationService::class)->saveByOrganiser($this->event, null, null, ['contact_name' => 'Vic Visitor', 'attendees' => [['name' => 'Vic Visitor', 'attending_dining' => true, 'starter_item_id' => $dish('Soup'), 'main_item_id' => $dish('Beef'), 'dessert_item_id' => $dish('Tart')]]], $this->admin);
+        app(EventRegistrationService::class)->saveByOrganiser($this->event, null, null, ['contact_name' => 'Nora Nodinner', 'attendees' => [['name' => 'Nora Nodinner', 'attending_dining' => false]]], $this->admin);
+
+        $this->actingAs($this->admin)->get(route('admin.events.dining', ['clubSlug' => 'club-a', 'id' => $this->event->id]))->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Admin/Events/Catering')
+            ->where('summary.covers', 5)
+            ->where('summary.not_dining', 1)
+            ->where('summary.split', ['members' => 3, 'guests' => 1, 'visitors' => 1])
+            ->where('summary.courses.main.0', ['name' => 'Beef', 'count' => 4])
+            ->where('summary.dietary.0.notes', 'Nut allergy'));
+    }
+
     public function test_the_csv_export_has_one_row_per_person_and_neutralises_formulas(): void
     {
         $this->seedBookings();
@@ -123,7 +140,7 @@ class EventGuestListTest extends TestCase
         $otherAdmin = User::factory()->create();
         $otherClub->users()->attach($otherAdmin->id, ['role' => 'admin', 'status' => 'active']);
 
-        foreach (['admin.events.guest_list', 'admin.events.catering', 'admin.events.export'] as $route) {
+        foreach (['admin.events.guest_list', 'admin.events.catering', 'admin.events.dining', 'admin.events.export'] as $route) {
             $url = route($route, ['clubSlug' => 'club-a', 'id' => $this->event->id]);
 
             $this->actingAs($member)->get($url)->assertForbidden();

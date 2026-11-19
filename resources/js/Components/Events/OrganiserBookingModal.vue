@@ -17,6 +17,8 @@ const props = defineProps({
     canMarkPaid: { type: Boolean, default: false },
     // The booking being changed, or null to add a new one.
     registrationId: { type: Number, default: null },
+    // Opened from the event night screen: a new booking is marked as arrived when it is saved.
+    atTheDoor: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'edit']);
@@ -27,10 +29,10 @@ const COURSES = [
     { key: 'dessert', column: 'dessert_item_id', label: 'Dessert' },
 ];
 
-const field = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const field = 'min-h-11 sm:min-h-0 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
 const label = 'mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300';
 // The two-way switches (member or visitor, attending or waiting list).
-const segment = (on) => ['rounded-lg px-3 py-1.5 text-sm font-medium', on ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'];
+const segment = (on) => ['min-h-11 sm:min-h-0 rounded-lg px-3 py-1.5 text-sm font-medium', on ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'];
 const errorText = 'mt-1 text-[11px] font-semibold text-rose-600';
 
 const blankPerson = (isGuest = false) => ({
@@ -231,6 +233,7 @@ const submit = () => {
         mark_paid: data.mark_paid.enabled ? data.mark_paid : null,
         send_confirmation: data.send_confirmation && !!data.contact_email,
         member_id: editing.value ? undefined : data.member_id,
+        check_in: props.atTheDoor && !editing.value,
     }));
 
     if (editing.value) {
@@ -244,7 +247,8 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
 </script>
 
 <template>
-    <Modal :open="open" size="xl" :title="editing ? `Edit booking${booking ? ' for ' + booking.attendees[0]?.name : ''}` : 'Add a booking'" :subtitle="event.title" @close="emit('close')">
+    <!-- On a phone the dialog fills the screen as a sheet; the classes reach the kit Modal's panel through its backdrop. -->
+    <Modal :open="open" size="xl" class="max-sm:p-0 max-sm:[&>div]:h-dvh max-sm:[&>div]:max-h-none max-sm:[&>div]:rounded-none max-sm:[&>div]:border-0 max-sm:[&>div]:p-4" :title="editing ? `Edit booking${booking ? ' for ' + booking.attendees[0]?.name : ''}` : 'Add a booking'" :subtitle="event.title" @close="emit('close')">
         <p v-if="loading" class="py-8 text-center text-xs text-slate-500">Loading booking...</p>
         <p v-else-if="loadError" class="rounded-lg bg-rose-500/10 p-3 text-xs font-semibold text-rose-600" role="alert">{{ loadError }}</p>
 
@@ -280,11 +284,11 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                         <label :class="label" for="member-search">Search members by name, email or member number</label>
                         <input id="member-search" v-model="search" type="search" autocomplete="off" maxlength="100" placeholder="Start typing a name..." :class="field" />
                         <p v-if="form.errors.member_id" :class="errorText">{{ form.errors.member_id }}</p>
-                        <ul v-if="search.trim().length >= 2" class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" role="listbox">
+                        <ul v-if="search.trim().length >= 2" class="mt-1 sm:absolute sm:z-20 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" role="listbox">
                             <li v-if="searching" class="px-3 py-2 text-slate-500">Searching...</li>
                             <li v-else-if="!results.length" class="px-3 py-2 text-slate-500">No members found. Try "A visitor or non-member" instead.</li>
                             <li v-for="found in results" :key="found.id" role="option">
-                                <button type="button" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800" @click="pickMember(found)">
+                                <button type="button" class="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800" @click="pickMember(found)">
                                     <span>
                                         <span class="font-bold text-slate-900 dark:text-white">{{ found.name }}</span>
                                         <span class="block text-slate-500 dark:text-slate-400"><template v-if="found.rank">{{ found.rank }} · </template>{{ found.lodge || clubName }} · {{ found.email }}</span>
@@ -334,7 +338,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                     </label>
 
                     <template v-if="event.has_dining">
-                        <label class="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <label class="flex min-h-11 items-center gap-2 font-bold text-slate-900 sm:min-h-0 dark:text-white">
                             <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded" @change="setDining(person, $event.target.checked)" />
                             Having dinner
                             <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500 dark:text-slate-400">({{ $money(event.dining_price) }})</span>
@@ -377,7 +381,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                 <template v-if="charged">
                     <div v-if="event.payment_options?.length" class="space-y-2" role="radiogroup" aria-label="How will they pay?">
                         <p :class="label">How will they pay?</p>
-                        <label v-for="option in event.payment_options" :key="option.id" :class="['flex cursor-pointer items-center justify-between gap-2 rounded-xl border p-3', form.payment_method === option.id ? 'border-blue-500 ring-1 ring-blue-500/40' : 'border-slate-200 dark:border-slate-800']">
+                        <label v-for="option in event.payment_options" :key="option.id" :class="['flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-xl border p-3', form.payment_method === option.id ? 'border-blue-500 ring-1 ring-blue-500/40' : 'border-slate-200 dark:border-slate-800']">
                             <span class="flex items-center gap-2"><input v-model="form.payment_method" type="radio" :value="option.id" name="organiser-payment-option" /><span class="font-bold text-slate-900 dark:text-white">{{ option.label }}</span></span>
                             <span class="font-mono">{{ formatMoney(optionQuotes.find((o) => o.id === option.id)?.total ?? 0) }}</span>
                         </label>
@@ -397,7 +401,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                     <label class="block"><span :class="label">Promo code (optional)</span><input v-model="form.promo_code" type="text" maxlength="40" :class="[field, 'sm:max-w-xs']" /></label>
 
                     <div v-if="canRecordPayment" class="space-y-2 rounded-xl border border-emerald-300 p-3 dark:border-emerald-800/60">
-                        <label class="flex items-center gap-2 font-bold text-slate-900 dark:text-white"><input v-model="form.mark_paid.enabled" type="checkbox" class="rounded" /> They have already paid</label>
+                        <label class="flex min-h-11 items-center gap-2 font-bold text-slate-900 sm:min-h-0 dark:text-white"><input v-model="form.mark_paid.enabled" type="checkbox" class="rounded" /> They have already paid</label>
                         <div v-if="form.mark_paid.enabled" class="grid gap-3 sm:grid-cols-3">
                             <label class="block"><span :class="label">Amount received</span><input v-model="form.mark_paid.amount" type="number" step="0.01" min="0.01" :class="field" @input="amountTouched = true" /><p v-if="form.errors['mark_paid.amount']" :class="errorText">{{ form.errors['mark_paid.amount'] }}</p></label>
                             <label class="block"><span :class="label">Date received</span><input v-model="form.mark_paid.received_on" type="date" :class="field" /></label>
@@ -412,18 +416,18 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
             <section class="space-y-3 pb-6">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">4. Notes and confirmation</h3>
                 <label class="block"><span :class="label">Internal note (only organisers see this)</span><textarea v-model="form.internal_note" rows="2" maxlength="2000" placeholder="Seat with the Master, phoned in on Tuesday" :class="field"></textarea></label>
-                <label class="flex flex-wrap items-center gap-2.5 py-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                <label class="flex min-h-11 flex-wrap items-center gap-2.5 py-1 text-sm sm:min-h-0 font-semibold text-slate-800 dark:text-slate-100">
                     <input v-model="form.send_confirmation" type="checkbox" :disabled="!hasEmail" class="h-4 w-4 rounded" />
                     Email them a confirmation <span v-if="!hasEmail" class="text-xs font-normal text-slate-500 dark:text-slate-400">(add an email address first)</span>
                     <span v-else class="text-xs font-normal text-slate-500 dark:text-slate-400">(guests with their own email are told too)</span>
                 </label>
             </section>
 
-            <div class="sticky bottom-0 -mx-6 -mb-6 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-900">
+            <div class="sticky bottom-0 -mx-4 -mb-4 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-4 dark:border-slate-800 dark:bg-slate-900">
                 <span class="font-mono text-sm font-bold text-slate-900 dark:text-white">{{ charged && chosenQuote ? `Total ${formatMoney(chosenQuote.total)}` : '' }}</span>
                 <div class="flex gap-2">
-                    <Button variant="secondary" @click="emit('close')">Cancel</Button>
-                    <Button type="submit" :disabled="!canSubmit" :loading="form.processing">{{ editing ? 'Save changes' : 'Add booking' }}</Button>
+                    <Button variant="secondary" class="max-sm:hidden" @click="emit('close')">Cancel</Button>
+                    <Button type="submit" :disabled="!canSubmit" :loading="form.processing">{{ editing ? 'Save changes' : (atTheDoor ? 'Add and mark arrived' : 'Add booking') }}</Button>
                 </div>
             </div>
         </form>

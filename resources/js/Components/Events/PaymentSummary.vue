@@ -25,7 +25,7 @@ const STATUS = {
 </script>
 
 <template>
-    <div v-if="Number(payment.total) > 0" :class="['space-y-2 rounded-xl border p-3 text-xs', box]">
+    <div v-if="Number(payment.total) > 0" :class="['space-y-2 rounded-2xl border p-4 text-xs', box]">
         <div class="flex items-center justify-between gap-2">
             <span class="font-bold">Payment</span>
             <span :class="['rounded px-2 py-0.5 text-[10px] font-bold uppercase', (STATUS[payment.status] ?? STATUS.unpaid)[1]]">{{ (STATUS[payment.status] ?? STATUS.unpaid)[0] }}</span>
@@ -50,12 +50,12 @@ const STATUS = {
                 </dl>
                 <p :class="['mt-1', muted]">Please use the reference exactly, so we can match your payment.</p>
                 <p v-if="payment.said_paid_at" class="mt-2 font-semibold text-amber-600">You told us you paid on {{ payment.said_paid_at }}. It will show as paid once the Treasurer sees it in the bank.</p>
-                <button v-else type="button" :disabled="paying" :class="['mt-2 w-full rounded-xl border px-3 py-2 text-xs font-bold disabled:opacity-60', dark ? 'border-slate-700 hover:bg-slate-900' : 'border-slate-300 hover:bg-white dark:border-slate-700 dark:hover:bg-slate-900']" @click="emit('said-paid')">I've paid by bank transfer</button>
+                <button v-else type="button" :disabled="paying" :class="['mt-2 min-h-11 w-full rounded-xl border px-3 py-2 text-sm font-semibold disabled:opacity-60', dark ? 'border-slate-700 hover:bg-slate-900' : 'border-slate-300 hover:bg-white dark:border-slate-700 dark:hover:bg-slate-900']" @click="emit('said-paid')">I've paid by bank transfer</button>
             </div>
             <p v-else-if="payment.method_type === 'cash_on_door'" :class="muted">Pay when you arrive.</p>
 
             <template v-if="payment.online?.can_pay">
-                <button v-for="offer in payment.online.options" :key="offer.id" type="button" :disabled="paying" class="w-full rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60" @click="emit('pay', offer.id)">
+                <button v-for="offer in payment.online.options" :key="offer.id" type="button" :disabled="paying" class="min-h-11 w-full rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-60" @click="emit('pay', offer.id)">
                     {{ paying ? 'Taking you to the payment page...' : `Pay ${formatMoney(offer.total)} now ${offer.type === 'paypal' ? 'with PayPal' : 'by card'}` }}
                     <span v-if="offer.saving > 0" class="ml-1 font-normal opacity-90">(save {{ formatMoney(offer.saving) }})</span>
                 </button>

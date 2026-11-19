@@ -169,6 +169,10 @@ class EventPayload
             'total' => $registration->total,
             'payment' => self::payment($registration),
             'checked_in_at' => $booker?->checked_in_at?->toIso8601String(),
+            // Waiting lists are served oldest booking first (EventRegistrationService::promoteFromWaitlist).
+            'waitlist_position' => $registration->status === 'waitlisted'
+                ? EventRegistration::where('event_id', $registration->event_id)->where('status', 'waitlisted')->where('id', '<=', $registration->id)->count()
+                : null,
             'attendees' => $registration->attendees->map(fn (EventAttendee $a) => [
                 'id' => $a->id,
                 'name' => $a->name,
@@ -181,6 +185,7 @@ class EventPayload
                 'dessert_item_id' => $a->dessert_item_id,
                 'dietary_requirements' => $a->dietary_requirements,
                 'meal' => $a->mealSummary(),
+                'price' => $a->price,
             ])->values(),
             'attending_dining' => (bool) $booker?->attending_dining,
             'menu_selections' => $booker?->mealSummary() ?? [],

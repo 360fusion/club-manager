@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\EventAttendee;
 use App\Models\EventRegistration;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * One source for the guest list, the catering summary and the CSV, so the three never disagree.
@@ -44,13 +45,19 @@ class GuestListBuilder
     /**
      * What the kitchen needs: covers, dishes and dietary notes.
      *
-     * @return array{covers: int, not_dining: int, total: int, courses: array<string, list<array{name: string, count: int}>>, dietary: list<array{name: string, notes: string}>, flags: array<string, int>}
+     * @return array{covers: int, not_dining: int, total: int, split: array{members: int, guests: int, visitors: int}, courses: array<string, list<array{name: string, count: int}>>, dietary: list<array{name: string, notes: string}>, flags: array<string, int>}
      */
     public function catering(Event $event): array
     {
         $registrations = $this->registrations($event, EventRegistration::HOLDING_PLACE);
         $attendees = $registrations->flatMap(fn (EventRegistration $r) => $r->attendees);
         $diners = $attendees->where('attending_dining', true);
+
+        // A booker is a member when their account belongs to this club; anyone else booking for themselves is a visitor.
+        $memberIds = DB::table('club_user')->where('club_id', $event->club_id)->whereIn('user_id', $registrations->pluck('user_id')->filter()->all())->pluck('user_id')->all();
+        $bookerIds = $registrations->keyBy('id')->map(fn (EventRegistration $r) => $r->user_id);
+        $members = $diners->filter(fn (EventAttendee $a) => ! $a->is_guest && in_array($bookerIds[$a->registration_id], $memberIds, false))->count();
+        $guests = $diners->where('is_guest', true)->count();
 
         $courses = [];
 
@@ -91,6 +98,7 @@ class GuestListBuilder
             'covers' => $diners->count(),
             'not_dining' => $attendees->where('attending_dining', false)->count(),
             'total' => $attendees->count(),
+            'split' => ['members' => $members, 'guests' => $guests, 'visitors' => $diners->count() - $members - $guests],
             'courses' => $courses,
             'dietary' => $attendees->filter(fn (EventAttendee $a) => filled($a->dietary_requirements))
                 ->map(fn (EventAttendee $a) => ['name' => $a->name, 'notes' => (string) $a->dietary_requirements])

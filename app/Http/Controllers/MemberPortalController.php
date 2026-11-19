@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Club;
 use App\Models\Event;
-use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\NewsTag;
+use App\Models\Page;
 use App\Models\Post;
+use App\Models\User;
 use App\Services\Events\EventPayload;
+use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -28,7 +31,7 @@ class MemberPortalController extends Controller
     public function show(string $slug): Response|RedirectResponse
     {
         $user = Auth::user();
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
 
         // Get user's membership pivot status
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
@@ -39,27 +42,19 @@ class MemberPortalController extends Controller
             return redirect()->route('public.site', ['clubSlug' => $club->slug]);
         }
 
-        // Attendance stats
-        $userRsvps = EventRegistration::with('attendees')
-            ->where('user_id', $user?->id ?? 0)
-            ->whereHas('event', fn ($q) => $q->where('club_id', $club->id))
-            ->get();
-
-        $totalRsvps = $userRsvps->count();
-        $attendedCount = $userRsvps->where('status', 'attending')->count() + $userRsvps->filter(fn ($r) => $r->booker()?->checked_in_at !== null)->count();
-        $attendanceRate = $totalRsvps > 0 ? round(($attendedCount / $totalRsvps) * 100, 1) : 100.0;
-
         // Someone still waiting for approval sees the waiting notice and none of the lodge's summonses, events or circulars.
-        $meetings = Meeting::where('club_id', $club->id)
+        $meetingModels = Meeting::where('club_id', $club->id)
             ->where('status', 'published')
             ->when($isPending, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('meeting_date', 'asc')
-            ->get()
-            ->map(function ($meeting) use ($user, $club) {
-                $userRsvp = $user ? MeetingRsvp::where('meeting_id', $meeting->id)
-                    ->where('user_id', $user->id)
-                    ->with('guests')
-                    ->first() : null;
+            ->get();
+        $myMeetingRsvps = $user
+            ? MeetingRsvp::whereIn('meeting_id', $meetingModels->pluck('id'))->where('user_id', $user->id)->with('guests')->get()->keyBy('meeting_id')
+            : collect();
+
+        $meetings = $meetingModels
+            ->map(function ($meeting) use ($myMeetingRsvps, $club) {
+                $userRsvp = $myMeetingRsvps->get($meeting->id);
 
                 return [
                     'id' => $meeting->id,
@@ -116,25 +111,123 @@ class MemberPortalController extends Controller
             ->values();
 
         // What the member still owes this lodge in dues, so the dashboard never claims good standing it cannot know.
-        $duesOwed = MemberSubscription::where('club_id', $club->id)
+        $subscriptions = MemberSubscription::where('club_id', $club->id)
             ->whereHas('member', fn ($member) => $member->where('user_id', $user->id))
-            ->get()
+            ->orderByDesc('due_date')
+            ->get();
+        $duesOwed = $subscriptions
             ->filter(fn (MemberSubscription $subscription) => $subscription->status->isOutstanding())
             ->sum('balance_due');
+        $latestSubscription = $subscriptions->first();
+
+        $member = Member::where('club_id', $club->id)->where('user_id', $user->id)->first();
 
         return Inertia::render('Member/Dashboard', [
-            'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
+            'club' => [...$club->only(['id', 'name', 'slug', 'lodge_number']), 'meets' => $club->lodge?->meets_text],
             'isPending' => $isPending,
             'memberRole' => $role,
-            'memberNumber' => $memberPivot?->member_number,
             'duesOwed' => round((float) $duesOwed, 2),
-            'attendanceRate' => $attendanceRate,
-            'attendedCount' => $attendedCount,
-            'totalRsvps' => $totalRsvps,
+            'subscription' => $latestSubscription ? [
+                'year' => $latestSubscription->billing_year,
+                'amount_due' => (float) $latestSubscription->amount_due,
+                'balance' => $latestSubscription->balance_due,
+                'status' => $latestSubscription->status->value,
+                'due_date' => $latestSubscription->due_date->format('j F Y'),
+            ] : null,
+            'organiserTools' => $isPending ? null : $this->organiserTools($user, $club, $member),
+            'officers' => $isPending ? [] : Member::currentOfficers($club),
+            'documents' => $isPending ? [] : $this->memberDocuments($club),
             'meetings' => $meetings,
             'events' => $events,
             'newsletters' => $newsletters,
         ]);
+    }
+
+    /**
+     * The admin screens a lodge's staff reach from their lodge page, each only when their role may open it, and the
+     * office they hold; null when they may open none of them.
+     *
+     * @return array{office: ?string, links: list<array{key: string, label: string, href: string}>}|null
+     */
+    private function organiserTools(?User $user, Club $club, ?Member $member): ?array
+    {
+        $links = [];
+
+        if (ClubAccess::can($user, $club, 'manage_events')) {
+            // The event happening today or next, else the last one held.
+            $event = Event::where('club_id', $club->id)->published()->where('starts_at', '>=', now()->startOfDay())->orderBy('starts_at')->first()
+                ?? Event::where('club_id', $club->id)->published()->latest('starts_at')->first();
+
+            if ($event) {
+                $links[] = ['key' => 'event_night', 'label' => 'Event night', 'href' => route('admin.events.checkin', ['clubSlug' => $club->slug, 'id' => $event->id])];
+            }
+        }
+
+        if (ClubAccess::can($user, $club, 'manage_meetings')) {
+            $meeting = Meeting::where('club_id', $club->id)->where('status', 'published')->where('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->first()
+                ?? Meeting::where('club_id', $club->id)->where('status', 'published')->latest('meeting_date')->first();
+
+            if ($meeting) {
+                $links[] = ['key' => 'catering', 'label' => 'Catering', 'href' => route('admin.meetings.dining', ['clubSlug' => $club->slug, 'id' => $meeting->id])];
+            }
+        }
+
+        if (ClubAccess::can($user, $club, 'manage_events')) {
+            $links[] = ['key' => 'add_booking', 'label' => 'Add booking', 'href' => route('admin.events.index', ['clubSlug' => $club->slug])];
+        }
+
+        if (ClubAccess::can($user, $club, 'send_newsletters')) {
+            $links[] = ['key' => 'send_notice', 'label' => 'Send notice', 'href' => route('admin.notices.index', ['clubSlug' => $club->slug])];
+        }
+
+        if ($links === []) {
+            return null;
+        }
+
+        $office = collect($member ? $member->active_offices : [])
+            ->map(fn ($office) => $office instanceof LodgeOffice ? $office : LodgeOffice::tryFrom((string) $office))
+            ->first(fn (?LodgeOffice $office) => $office && $office !== LodgeOffice::Member);
+
+        return ['office' => $office?->label(), 'links' => $links];
+    }
+
+    /**
+     * The files and links the lodge's website keeps for members only: downloads blocks marked members-only, or on a
+     * members-only page.
+     *
+     * @return list<array{title: string, href: string, type: string}>
+     */
+    private function memberDocuments(Club $club): array
+    {
+        $documents = [];
+
+        foreach (Page::where('club_id', $club->id)->live()->orderBy('sort_order')->get() as $page) {
+            foreach ($page->blocks ?? [] as $block) {
+                if (($block['type'] ?? null) !== 'downloads' || (empty($block['members_only']) && ! $page->is_members_only)) {
+                    continue;
+                }
+
+                foreach ($block['items'] ?? [] as $item) {
+                    $isUpload = ($item['source'] ?? null) === 'upload';
+                    $href = $isUpload
+                        ? ((int) ($item['media_id'] ?? 0) > 0 ? route('public.site.file', ['clubSlug' => $club->slug, 'mediaId' => (int) $item['media_id']]) : '')
+                        : (string) ($item['url'] ?? '');
+
+                    if ($href === '') {
+                        continue;
+                    }
+
+                    $fileName = (string) ($item['file_name'] ?? '');
+                    $documents[$href] = [
+                        'title' => ($item['title'] ?? '') ?: ($fileName ?: 'Document'),
+                        'href' => $href,
+                        'type' => $isUpload ? strtoupper(pathinfo($fileName, PATHINFO_EXTENSION)) : 'Link',
+                    ];
+                }
+            }
+        }
+
+        return array_values($documents);
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\DefaultEmailTemplate;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Post;
@@ -129,6 +130,48 @@ class MemberAreaTest extends TestCase
         $this->get('/members/news')->assertInertia(fn (Assert $page) => $page->has('posts.data', 1)->where('posts.data.0.title', 'Oxford news'));
         $this->get('/members/meetings')->assertInertia(fn (Assert $page) => $page->has('meetings', 1)->where('meetings.0.title', 'Oxford meeting'));
         $this->get('/members/events')->assertInertia(fn (Assert $page) => $page->has('events', 1)->where('events.0.title', 'Oxford dinner'));
+    }
+
+    public function test_the_bookings_page_carries_the_members_bookings_with_prices_and_waiting_list_place(): void
+    {
+        $dinner = $this->event($this->oxford, ['title' => 'Festive board', 'starts_at' => now()->addDays(3), 'requires_payment' => true]);
+        $booking = EventRegistration::create(['event_id' => $dinner->id, 'user_id' => $this->member->id, 'contact_name' => 'Alex Morgan', 'status' => 'attending', 'total' => 70, 'payment_status' => 'unpaid']);
+        $booking->attendees()->create(['user_id' => $this->member->id, 'name' => 'Alex Morgan', 'price' => 32]);
+        $booking->attendees()->create(['name' => 'Sam Reid', 'is_guest' => true, 'price' => 38]);
+
+        $ball = $this->event($this->oxford, ['title' => 'Ladies festival', 'starts_at' => now()->addDays(5)]);
+        EventRegistration::create(['event_id' => $ball->id, 'user_id' => $this->join($this->oxford)->id, 'contact_name' => 'First in line', 'status' => 'waitlisted']);
+        EventRegistration::create(['event_id' => $ball->id, 'user_id' => $this->member->id, 'contact_name' => 'Alex Morgan', 'status' => 'waitlisted']);
+
+        $this->event($this->oxford, ['title' => 'Open evening', 'starts_at' => now()->addDays(7)]);
+
+        $this->actingAs($this->member)->get('/members/events')->assertInertia(fn (Assert $page) => $page
+            ->component('Members/AllEvents')
+            ->where('events.0.title', 'Festive board')
+            ->where('events.0.club.currency_symbol', '£')
+            ->where('events.0.booking.payment.balance', '70.00')
+            ->where('events.0.booking.attendees.1.name', 'Sam Reid')
+            ->where('events.0.booking.attendees.1.price', '38.00')
+            ->where('events.1.booking.attendance_status', 'waitlisted')
+            ->where('events.1.booking.waitlist_position', 2)
+            ->where('events.2.title', 'Open evening')
+            ->where('events.2.booking', null));
+    }
+
+    public function test_past_bookings_are_the_members_own_places_from_the_last_year_in_their_clubs(): void
+    {
+        $book = fn (Event $event, string $status = 'attending', ?User $user = null) => EventRegistration::create(['event_id' => $event->id, 'user_id' => ($user ?? $this->member)->id, 'contact_name' => 'Someone', 'status' => $status]);
+
+        $book($this->event($this->oxford, ['title' => 'Summer ball', 'starts_at' => now()->subDays(10)]));
+        $book($this->event($this->oxford, ['title' => 'Declined dinner', 'starts_at' => now()->subDays(12)]), 'declined');
+        $book($this->event($this->oxford, ['title' => 'Someone elses dinner', 'starts_at' => now()->subDays(14)]), 'attending', $this->join($this->oxford));
+        $book($this->event($this->bath, ['title' => 'Bath dinner', 'starts_at' => now()->subDays(16)]));
+        $book($this->event($this->oxford, ['title' => 'Long ago dinner', 'starts_at' => now()->subYears(2)]));
+
+        $this->actingAs($this->member)->get('/members/events')->assertInertia(fn (Assert $page) => $page
+            ->has('past', 1)
+            ->where('past.0.title', 'Summer ball')
+            ->where('past.0.club.slug', 'oxford-lodge'));
     }
 
     public function test_meetings_list_carries_the_members_reply_for_the_edit_popup(): void

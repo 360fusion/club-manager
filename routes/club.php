@@ -82,6 +82,7 @@ use App\Http\Controllers\NativeAppController;
 use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterTypeAdminController;
 use App\Http\Controllers\NewsTagAdminController;
+use App\Http\Controllers\NoticeAdminController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficerRosterAdminController;
 use App\Http\Controllers\PageAdminController;
@@ -288,6 +289,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/newsletters/{id}/duplicate', [NewsletterAdminController::class, 'duplicate'])->name('admin.newsletters.duplicate');
     Route::post('/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
     Route::delete('/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
+
+    // Short notices to a group of members, to their phones and by email (guarded by send_newsletters through the route map)
+    Route::get('/{clubSlug}/admin/notices', [NoticeAdminController::class, 'index'])->name('admin.notices.index');
+    Route::post('/{clubSlug}/admin/notices', [NoticeAdminController::class, 'store'])->middleware('throttle:10,1,notices')->name('admin.notices.store');
 
     // Visitors who ask to receive the lodge's summonses (guarded by the meetings capability through the route map)
     Route::get('/{clubSlug}/admin/visitors', [VisitorAccessAdminController::class, 'index'])->name('admin.visitors.index');
@@ -605,6 +610,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/{clubSlug}/admin/payment-options/{id}', [PaymentOptionsController::class, 'destroy'])->name('admin.payment_options.destroy');
     Route::get('/{clubSlug}/admin/events/{id}/guest-list', [EventGuestListController::class, 'guestList'])->name('admin.events.guest_list');
     Route::get('/{clubSlug}/admin/events/{id}/catering', [EventGuestListController::class, 'catering'])->name('admin.events.catering');
+    Route::get('/{clubSlug}/admin/events/{id}/dining', [EventGuestListController::class, 'dining'])->name('admin.events.dining');
     Route::get('/{clubSlug}/admin/events/{id}/export', [EventGuestListController::class, 'export'])->name('admin.events.export');
     Route::post('/{clubSlug}/admin/events/{id}/walk-in', [AttendanceController::class, 'walkIn'])->name('admin.events.checkin.walk_in');
 });

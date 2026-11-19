@@ -2,7 +2,8 @@
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import { formatLocal } from '@/Utils/localDateTime';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { formatMoney } from '@/Utils/currency';
 import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
@@ -12,18 +13,43 @@ import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Modal from '@/Components/Ui/Modal.vue';
 
-defineProps({
+const props = defineProps({
   club: { type: Object, required: true },
   isPending: { type: Boolean, default: false },
   memberRole: { type: String, default: 'member' },
-  memberNumber: { type: String, default: null },
   duesOwed: { type: Number, default: 0 },
-  attendanceRate: { type: Number, default: 100 },
-  attendedCount: { type: Number, default: 0 },
-  totalRsvps: { type: Number, default: 0 },
+  subscription: { type: Object, default: null },
+  organiserTools: { type: Object, default: null },
+  officers: { type: Array, default: () => [] },
+  documents: { type: Array, default: () => [] },
   meetings: { type: Array, default: () => [] },
   events: { type: Array, default: () => [] },
   newsletters: { type: Array, default: () => [] },
+});
+
+const toolIcons = { event_night: 'check', catering: 'clipboard', add_booking: 'user-add', send_notice: 'mail' };
+
+const SUBSCRIPTION_BADGES = {
+  paid: { variant: 'success', label: 'Paid' },
+  waived: { variant: 'neutral', label: 'Waived' },
+  partially_paid: { variant: 'info', label: 'Part paid' },
+  arrears_warning: { variant: 'danger', label: 'In arrears' },
+};
+const subscriptionBadge = computed(() => SUBSCRIPTION_BADGES[props.subscription?.status] ?? { variant: 'warning', label: 'Unpaid' });
+
+const subtitle = computed(() => [props.club.lodge_number ? `No. ${props.club.lodge_number}` : null, props.club.meets].filter(Boolean).join(' · '));
+
+const subscriptionHint = computed(() => {
+  const subscription = props.subscription;
+  if (!subscription) {
+    return 'Your lodge has not recorded a subscription for you yet.';
+  }
+  const due = subscription.due_date ? ` Due ${subscription.due_date}.` : '';
+  const earlier = props.duesOwed > subscription.balance ? ` You owe ${formatMoney(props.duesOwed)} in all.` : '';
+  if (['paid', 'waived'].includes(subscription.status)) {
+    return `Nothing to pay for this year.${earlier}`;
+  }
+  return `${formatMoney(subscription.balance)} still to pay.${due}${earlier}`;
 });
 
 const selectedEvent = ref(null);
@@ -46,41 +72,67 @@ const openMeetingRsvpModal = (meeting) => {
 </script>
 
 <template>
-  <MembersLayout title="Member portal" :club="club" :member-role="memberRole" active-tab="dashboard">
+  <MembersLayout :title="club.name" :club="club" :member-role="memberRole" active-tab="dashboard" own-heading>
+
+    <header class="flex items-center gap-3 rounded-2xl bg-blue-900 px-4 py-4 text-white dark:bg-blue-950 sm:px-6">
+      <div class="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-gold-400">
+        <UiIcon name="building" :size="24" />
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-[22px] font-semibold leading-7">{{ club.name }}</h1>
+        <p v-if="subtitle" class="text-xs text-blue-100">{{ subtitle }}</p>
+      </div>
+    </header>
 
     <!-- Pending Approval Banner -->
     <Alert v-if="isPending" variant="warning" title="Your membership is waiting for approval">
       Your registration for <strong>{{ club.name }}</strong> has been submitted. A club officer or captain will review your invite request shortly.
     </Alert>
 
-    <!-- Top Big Stat Cards Grid (Matching Admin Design) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-6">
+      <section v-if="organiserTools" class="space-y-3 rounded-2xl border border-gold-500 bg-gold-50 p-4 shadow-sm dark:border-gold-400/60 dark:bg-gold-950">
+        <div class="flex items-center gap-3">
+          <h2 class="flex-1 text-xs font-bold uppercase tracking-wide text-gold-700 dark:text-gold-300">Organiser tools</h2>
+          <span v-if="organiserTools.office" class="text-xs text-slate-500 dark:text-slate-400">You're {{ organiserTools.office }}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <Link v-for="tool in organiserTools.links" :key="tool.key" :href="tool.href" class="flex min-h-[52px] items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[13px] font-semibold text-slate-900 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600">
+            <UiIcon :name="toolIcons[tool.key] ?? 'link'" :size="18" class="text-gold-700 dark:text-gold-300" />
+            {{ tool.label }}
+          </Link>
+        </div>
+      </section>
 
-      <!-- 1. Member Standing Card -->
-      <Card class="flex flex-col justify-between space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Member standing</span>
-          <Badge v-if="memberNumber" variant="neutral">#{{ memberNumber }}</Badge>
+      <Card id="dues-section" padding="sm" class="space-y-2.5">
+        <div class="flex items-center gap-3">
+          <div class="min-w-0 flex-1">
+            <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ subscription ? `Subscription ${subscription.year}` : 'Subscription' }}</h2>
+            <p v-if="subscription" class="mt-1 font-semibold text-slate-900 tabular-nums dark:text-white">{{ $money(subscription.amount_due) }}</p>
+          </div>
+          <Badge v-if="subscription" :variant="subscriptionBadge.variant">{{ subscriptionBadge.label }}</Badge>
         </div>
-        <div class="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
-          {{ memberRole.toUpperCase() }}
-        </div>
-        <div class="text-xs font-medium text-slate-600 dark:text-slate-300">
-          {{ club.name }}
-        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ subscriptionHint }}</p>
+        <Link :href="route('members.dues', { club: club.slug })" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">See your dues</Link>
       </Card>
 
-      <!-- 2. Attendance Standing Score Card -->
-      <Card class="flex flex-col justify-between space-y-3">
-        <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Attendance rate</div>
-        <div class="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums">
-          {{ attendanceRate }}%
-        </div>
-        <div class="text-xs text-slate-500 dark:text-slate-400">
-          {{ attendedCount }} of {{ totalRsvps }} sessions attended
-        </div>
+      <Card v-if="officers.length" padding="sm" class="space-y-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Officers</h2>
+        <dl class="grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-[13px] leading-[18px]">
+          <template v-for="(officer, index) in officers" :key="index">
+            <dt class="text-slate-500 dark:text-slate-400">{{ officer.role }}</dt>
+            <dd class="font-medium text-slate-900 dark:text-white">{{ officer.name }}</dd>
+          </template>
+        </dl>
       </Card>
 
+      <Card v-if="documents.length" padding="sm">
+        <h2 class="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Documents</h2>
+        <a v-for="doc in documents" :key="doc.href" :href="doc.href" target="_blank" rel="noopener" class="flex min-h-11 items-center gap-2.5 border-t border-slate-200 text-slate-900 first-of-type:border-t-0 hover:text-blue-600 dark:border-slate-800 dark:text-white dark:hover:text-blue-400">
+          <UiIcon name="document" :size="18" class="text-slate-500 dark:text-slate-400" />
+          <span class="min-w-0 flex-1 truncate">{{ doc.title }}</span>
+          <span v-if="doc.type" class="text-xs text-slate-500 dark:text-slate-400">{{ doc.type }}</span>
+        </a>
+      </Card>
     </div>
 
     <!-- Main Content Dual Grid -->
@@ -189,8 +241,8 @@ const openMeetingRsvpModal = (meeting) => {
 
       </div>
 
-      <!-- Right Column: Newsletters Feed & Dues Sidebar (1 col) -->
-      <div id="dues-section" class="space-y-6">
+      <!-- Right Column: Newsletters Feed (1 col) -->
+      <div class="space-y-6">
 
         <!-- Published Newsletters Feed Card -->
         <Card>
@@ -211,38 +263,6 @@ const openMeetingRsvpModal = (meeting) => {
 
           <div v-else class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
             No published email broadcasts yet.
-          </div>
-        </Card>
-
-        <!-- My Active Dues Card -->
-        <Card>
-          <template #header>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="cash" class="text-slate-500 dark:text-slate-400" /> Membership dues</h3>
-          </template>
-          <div class="space-y-4">
-            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
-              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Still to pay</div>
-              <div class="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">{{ $money(duesOwed) }}</div>
-              <div class="text-xs text-slate-600 dark:text-slate-300 font-medium">{{ duesOwed > 0 ? 'Your dues for this lodge are not fully paid yet.' : 'Nothing owed on your dues.' }}</div>
-            </div>
-            <Link :href="route('members.dues', { club: club.slug })" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">See your dues</Link>
-          </div>
-        </Card>
-
-        <!-- Attendance Stats Detail Card -->
-        <Card>
-          <template #header>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="chart" class="text-slate-500 dark:text-slate-400" /> Attendance</h3>
-          </template>
-          <div class="space-y-2 text-xs">
-            <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
-              <span class="text-slate-600 dark:text-slate-300">Sessions tracked</span>
-              <span class="font-semibold text-slate-900 dark:text-white tabular-nums">{{ totalRsvps }}</span>
-            </div>
-            <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
-              <span class="text-slate-600 dark:text-slate-300">Checked in or attended</span>
-              <span class="font-semibold text-slate-900 dark:text-white tabular-nums">{{ attendedCount }}</span>
-            </div>
           </div>
         </Card>
 

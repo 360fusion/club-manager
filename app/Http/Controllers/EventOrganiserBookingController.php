@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Models\Event;
+use App\Models\EventAttendee;
 use App\Models\EventRegistration;
 use App\Models\User;
 use App\Services\Events\EventMailer;
@@ -171,6 +172,11 @@ class EventOrganiserBookingController extends Controller
         $registration = DB::transaction(function () use ($registrations, $payments, $event, $existing, $member, $data, $actor, $validated, $markPaid) {
             $registration = $registrations->saveByOrganiser($event, $existing, $member, $data, $actor, (bool) ($validated['over_capacity'] ?? false));
 
+            // Booked at the door: everyone on a new booking that got a place is marked as arrived.
+            if (! $existing && ! empty($validated['check_in']) && $registration->status === 'attending') {
+                EventAttendee::where('registration_id', $registration->id)->update(['checked_in_at' => now()]);
+            }
+
             if ($markPaid) {
                 if ($registration->status !== 'attending' || (float) $registration->total <= 0) {
                     throw ValidationException::withMessages(['mark_paid' => 'Only a confirmed booking with something to pay can be marked as paid.']);
@@ -205,6 +211,7 @@ class EventOrganiserBookingController extends Controller
             'payment_method' => 'nullable|integer|min:1|max:4294967295',
             'promo_code' => 'nullable|string|max:40',
             'send_confirmation' => 'nullable|boolean',
+            'check_in' => 'nullable|boolean',
             'mark_paid' => 'nullable|array|max:5',
             'mark_paid.enabled' => 'nullable|boolean',
             'mark_paid.amount' => 'nullable|numeric|min:0.01|max:99999999.99',

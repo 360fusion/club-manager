@@ -399,6 +399,29 @@ class Member extends Model
     }
 
     /**
+     * The lodge's officers as its own records have them (the confirmed roster, else each member's office), in the
+     * order a summons lists them, leaving out plain members and committee members.
+     *
+     * @return list<array{role: string, name: string}>
+     */
+    public static function currentOfficers(Club $club): array
+    {
+        $members = self::where('club_id', $club->id)->active()->get();
+        self::loadActiveOffices($members);
+        $order = array_flip(array_column(LodgeOffice::cases(), 'value'));
+
+        return $members
+            ->flatMap(fn (Member $member) => collect($member->active_offices)
+                ->map(fn ($office) => $office instanceof LodgeOffice ? $office : LodgeOffice::tryFrom((string) $office))
+                ->filter(fn (?LodgeOffice $office) => $office && ! in_array($office, [LodgeOffice::Member, LodgeOffice::CommitteeMember], true))
+                ->map(fn (LodgeOffice $office) => ['order' => $order[$office->value], 'role' => $office->label(), 'name' => $member->formatted_rank_name]))
+            ->sortBy('order')
+            ->map(fn (array $row) => ['role' => $row['role'], 'name' => $row['name']])
+            ->values()
+            ->all();
+    }
+
+    /**
      * @return list<string|LodgeOffice> an office from a roster is its code, one from the member record is the enum
      */
     public function getActiveOfficesAttribute(): array

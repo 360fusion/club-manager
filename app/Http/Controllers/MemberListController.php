@@ -3,17 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Enums\EventStatus;
 use App\Models\Club;
+use App\Models\EventRegistration;
 use App\Models\Invoice;
 use App\Models\Lodge;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\NewsTag;
 use App\Models\Post;
+use App\Services\Events\EventPayload;
 use App\Services\MemberCalendar;
 use App\Support\MemberScope;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -46,10 +50,46 @@ class MemberListController extends Controller
         $items = app(MemberCalendar::class)
             ->items($scope, $now->startOfDay(), $now->addMonths(6))
             ->where('type', 'event')
-            ->map(fn (array $item) => $this->serialise($item))
             ->values();
 
-        return Inertia::render('Members/AllEvents', [...$this->scopeProps($scope), 'events' => $items]);
+        $bookings = $this->bookings($scope)->whereIn('event_id', $items->pluck('id'))->get()->keyBy('event_id');
+
+        $items = $items->map(fn (array $item) => [
+            ...$this->serialise($item),
+            'club' => [...$item['club'], 'currency_symbol' => $scope->clubFor($item['club']['id'])->currencySymbol()],
+            'booking' => $bookings->has($item['id']) ? EventPayload::registration($bookings->get($item['id'])) : null,
+        ])->values();
+
+        $past = $this->bookings($scope)
+            ->whereHas('event', fn ($query) => $query->whereIn('club_id', $scope->clubIds())->where('status', '!=', EventStatus::Cancelled->value)->whereBetween('starts_at', [$now->subYear(), $now->startOfDay()]))
+            ->whereIn('status', EventRegistration::HOLDING_PLACE)
+            ->get()
+            ->sortByDesc(fn (EventRegistration $registration) => $registration->event->starts_at)
+            ->take(20)
+            ->map(fn (EventRegistration $registration) => [
+                'key' => 'past-'.$registration->id,
+                'id' => $registration->event_id,
+                'club' => $this->clubPayload($scope->clubFor($registration->event->club_id)),
+                'title' => $registration->event->title,
+                'start' => $registration->event->starts_at->toIso8601String(),
+                'where' => $registration->event->location,
+                'booking' => EventPayload::registration($registration),
+            ])
+            ->values();
+
+        return Inertia::render('Members/AllEvents', [...$this->scopeProps($scope), 'events' => $items, 'past' => $past]);
+    }
+
+    /**
+     * The member's own bookings that hold or wait for a place, with what the booking card shows.
+     *
+     * @return Builder<EventRegistration>
+     */
+    private function bookings(MemberScope $scope): Builder
+    {
+        return EventRegistration::where('user_id', $scope->user->id)
+            ->whereIn('status', [...EventRegistration::HOLDING_PLACE, 'waitlisted'])
+            ->with(['event.club', 'paymentMethod', 'attendees.starter', 'attendees.main', 'attendees.dessert']);
     }
 
     public function meetings(Request $request, ?string $slug = null): Response

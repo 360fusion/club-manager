@@ -34,6 +34,10 @@ const openRsvpModal = (event) => {
   showDinnerModal.value = true;
 };
 
+// The Bookings page links here with ?book={event id} to open that event's booking sheet.
+const bookId = typeof window !== 'undefined' ? Number(new URLSearchParams(window.location.search).get('book')) : 0;
+const toBook = props.events.find((event) => event.id === bookId && (!event.is_booking_closed || event.user_rsvp));
+if (toBook) openRsvpModal(toBook);
 
 // Meeting RSVP Modal State
 const selectedMeeting = ref(null);

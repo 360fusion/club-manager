@@ -13,7 +13,9 @@ use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\Meetings\MeetingReplies;
 use App\Services\MemberInbox;
+use App\Support\Currencies;
 use App\Support\MemberScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -71,7 +73,7 @@ class MemberHomeController extends Controller
     }
 
     /**
-     * The next meetings and events across the member's clubs, soonest first.
+     * The next meetings and events across the member's clubs, soonest first, with their reply, guests and what they still owe.
      *
      * @param  Collection<int, Club>  $clubs
      * @return list<array<string, mixed>>
@@ -84,18 +86,20 @@ class MemberHomeController extends Controller
 
         $clubIds = $clubs->pluck('id');
 
-        $meetings = Meeting::whereIn('club_id', $clubIds)
+        $meetings = Meeting::with('club')->whereIn('club_id', $clubIds)
             ->where('status', 'published')
             ->whereDate('meeting_date', '>=', today())
             ->orderBy('meeting_date')
             ->limit(self::UP_NEXT_LIMIT)
             ->get();
 
-        $meetingReplies = MeetingRsvp::whereIn('meeting_id', $meetings->pluck('id'))
+        $meetingReplies = MeetingRsvp::with('guests')
+            ->whereIn('meeting_id', $meetings->pluck('id'))
             ->where('user_id', $user->id)
-            ->pluck('attendance_status', 'meeting_id');
+            ->get()
+            ->keyBy('meeting_id');
 
-        $events = Event::whereIn('club_id', $clubIds)
+        $events = Event::with('club')->whereIn('club_id', $clubIds)
             ->visibleTo($user)
             ->where('status', EventStatus::Upcoming->value)
             ->where('starts_at', '>=', now())
@@ -103,29 +107,57 @@ class MemberHomeController extends Controller
             ->limit(self::UP_NEXT_LIMIT)
             ->get();
 
-        $eventReplies = EventRegistration::whereIn('event_id', $events->pluck('id'))
+        $eventReplies = EventRegistration::withCount('attendees')
+            ->whereIn('event_id', $events->pluck('id'))
             ->where('user_id', $user->id)
-            ->pluck('status', 'event_id');
+            ->get()
+            ->keyBy('event_id');
 
-        return $meetings->map(fn (Meeting $meeting) => [
-            'type' => 'meeting',
-            'club_slug' => $clubs->firstWhere('id', $meeting->club_id)->slug,
-            'club_name' => $clubs->firstWhere('id', $meeting->club_id)->name,
-            'club_colour' => $clubs->firstWhere('id', $meeting->club_id)->colourKey(),
-            'title' => $meeting->title,
-            'at' => ($meeting->starts_at ? $meeting->meeting_date->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)?->toIso8601String(),
-            'where' => $meeting->venue,
-            'reply' => $meetingReplies[$meeting->id] ?? null,
-        ])->concat($events->map(fn (Event $event) => [
-            'type' => 'event',
-            'club_slug' => $clubs->firstWhere('id', $event->club_id)->slug,
-            'club_name' => $clubs->firstWhere('id', $event->club_id)->name,
-            'club_colour' => $clubs->firstWhere('id', $event->club_id)->colourKey(),
-            'title' => $event->title,
-            'at' => $event->starts_at->toIso8601String(),
-            'where' => $event->location,
-            'reply' => $eventReplies[$event->id] ?? null,
-        ]))
+        $owes = fn (float $amount, int $clubId): ?string => $amount > 0 ? Currencies::format($amount, $clubs->firstWhere('id', $clubId)) : null;
+
+        return $meetings->map(function (Meeting $meeting) use ($clubs, $meetingReplies, $owes) {
+            $club = $clubs->firstWhere('id', $meeting->club_id);
+            $rsvp = $meetingReplies[$meeting->id] ?? null;
+
+            return [
+                'type' => 'meeting',
+                'id' => $meeting->id,
+                'club_slug' => $club->slug,
+                'club_name' => $club->name,
+                'club_colour' => $club->colourKey(),
+                'title' => $meeting->title,
+                'at' => ($meeting->starts_at ? $meeting->meeting_date->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)?->toIso8601String(),
+                'where' => $meeting->venue,
+                'reply' => $rsvp?->attendance_status,
+                'guests' => $rsvp ? MeetingReplies::listedGuests($rsvp)->count() : 0,
+                'owes' => $rsvp ? $owes(MeetingReplies::owed($meeting, $rsvp)['amount'], $meeting->club_id) : null,
+                // They told the lodge they paid by bank transfer: not chased while the Treasurer waits for the statement.
+                'said_paid' => $rsvp?->said_paid_at !== null,
+                'closed' => $meeting->rsvpClosed(),
+                'url' => route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false),
+            ];
+        })->concat($events->map(function (Event $event) use ($clubs, $eventReplies, $owes) {
+            $club = $clubs->firstWhere('id', $event->club_id);
+            $booking = $eventReplies[$event->id] ?? null;
+            $settled = ! $booking || $booking->status !== 'attending' || in_array($booking->payment_status, ['waived', 'refunded'], true);
+
+            return [
+                'type' => 'event',
+                'id' => $event->id,
+                'club_slug' => $club->slug,
+                'club_name' => $club->name,
+                'club_colour' => $club->colourKey(),
+                'title' => $event->title,
+                'at' => $event->starts_at->toIso8601String(),
+                'where' => $event->location,
+                'reply' => $booking?->status,
+                'guests' => $booking ? max(0, $booking->attendees_count - 1) : 0,
+                'owes' => $settled ? null : $owes($booking->balanceDue(), $event->club_id),
+                'said_paid' => $booking?->said_paid_at !== null,
+                'closed' => (bool) $event->is_booking_closed,
+                'url' => route('member.events', ['slug' => $club->slug], false),
+            ];
+        }))
             ->sortBy('at')
             ->take(self::UP_NEXT_LIMIT)
             ->values()

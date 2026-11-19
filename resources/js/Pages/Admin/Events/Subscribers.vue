@@ -149,6 +149,7 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
             <div class="flex flex-wrap items-center gap-2 lg:justify-end">
               <Button size="sm" @click="openAdd">Add a booking</Button>
               <Button variant="secondary" size="sm" :href="route('admin.events.checkin', { clubSlug: club.slug, id: event.id })">Check-in</Button>
+              <Button v-if="event.has_dining" variant="secondary" size="sm" :href="route('admin.events.dining', { clubSlug: club.slug, id: event.id })">Catering</Button>
               <DropdownMenu label="Print and export" :button-class="secondaryButton">
                 <a :href="route('admin.events.guest_list', { clubSlug: club.slug, id: event.id })" target="_blank" :class="menuItem" role="menuitem">Guest list</a>
                 <a v-if="event.has_dining" :href="route('admin.events.catering', { clubSlug: club.slug, id: event.id })" target="_blank" :class="menuItem" role="menuitem">Catering summary</a>

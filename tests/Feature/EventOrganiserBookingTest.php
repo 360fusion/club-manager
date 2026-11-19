@@ -267,4 +267,34 @@ class EventOrganiserBookingTest extends TestCase
 
         $this->actingAs($this->join($this->club, 'member'))->postJson(route('admin.events.quote', ['clubSlug' => 'club-a', 'id' => $this->event->id]), ['attendees' => [['is_guest' => false]]])->assertForbidden();
     }
+
+    public function test_a_booking_added_at_the_door_marks_everyone_on_it_as_arrived_but_only_when_asked_and_given_a_place(): void
+    {
+        $this->add(['check_in' => true, 'attendees' => [$this->person('Vera Visitor'), $this->person('Gina Guest', ['is_guest' => true])]])->assertSessionHasNoErrors();
+        $this->add(['attendees' => [$this->person('Ned Normal')]])->assertSessionHasNoErrors();
+        $this->event->update(['waitlist_enabled' => true]);
+        $this->add(['check_in' => true, 'status' => 'waitlisted', 'attendees' => [$this->person('Wanda Waiting')]])->assertSessionHasNoErrors();
+
+        $arrived = fn (string $name) => EventRegistration::where('contact_name', $name)->sole()->attendees->pluck('checked_in_at')->filter()->count();
+        $this->assertSame(2, $arrived('Vera Visitor'), 'the booker and their guest');
+        $this->assertSame(0, $arrived('Ned Normal'));
+        $this->assertSame(0, $arrived('Wanda Waiting'), 'a waiting-list place is not a place at the door');
+    }
+
+    public function test_the_event_night_page_carries_each_bookings_balance_and_what_the_add_booking_popup_needs(): void
+    {
+        $this->add(['attendees' => [$this->person('Vera Visitor', ['organisation' => 'Abbey Lodge']), $this->person('Gina Guest', ['is_guest' => true])]])->assertSessionHasNoErrors();
+
+        $this->actingAs($this->admin)->get(route('admin.events.checkin', ['clubSlug' => 'club-a', 'id' => $this->event->id]))->assertInertia(fn ($page) => $page
+            ->component('Admin/Events/CheckIn')
+            ->where('canManagePayments', true)
+            ->has('event.payment_options', 1)
+            ->has('event.menu.main', 2)
+            ->where('attendees.0.name', 'Vera Visitor')
+            ->where('attendees.0.balance', '100.00')
+            ->where('attendees.0.is_booker', true)
+            ->where('attendees.0.is_visitor', true)
+            ->where('attendees.1.is_booker', false)
+            ->where('attendees.1.is_visitor', false));
+    }
 }

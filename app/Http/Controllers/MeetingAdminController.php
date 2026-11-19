@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\ClubRole;
@@ -104,7 +103,7 @@ class MeetingAdminController extends Controller
             ]),
             // Only what the officer dropdowns show, not every member's contact details.
             'members' => $club->users()->get(['users.id', 'users.name'])->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name, 'pivot' => ['rank' => $user->pivot->rank]]),
-            'lodgeOfficers' => $this->currentOfficers($club),
+            'lodgeOfficers' => Member::currentOfficers($club),
         ]);
     }
 
@@ -136,31 +135,8 @@ class MeetingAdminController extends Controller
             'meeting' => $meeting,
             'members' => $club->users()->get(['users.id', 'users.name'])->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name, 'pivot' => ['rank' => $user->pivot->rank]]),
             'charityGrants' => $charityGrants,
-            'lodgeOfficers' => $this->currentOfficers($club),
+            'lodgeOfficers' => Member::currentOfficers($club),
         ]);
-    }
-
-    /**
-     * The lodge's officers as its own records have them (the confirmed roster, else each member's office), in the
-     * order a summons lists them: the starting point for a meeting's "Officers for the year" instead of sample names.
-     *
-     * @return list<array{role: string, name: string}>
-     */
-    private function currentOfficers(Club $club): array
-    {
-        $members = Member::where('club_id', $club->id)->active()->get();
-        Member::loadActiveOffices($members);
-        $order = array_flip(array_column(LodgeOffice::cases(), 'value'));
-
-        return $members
-            ->flatMap(fn (Member $member) => collect($member->active_offices)
-                ->map(fn ($office) => $office instanceof LodgeOffice ? $office : LodgeOffice::tryFrom((string) $office))
-                ->filter(fn (?LodgeOffice $office) => $office && ! in_array($office, [LodgeOffice::Member, LodgeOffice::CommitteeMember], true))
-                ->map(fn (LodgeOffice $office) => ['order' => $order[$office->value], 'role' => $office->label(), 'name' => $member->formatted_rank_name]))
-            ->sortBy('order')
-            ->map(fn (array $row) => ['role' => $row['role'], 'name' => $row['name']])
-            ->values()
-            ->all();
     }
 
     /**

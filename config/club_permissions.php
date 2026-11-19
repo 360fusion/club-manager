@@ -110,6 +110,7 @@ return [
         'events' => 'manage_events',
 
         'newsletters' => 'send_newsletters',
+        'notices' => 'send_newsletters',
 
         'email-templates' => 'manage_communications',
         'posts' => 'manage_communications',

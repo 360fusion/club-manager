@@ -6,6 +6,7 @@ use App\Enums\Visibility;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Post;
@@ -158,6 +159,29 @@ class MemberHomeTest extends TestCase
                 ->has('upNext', 2)
                 ->where('upNext.0.title', 'Club dinner')
                 ->where('upNext.1.title', 'Regular meeting'));
+    }
+
+    public function test_up_next_shows_what_the_member_still_owes_for_each_booking(): void
+    {
+        $dinner = Event::create(['club_id' => $this->club->id, 'title' => 'Festive board', 'slug' => 'festive-board', 'starts_at' => now()->addDays(3), 'status' => 'upcoming', 'visibility' => Visibility::Club]);
+        $booking = EventRegistration::create(['event_id' => $dinner->id, 'user_id' => $this->member->id, 'contact_name' => 'Member', 'status' => 'attending', 'total' => 70, 'amount_paid' => 20]);
+        $booking->attendees()->createMany([['name' => 'Member', 'is_guest' => false], ['name' => 'Guest', 'is_guest' => true]]);
+
+        $meeting = $this->meeting($this->club, ['dining_cost_member' => 30]);
+        MeetingRsvp::create(['meeting_id' => $meeting->id, 'user_id' => $this->member->id, 'token_hash' => hash('sha256', 'dining'), 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'attending_dining', 'payment_status' => 'paid', 'responded_at' => now()]);
+
+        $this->actingAs($this->member)->get(route('members.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('upNext.0.title', 'Festive board')
+                ->where('upNext.0.owes', '£50.00')
+                ->where('upNext.0.guests', 1)
+                ->where('upNext.1.reply', 'attending_dining')
+                ->where('upNext.1.owes', null));
+
+        $booking->update(['payment_status' => 'waived']);
+
+        $this->actingAs($this->member)->get(route('members.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('upNext.0.owes', null));
     }
 
     public function test_feed_only_contains_content_from_the_users_clubs(): void

@@ -10,6 +10,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -40,6 +42,27 @@ class EventGuestListController extends Controller
             'event' => $event,
             'summary' => $builder->catering($event),
         ], 'catering-summary', 'portrait');
+    }
+
+    /**
+     * The catering numbers as a page for the phone: covers, dishes per course and dietary notes.
+     */
+    public function dining(string $clubSlug, int $id, GuestListBuilder $builder): InertiaResponse
+    {
+        [$club, $event] = $this->find($clubSlug, $id);
+
+        return Inertia::render('Admin/Events/Catering', [
+            'club' => $club,
+            'event' => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'starts_at' => $event->starts_at->format('D j M'),
+                'has_dining' => $event->has_dining,
+                'closes_at' => $event->booking_cutoff_at?->format('D j M'),
+                'is_closed' => $event->is_booking_closed,
+            ],
+            'summary' => $builder->catering($event),
+        ]);
     }
 
     public function export(string $clubSlug, int $id, GuestListBuilder $builder): StreamedResponse

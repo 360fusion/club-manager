@@ -105,6 +105,7 @@ const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? 
           <div class="flex flex-wrap items-center gap-2">
             <Button variant="secondary" size="sm" :href="route('admin.newsletters.subscribers', { clubSlug: club.slug })">Manage subscribers</Button>
             <Button variant="secondary" size="sm" :href="route('admin.newsletters.types', { clubSlug: club.slug })">Channels and settings</Button>
+            <Button variant="secondary" size="sm" :href="route('admin.notices.index', { clubSlug: club.slug })">Send a notice</Button>
             <Button size="sm" :href="route('admin.newsletters.create', { clubSlug: club.slug })">Write a newsletter</Button>
           </div>
         </div>
