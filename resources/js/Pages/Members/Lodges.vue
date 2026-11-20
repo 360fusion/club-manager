@@ -108,7 +108,7 @@ function unfollow(lodge) {
                                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.detail }}</p>
                             </div>
                             <Badge v-if="lodge.following" variant="success">Following</Badge>
-                            <Button v-else size="sm" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
+                            <Button v-else size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
                         </li>
                     </ul>
                     <Link :href="route('lodges.index')" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Or browse the directory by area, day and order</Link>
@@ -134,7 +134,7 @@ function unfollow(lodge) {
                             <p v-else class="font-semibold text-slate-900 dark:text-white">{{ club.name }}</p>
                             <p class="text-xs capitalize text-slate-500 dark:text-slate-400">{{ club.role }}<template v-if="club.hall"> · <span class="normal-case">{{ club.hall.name }}<template v-if="club.hall.town">, {{ club.hall.town }}</template></span></template></p>
                         </div>
-                        <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: club.slug })">Open</Button>
+                        <Button size="sm" class="min-w-20 shrink-0" :href="route('member.dashboard', { slug: club.slug })">Open</Button>
                     </li>
                 </ul>
             </section>
@@ -151,7 +151,7 @@ function unfollow(lodge) {
                             <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.reason }}<template v-if="lodge.order"> · {{ lodge.order }}</template></p>
                             <p v-if="lodge.meets_text" class="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{{ lodge.meets_text }}</p>
                         </div>
-                        <Button size="sm" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
+                        <Button size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
                     </li>
                 </ul>
             </section>
