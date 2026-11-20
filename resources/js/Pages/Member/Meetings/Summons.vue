@@ -9,6 +9,7 @@ import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import { useClipboard } from '@/Composables/useClipboard';
 
 const props = defineProps({
@@ -74,10 +75,35 @@ const diningGuests = computed(() => (props.userRsvp?.guests ?? []).filter((guest
 const isAnswerDisabled = (value) => props.isCutoffPassed && value === 'attending_dining' && !isDining.value;
 
 const replying = ref(null);
-// One tap saves the answer through the quick reply route, which keeps guests and dietary notes already given.
+// Changing a reply already given asks first, saying what it means for dining and anything paid.
+const changingTo = ref(null);
+const labelFor = (value) => ANSWERS.find((option) => option.value === value)?.label ?? '';
+const changeNote = computed(() => {
+  const to = changingTo.value;
+  if (!to) return '';
+  const leavesDining = isDining.value && to !== 'attending_dining';
+  const paid = props.userRsvp?.payment_status === 'paid';
+  if (leavesDining && paid) return 'You have paid for dining, so it will be refunded: a card or PayPal payment straight away, a bank transfer by the Treasurer.';
+  if (leavesDining && props.isCutoffPassed) return 'Dining numbers have gone to the caterer, so you won\'t be able to add dining back here.';
+  if (leavesDining) return 'Your dining place will be given up.';
+  return '';
+});
 const reply = (value) => {
   if (value === answer.value || isAnswerDisabled(value)) return;
-
+  // Only a real reply asks first: someone who hasn't replied yet is stored as pending.
+  if (labelFor(answer.value)) {
+    changingTo.value = value;
+    return;
+  }
+  send(value);
+};
+const confirmChange = () => {
+  const value = changingTo.value;
+  changingTo.value = null;
+  send(value);
+};
+// One tap saves the answer through the quick reply route, which keeps guests and dietary notes already given.
+const send = (value) => {
   router.post(route('member.meetings.quick_rsvp', { slug: props.club.slug, id: props.meeting.id }), { attendance_status: value }, {
     preserveScroll: true,
     onStart: () => { replying.value = value; },
@@ -138,12 +164,15 @@ const grantStatusLabel = (grantStatus) => {
             type="button"
             :aria-pressed="answer === option.value"
             :disabled="isAnswerDisabled(option.value) || replying !== null"
-            :class="['min-h-11 rounded-xl px-1.5 text-[13px] leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed', answer === option.value ? 'bg-white font-semibold text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white' : 'font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50 dark:text-slate-300 dark:hover:text-white', replying === option.value ? 'animate-pulse' : '']"
+            :class="['min-h-11 rounded-xl px-1.5 text-[13px] leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed', answer === option.value ? 'bg-emerald-600 font-semibold text-white shadow-sm dark:bg-emerald-500' : 'font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50 dark:text-slate-300 dark:hover:text-white', replying === option.value ? 'animate-pulse' : '']"
             @click="reply(option.value)"
           >
             {{ option.label }}
           </button>
         </div>
+        <ConfirmDialog :open="changingTo !== null" :title="`Change your reply to ${labelFor(changingTo)}?`" :confirm-label="`Yes, ${labelFor(changingTo).toLowerCase()}`" cancel-label="Keep my reply" variant="primary" @confirm="confirmChange" @close="changingTo = null">
+          You replied {{ labelFor(answer) }}.{{ changeNote ? ` ${changeNote}` : '' }}
+        </ConfirmDialog>
         <p v-if="isCutoffPassed && !isDining" class="text-xs text-slate-500 dark:text-slate-400">Dining numbers have gone to the caterer, so dining can no longer be added here. To dine, please ask the Secretary.</p>
         <button v-if="answer === 'attending_dining' || answer === 'apologies'" type="button" class="-my-2 inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 sm:min-h-0 sm:my-0" @click="openRsvpModal()">
           {{ answer === 'apologies' ? 'Add a reason' : 'Guests and dietary needs' }}

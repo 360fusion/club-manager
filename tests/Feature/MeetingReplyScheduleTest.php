@@ -294,6 +294,48 @@ class MeetingReplyScheduleTest extends TestCase
         $this->assertSame('refunded', $rsvp->fresh()->payment_status);
     }
 
+    public function test_dining_paid_then_dropped_is_refunded_online_at_once_and_the_treasurer_is_told_about_the_bank_payment(): void
+    {
+        $this->cardOption();
+        Member::create(['club_id' => $this->club->id, 'first_name' => 'Tess', 'last_name' => 'Treasurer', 'membership_status' => 'active', 'current_office' => LodgeOffice::Treasurer->value, 'email' => 'treasurer@example.test']);
+        $rsvp = MeetingRsvp::where('user_id', $this->diner->id)->with('guests')->first();
+        $rsvp->forceFill(['payment_status' => 'paid', 'payment_method' => 'online', 'online_provider' => 'stripe', 'online_payment_id' => 'pi_member'])->save();
+        $rsvp->guests->first()->forceFill(['payment_status' => 'paid', 'payment_method' => 'bank'])->save();
+        $this->mock(StripeGateway::class)->shouldReceive('refund')->once()->withArgs(fn ($method, $intent, $minor) => $intent === 'pi_member' && $minor === 3000)->andReturn('re_1');
+
+        $this->actingAs($this->diner)->post(route('member.meetings.quick_rsvp', ['slug' => $this->club->slug, 'id' => $this->meeting->id]), ['attendance_status' => 'apologies'])
+            ->assertSessionHasNoErrors();
+
+        $rsvp->refresh()->load('guests');
+        $this->assertSame('refunded', $rsvp->payment_status);
+        $this->assertSame('paid', $rsvp->guests->first()->payment_status);
+        Mail::assertQueued(MeetingNumbersMail::class, fn (MeetingNumbersMail $mail) => $mail->hasTo('treasurer@example.test')
+            && str_contains($mail->change, '£30.00 has been refunded') && str_contains($mail->change, '£35.00 paid by bank'));
+    }
+
+    public function test_an_online_refund_the_provider_refuses_is_left_for_the_treasurer_and_the_reply_still_saves(): void
+    {
+        $this->cardOption();
+        $treasurer = $this->person('Tess Treasurer');
+        $this->club->users()->updateExistingPivot($treasurer->id, ['role' => 'treasurer']);
+        $rsvp = MeetingRsvp::where('user_id', $this->diner->id)->first();
+        $rsvp->forceFill(['payment_status' => 'paid', 'payment_method' => 'online', 'online_provider' => 'stripe', 'online_payment_id' => 'pi_member'])->save();
+        $this->mock(StripeGateway::class)->shouldReceive('refund')->once()->andThrow(new \RuntimeException('Stripe is down'));
+
+        $this->actingAs($this->diner)->post(route('member.meetings.quick_rsvp', ['slug' => $this->club->slug, 'id' => $this->meeting->id]), ['attendance_status' => 'attending_meeting_only'])
+            ->assertSessionHasNoErrors();
+
+        $rsvp->refresh();
+        $this->assertSame(['attending_meeting_only', 'paid'], [$rsvp->attendance_status, $rsvp->payment_status]);
+        Mail::assertQueued(MeetingNumbersMail::class, fn (MeetingNumbersMail $mail) => $mail->hasTo($treasurer->email) && str_contains($mail->change, '£30.00 paid by bank'));
+    }
+
+    private function cardOption(): void
+    {
+        config(['events.online_payments' => true]);
+        ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => ClubPaymentMethod::CARD, 'label' => 'Card', 'sort_order' => 0, 'is_active' => true, 'config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => self::SECRET]]);
+    }
+
     public function test_the_caterer_gets_the_count_menu_and_dietary_needs_but_not_who_is_away_or_unpaid(): void
     {
         $this->club->update(['settings' => [...($this->club->settings ?? []), 'caterer_email' => 'kitchen@example.test']]);

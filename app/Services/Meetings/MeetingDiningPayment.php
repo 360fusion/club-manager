@@ -320,6 +320,51 @@ class MeetingDiningPayment
     }
 
     /**
+     * Refund the places on a reply that were paid for but are no longer dining. A card or PayPal payment goes straight
+     * back through the provider; a bank or cash payment, or one the provider refuses, stays paid and so stays on the
+     * dining list's "Paid but no longer dining" for the Treasurer to refund by hand.
+     *
+     * @return array{refunded: float, by_hand: float}
+     */
+    public function refundDropped(MeetingRsvp $rsvp): array
+    {
+        $rsvp->loadMissing(['meeting', 'guests']);
+        $meeting = $rsvp->meeting;
+        $attending = in_array($rsvp->attendance_status, MeetingReplies::ATTENDING, true);
+
+        $dropped = [];
+        if ($rsvp->payment_status === 'paid' && $rsvp->attendance_status !== 'attending_dining') {
+            $dropped[] = [null, (float) $meeting->dining_cost_member];
+        }
+        foreach ($rsvp->guests as $guest) {
+            if ($guest->payment_status === 'paid' && (! $guest->attending_dining || ! $attending)) {
+                $dropped[] = [$guest, MeetingReplies::guestFee($meeting, $guest)];
+            }
+        }
+
+        $totals = ['refunded' => 0.0, 'by_hand' => 0.0];
+        foreach ($dropped as [$guest, $amount]) {
+            $place = $guest ?? $rsvp;
+
+            if ($place->online_payment_id && in_array($place->online_provider, ['stripe', 'paypal'], true)) {
+                try {
+                    $this->refund($rsvp, $guest);
+                    $totals['refunded'] += $amount;
+
+                    continue;
+                } catch (\Throwable $e) {
+                    // The reply is already saved: a refund the provider refuses is left for the Treasurer instead.
+                    report($e);
+                }
+            }
+
+            $totals['by_hand'] += $amount;
+        }
+
+        return $totals;
+    }
+
+    /**
      * @param  list<int>  $guestIds
      */
     public static function customId(int $rsvpId, bool $member, array $guestIds): string

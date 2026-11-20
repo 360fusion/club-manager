@@ -2,6 +2,7 @@
 
 namespace App\Services\Meetings;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\ClubMemberStatus;
 use App\Enums\ClubRole;
@@ -11,6 +12,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\MeetingRsvpGuest;
 use App\Models\User;
+use App\Support\Currencies;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -29,6 +31,8 @@ class MeetingReplies
     public const ATTENDING = ['attending_dining', 'attending_meeting_only'];
 
     public const ANSWERS = ['attending_dining', 'attending_meeting_only', 'apologies'];
+
+    public function __construct(private MeetingDiningPayment $payments) {}
 
     /**
      * How many days before a meeting each step happens, from the lodge's settings: ask everyone who has not replied,
@@ -110,25 +114,49 @@ class MeetingReplies
      */
     public function afterChange(Meeting $meeting, MeetingRsvp $rsvp, array $before): void
     {
-        if (! $meeting->numbers_sent_at) {
-            return;
-        }
-
         $rsvp->load(['guests', 'user']);
         $heads = self::diningHeads($rsvp->attendance_status, $rsvp->guests);
+        $who = $rsvp->user->name ?? 'A member';
 
-        if ($before['status'] === $rsvp->attendance_status && $before['heads'] === $heads) {
+        // Dining paid for and then dropped is refunded: online payments at once, the rest by the Treasurer.
+        $refundNote = '';
+        if ($before['paid'] && $heads < $before['heads']) {
+            $refund = $this->payments->refundDropped($rsvp);
+            $club = $meeting->club;
+            $refundNote = ($refund['refunded'] > 0 ? ' Their online payment of '.Currencies::format($refund['refunded'], $club).' has been refunded.' : '')
+                .($refund['by_hand'] > 0 ? ' '.Currencies::format($refund['by_hand'], $club).' paid by bank, cash or a payment that could not be refunded online is still to refund by hand from the dining list.' : '');
+
+            if ($refund['by_hand'] > 0) {
+                $this->tellTreasurer($meeting, "{$who} is no longer dining.".$refundNote);
+            }
+        }
+
+        if (! $meeting->numbers_sent_at || ($before['status'] === $rsvp->attendance_status && $before['heads'] === $heads)) {
             return;
         }
 
-        $change = ($rsvp->user->name ?? 'A member').': '.self::label($before['status']).($before['heads'] ? " ({$before['heads']} dining)" : '')
-            .' → '.self::label($rsvp->attendance_status).($heads ? " ({$heads} dining)" : '').'.';
-
-        if ($heads < $before['heads'] && $before['paid']) {
-            $change .= ' They had already paid for dining: refund them from the dining list if needed.';
-        }
+        $change = $who.': '.self::label($before['status']).($before['heads'] ? " ({$before['heads']} dining)" : '')
+            .' → '.self::label($rsvp->attendance_status).($heads ? " ({$heads} dining)" : '').'.'.$refundNote;
 
         $this->sendNumbers($meeting, $change, $this->numbers($meeting)['dining'] - $heads + $before['heads']);
+    }
+
+    /**
+     * A refund that needs doing by hand goes to the member holding the Treasurer office, else an account with the
+     * Treasurer role. Skipped when that is the Secretary and the numbers have gone, since their update says the same.
+     */
+    private function tellTreasurer(Meeting $meeting, string $note): void
+    {
+        $club = $meeting->club;
+        $office = Member::holdingOffice($club, LodgeOffice::Treasurer);
+        $email = $office ? ($office->email ?: $office->user?->email)
+            : $club->users()->wherePivot('role', ClubRole::Treasurer->value)->wherePivot('status', ClubMemberStatus::Active->value)->value('email');
+
+        if (! $email || ($meeting->numbers_sent_at && $email === (Member::summonsSecretary($club)['email'] ?? null))) {
+            return;
+        }
+
+        Mail::to($email)->queue(new MeetingNumbersMail($club, $meeting, $this->numbers($meeting), $note));
     }
 
     /**

@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import Button from '@/Components/Ui/Button.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 
 const props = defineProps({
     // { type: 'meeting' | 'event', id, slug, reply, closed, simple }
@@ -20,6 +21,27 @@ const OPTIONS = {
         { value: 'attending', label: 'Going' },
         { value: 'declined', label: "Can't go" },
     ],
+};
+
+// Changing a reply already given asks first (the same as on the summons).
+const changingTo = ref(null);
+const labelFor = (value) => OPTIONS[props.item.type].find((option) => option.value === value)?.label ?? '';
+const choose = (status) => {
+    if (status === props.item.reply) return;
+    // Only a real reply asks first: someone who hasn't replied yet may be stored as pending.
+    if (labelFor(props.item.reply)) {
+        changingTo.value = status;
+        return;
+    }
+    reply(status);
+};
+const diningNote = computed(() => (props.item.type === 'meeting' && props.item.reply === 'attending_dining'
+    ? ` Your dining place will be given up${props.item.closed ? ', and dining numbers have gone to the caterer so it can\'t be added back here' : ''}. If you have paid, it is refunded: by card or PayPal straight away, by bank transfer through the Treasurer.`
+    : ''));
+const confirmChange = () => {
+    const status = changingTo.value;
+    changingTo.value = null;
+    reply(status);
 };
 
 const reply = (status) => {
@@ -47,11 +69,11 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
             v-for="option in options()"
             :key="option.value"
             size="sm"
-            :variant="item.reply === option.value ? 'primary' : 'secondary'"
+            :variant="item.reply === option.value ? 'success' : 'secondary'"
             :loading="busy === option.value"
             :disabled="isDisabled(option.value)"
             :aria-pressed="item.reply === option.value"
-            @click="reply(option.value)"
+            @click="choose(option.value)"
         >
             {{ option.label }}
         </Button>
@@ -60,5 +82,8 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
             {{ booked() ? 'View booking' : 'Choose options' }}
         </Link>
         <span v-if="item.closed" class="text-xs text-slate-500 dark:text-slate-400">{{ item.type === 'meeting' ? 'Dining closed' : 'Replies closed' }}</span>
+        <ConfirmDialog :open="changingTo !== null" :title="`Change your reply to ${labelFor(changingTo)}?`" :confirm-label="`Yes, ${labelFor(changingTo).toLowerCase()}`" cancel-label="Keep my reply" variant="primary" @confirm="confirmChange" @close="changingTo = null">
+            You replied {{ labelFor(item.reply) }}.{{ diningNote }}
+        </ConfirmDialog>
     </div>
 </template>

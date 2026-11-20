@@ -19,6 +19,8 @@ const VARIANTS = {
     secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800',
     ghost: 'bg-transparent text-slate-600 border border-transparent hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white',
     danger: 'bg-rose-600 text-white hover:bg-rose-500 border border-transparent',
+    // A choice that is made and saved, such as the reply a member has given.
+    success: 'bg-emerald-600 text-white hover:bg-emerald-500 border border-transparent',
 };
 
 // On phones every button is at least 44px tall, the size a thumb can hit; from sm up they keep their compact height.

@@ -146,22 +146,19 @@ class MeetingJourneyTest extends TestCase
         $this->assertStringContainsString('Vegetarian', $kitchen);
         $this->assertStringNotContainsString('Ann Lee', $kitchen);
 
-        // E7: late changes. Ben cannot add dining now but can send apologies; Tom takes his paid guest off.
+        // E7: late changes. Ben cannot add dining now but can send apologies; Tom takes his paid guest off, which refunds the guest's card payment.
         $this->actingAs($this->ben)->post(route('member.meetings.quick_rsvp', ['slug' => 'harbour', 'id' => $meeting->id]), ['attendance_status' => 'attending_dining'])->assertSessionHasErrors('cutoff');
         $this->actingAs($this->ben)->post(route('member.meetings.quick_rsvp', ['slug' => 'harbour', 'id' => $meeting->id]), ['attendance_status' => 'apologies'])->assertSessionHasNoErrors();
         $this->actingAs($this->tom)->post(route('member.meetings.rsvp', ['slug' => 'harbour', 'id' => $meeting->id]), ['attendance_status' => 'attending_dining', 'guests' => []])->assertSessionHasNoErrors();
 
         $changes = Mail::queued(MeetingNumbersMail::class)->filter(fn (MeetingNumbersMail $mail) => $mail->change !== null);
         $this->assertTrue($changes->contains(fn ($mail) => ! $mail->forCaterer && str_starts_with($mail->change, 'Ben Cole: no reply → apologies')));
-        $this->assertTrue($changes->contains(fn ($mail) => ! $mail->forCaterer && str_contains($mail->change, 'They had already paid')));
+        $this->assertTrue($changes->contains(fn ($mail) => ! $mail->forCaterer && str_contains($mail->change, 'online payment of £35.00 has been refunded')));
         $this->assertSame(['The numbers have changed: now 1 dining.'], $changes->where('forCaterer', true)->pluck('change')->values()->all());
 
-        // E8: the Secretary refunds the guest's place through Stripe from the dining list.
-        $diningList = route('admin.meetings.dining', ['clubSlug' => 'harbour', 'id' => $meeting->id]);
-        $this->actingAs($this->secretary)->get($diningList)->assertInertia(fn ($page) => $page->has('refundable', 1)->where('refundable.0.name', 'Gus Guest'));
-        $gus = $tomsReply->guests()->sole();
-        $this->actingAs($this->secretary)->post(route('admin.meetings.dining.refund', ['clubSlug' => 'harbour', 'id' => $meeting->id]), ['kind' => 'guest', 'diner_id' => $gus->id])->assertSessionHasNoErrors();
-        $this->assertSame('refunded', $gus->fresh()->payment_status);
+        // E8: nothing is left for the Secretary to refund by hand.
+        $this->assertSame('refunded', $tomsReply->guests()->sole()->payment_status);
+        $this->actingAs($this->secretary)->get(route('admin.meetings.dining', ['clubSlug' => 'harbour', 'id' => $meeting->id]))->assertInertia(fn ($page) => $page->has('refundable', 0));
 
         // E9: the day before, only those coming are reminded, and Tom has nothing left to pay.
         $this->runAt('2026-12-10 09:00');
