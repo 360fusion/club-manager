@@ -60,6 +60,11 @@ return [
             'description' => 'Draft, preview, and dispatch bulk email newsletters to members',
             'roles' => ['owner', 'admin', 'coach'],
         ],
+        'pass_on_communications' => [
+            'label' => 'Passing on communications',
+            'description' => 'Pass on summonses and notices from sister and reciprocal lodges, and Provincial and Grand Lodge communications, to members who want them',
+            'roles' => ['owner', 'admin', 'secretary'],
+        ],
         'edit_website' => [
             'label' => 'Website Builder',
             'description' => 'Build CMS pages, customize navigation, and update site content',

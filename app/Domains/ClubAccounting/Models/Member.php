@@ -81,6 +81,7 @@ class Member extends Model
             'date_of_raising' => 'date',
             'date_of_joining' => 'date',
             'annual_dues_override' => 'decimal:2',
+            'passed_on_prefs' => 'array',
         ];
     }
 

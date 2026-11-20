@@ -8,8 +8,11 @@ use App\Models\Lodge;
 use App\Models\LodgeSchedule;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\PassedOnDelivery;
+use App\Models\PassedOnItem;
 use App\Models\User;
 use App\Support\MemberScope;
+use App\Support\PassedOnPreferences;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -105,7 +108,11 @@ class MemberCalendar
 
         // Followed lodges have no member area of their own, so they only join the all-clubs calendar.
         if (! $scope->isSingle()) {
-            $items = $items->concat($this->followedLodgeItems($user, $clubIds, $from, $to));
+            // A passed-on summons comes last, so it replaces the same lodge's expected date (same key).
+            $items = $items->concat($this->followedLodgeItems($user, $clubIds, $from, $to))
+                ->concat($this->passedOnItems($user, $from, $to))
+                ->keyBy('key')
+                ->values();
         }
 
         return $this->flagClashes($items->sortBy(fn (array $item) => $item['start']->getTimestamp())->values());
@@ -121,8 +128,10 @@ class MemberCalendar
      */
     private function followedLodgeItems(User $user, Collection $memberClubIds, CarbonInterface $from, CarbonInterface $to): Collection
     {
+        $muted = PassedOnPreferences::fromArray($user->passed_on_prefs)->mutedLodges();
         $lodges = $user->followedLodges()
             ->wherePivot('in_calendar', true)
+            ->whereNotIn('lodges.id', $muted)
             ->where('lodges.status', 'active')
             ->where(fn ($lodge) => $lodge->whereNull('lodges.club_id')->orWhereNotIn('lodges.club_id', $memberClubIds->all()))
             ->with(['schedules', 'masonicHall', 'clubType:id,code,name'])
@@ -152,6 +161,56 @@ class MemberCalendar
                 ];
             }, $schedule->datesBetween($from, $to)));
         })->values();
+    }
+
+    /**
+     * Meetings from summonses passed on to the user (PassedOnDelivery), unless they turned that off or muted the lodge.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function passedOnItems(User $user, CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        $prefs = PassedOnPreferences::fromArray($user->passed_on_prefs);
+        if (! $prefs->calendar()) {
+            return collect();
+        }
+
+        return PassedOnDelivery::where('user_id', $user->id)
+            ->whereHas('item', fn ($item) => $item->where('type', PassedOnItem::SUMMONS)->whereBetween('meeting_date', [$from->toDateString(), $to->toDateString()]))
+            ->with('item.lodge.clubType:id,code,name')
+            ->get()
+            ->reject(fn (PassedOnDelivery $copy) => $prefs->mutes($copy->item->lodge_id))
+            ->map(fn (PassedOnDelivery $copy) => $this->passedOnItem($copy))
+            ->values();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function passedOnItem(PassedOnDelivery $copy): array
+    {
+        $item = $copy->item;
+        $date = CarbonImmutable::parse($item->meeting_date->toDateString(), LodgeSchedule::TIMEZONE);
+        $start = $item->meeting_time ? $date->setTimeFromTimeString($item->meeting_time) : $date->startOfDay();
+
+        return [
+            'key' => $item->lodge_id ? 'lodge-'.$item->lodge_id.'-'.$date->toDateString() : 'passed-on-'.$copy->id,
+            'type' => 'passed_on',
+            'id' => $copy->id,
+            'club' => ['id' => null, 'name' => $item->lodge?->displayName() ?? $item->title, 'slug' => $item->lodge?->slug, 'colour' => 'slate'],
+            'title' => $item->title,
+            'installation' => false,
+            'start' => $start,
+            'end' => $start->addHours(self::MEETING_HOURS),
+            'all_day' => $item->meeting_time === null,
+            'where' => $item->venue,
+            'reply' => null,
+            'unpaid' => false,
+            'said_paid' => false,
+            'closed' => false,
+            'simple' => false,
+            'url' => route('members.passed_on.show', ['delivery' => $copy->id], false),
+        ];
     }
 
     /**

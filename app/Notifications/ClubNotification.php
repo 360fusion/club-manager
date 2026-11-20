@@ -8,9 +8,11 @@ use App\Models\ClubVisitorAccess;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
+use App\Models\PassedOnDelivery;
 use App\Models\Post;
 use App\Models\SignatureRequest;
 use App\Support\Currencies;
+use App\Support\PassedOnPreferences;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -35,6 +37,9 @@ class ClubNotification extends Notification
     public const SIGNATURE = 'signature';
 
     public const REMINDER = 'reminder';
+
+    /** Passed on from another lodge, Province or Grand Lodge: the member's own choices (PassedOnPreferences) decide it, not push_muted. */
+    public const PASSED_ON = 'passed_on';
 
     /** The kinds someone may stop being sent to their phone; payments, signatures and membership decisions always are. */
     public const PUSH_OPTIONAL = [self::SUMMONS, self::EVENT, self::NEWS, self::NOTICE, self::REMINDER];
@@ -62,6 +67,20 @@ class ClubNotification extends Notification
             'member.meetings.summons',
             ['slug' => $club->slug, 'id' => $meeting->id],
             true,
+        );
+    }
+
+    public static function passedOn(PassedOnDelivery $delivery): self
+    {
+        $item = $delivery->item;
+
+        return new self(
+            self::PASSED_ON,
+            $item->title,
+            implode(' · ', array_filter([$item->lodge?->displayName() ?? (PassedOnPreferences::LABELS[$delivery->kind] ?? null), $item->meeting_date?->format('j M Y')])),
+            $delivery->viaClub,
+            'members.passed_on.show',
+            ['delivery' => $delivery->id],
         );
     }
 

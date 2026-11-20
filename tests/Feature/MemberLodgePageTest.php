@@ -72,6 +72,7 @@ class MemberLodgePageTest extends TestCase
                 ['key' => 'collections', 'label' => 'Alms and raffle', 'href' => route('member.meetings.collections', ['slug' => $this->club->slug, 'id' => $meeting->id])],
                 ['key' => 'add_booking', 'label' => 'Add booking', 'href' => route('admin.events.index', ['clubSlug' => $this->club->slug])],
                 ['key' => 'send_notice', 'label' => 'Send notice', 'href' => route('admin.notices.index', ['clubSlug' => $this->club->slug])],
+                ['key' => 'pass_on', 'label' => 'Pass on', 'href' => route('member.pass_on', ['slug' => $this->club->slug])],
             ]);
     }
 

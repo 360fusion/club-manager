@@ -8,6 +8,7 @@ use App\Models\Meeting;
 use App\Models\User;
 use App\Notifications\ClubNotification;
 use App\Support\ClubAccess;
+use App\Support\PassedOnPreferences;
 use App\Support\VisitorSummons;
 use Illuminate\Notifications\Notification as BaseNotification;
 use Illuminate\Support\Facades\Notification;
@@ -51,7 +52,10 @@ class ClubNotifier
      * one has been published. Members already had their own notification, and anyone who is not
      * allowed to see this lodge's meetings is not told about them.
      */
-    public function toFollowers(Club $club, Meeting $meeting): void
+    /**
+     * @param  list<int>  $exceptUserIds  people already told (a passed-on copy through a lodge that lists this one)
+     */
+    public function toFollowers(Club $club, Meeting $meeting, array $exceptUserIds = []): void
     {
         $lodge = $club->lodge;
 
@@ -60,6 +64,7 @@ class ClubNotifier
         }
 
         $followers = $lodge->followers()->wherePivot('notify_summons', true)->get()
+            ->reject(fn (User $user) => in_array($user->id, $exceptUserIds, true) || PassedOnPreferences::fromArray($user->passed_on_prefs)->mutes($lodge->id))
             ->reject(fn (User $user) => ClubAccess::isActiveMember($user, $club))
             ->filter(fn (User $user) => VisitorSummons::canSee($club, $user));
 

@@ -196,6 +196,10 @@ class MemberPortalController extends Controller
             $links[] = ['key' => 'send_notice', 'label' => 'Send notice', 'href' => route('admin.notices.index', ['clubSlug' => $club->slug])];
         }
 
+        if (PassOnController::canSend($user, $club)) {
+            $links[] = ['key' => 'pass_on', 'label' => 'Pass on', 'href' => route('member.pass_on', ['slug' => $club->slug])];
+        }
+
         if ($links === []) {
             return null;
         }

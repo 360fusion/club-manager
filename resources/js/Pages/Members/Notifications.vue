@@ -23,9 +23,10 @@ const CATEGORIES = [
     { value: 'notice', label: 'Notices' },
     { value: 'membership', label: 'Membership' },
     { value: 'signature', label: 'Sign' },
+    { value: 'passed_on', label: 'Other lodges' },
 ];
 
-const ICONS = { summons: 'document', news: 'mail', event: 'calendar', reminder: 'clock', notice: 'info', membership: 'user', signature: 'pencil' };
+const ICONS = { summons: 'document', news: 'mail', event: 'calendar', reminder: 'clock', notice: 'info', membership: 'user', signature: 'pencil', passed_on: 'document' };
 
 const categoryLabel = (value) => CATEGORIES.find((c) => c.value === value)?.label ?? value;
 
@@ -58,6 +59,7 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
                 <Link v-for="category in CATEGORIES" :key="category.value" :href="route('members.notifications')" :data="{ category: category.value || undefined, unread: filters.unread ? 1 : undefined }" :class="chip(filters.category === category.value)" :aria-current="filters.category === category.value ? 'true' : undefined" preserve-scroll>{{ category.label }}</Link>
                 <Link :href="route('members.notifications')" :data="{ category: filters.category || undefined, unread: filters.unread ? undefined : 1 }" :class="chip(filters.unread)" :aria-current="filters.unread ? 'true' : undefined" preserve-scroll>Unread only</Link>
             </nav>
+            <Link :href="route('members.passed_on.choices')" class="inline-block text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Choose what is passed on to you from other lodges</Link>
 
             <section v-for="group in groups" :key="group.label" :aria-labelledby="`inbox-${group.label}`" class="space-y-2">
                 <h3 :id="`inbox-${group.label}`" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ group.label }}</h3>

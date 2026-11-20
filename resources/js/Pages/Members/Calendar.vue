@@ -141,7 +141,7 @@ const STATUS = {
 const statusFor = (item) => {
     if (item.unpaid && item.said_paid) return { label: 'Payment sent', variant: 'info' };
     if (item.unpaid) return { label: 'Unpaid', variant: 'warning' };
-    if (item.type === 'lodge') return null;
+    if (item.type === 'lodge' || item.type === 'passed_on') return null;
     if (STATUS[item.reply]) return { label: STATUS[item.reply][0], variant: STATUS[item.reply][1] };
 
     // Meetings still take replies after dining closes.
@@ -272,7 +272,7 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center gap-1.5 wh
                                 <Badge v-if="statusFor(item)" :variant="statusFor(item).variant" class="shrink-0">{{ statusFor(item).label }}</Badge>
                             </Link>
                             <!-- Wider screens keep the quick reply buttons; on a phone the row opens the meeting or event to reply. -->
-                            <div v-if="item.type !== 'lodge'" class="hidden px-4 pb-3 pl-19 sm:block">
+                            <div v-if="!['lodge', 'passed_on'].includes(item.type)" class="hidden px-4 pb-3 pl-19 sm:block">
                                 <QuickReply :item="{ type: item.type, id: item.id, slug: item.club.slug, reply: item.reply, closed: item.closed, simple: item.simple }" />
                             </div>
                         </li>

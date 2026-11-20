@@ -21,6 +21,7 @@ use App\Http\Controllers\LodgeDirectoryController;
 use App\Http\Controllers\LodgeFeedController;
 use App\Http\Controllers\NativeAppController;
 use App\Http\Controllers\NewsletterPublicController;
+use App\Http\Controllers\PassedOnController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\PlatformStripeWebhookController;
@@ -153,6 +154,12 @@ if (app()->isLocal()) {
 // GoCardless posts here unauthenticated; the request is authenticated by its
 // HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
 Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe.club');
+// A passed-on item from its email, by the person's private token (no sign-in): the item, its PDF, their choices and one-click unsubscribe.
+Route::get('/webhooks/passed-on/{token}', [PassedOnController::class, 'publicShow'])->middleware('throttle:60,1')->name('passed_on.public');
+Route::get('/webhooks/passed-on/{token}/attachment', [PassedOnController::class, 'publicAttachment'])->middleware('throttle:60,1')->name('passed_on.public.attachment');
+Route::post('/webhooks/passed-on/{token}/choices', [PassedOnController::class, 'publicChoices'])->middleware('throttle:60,1')->name('passed_on.choices');
+Route::get('/webhooks/passed-on/{token}/unsubscribe', [PassedOnController::class, 'publicShow'])->middleware('throttle:60,1')->name('passed_on.unsubscribe.form');
+Route::post('/webhooks/passed-on/{token}/unsubscribe', [PassedOnController::class, 'unsubscribe'])->middleware('throttle:60,1')->name('passed_on.unsubscribe');
 Route::get('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribeForm'])->middleware('throttle:60,1')->name('newsletters.unsubscribe.form');
 Route::post('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribe'])->middleware('throttle:60,1')->name('newsletters.unsubscribe');
 // Each notification makes a call to PayPal to verify it, so a flood of fake ones is capped.

@@ -12,6 +12,7 @@ use App\Models\RecurringRule;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
 use App\Services\MeetingScheduleService;
+use App\Services\PassedOn\PlatformSummons;
 use App\Services\SummonsSender;
 use App\Support\NodeBinaries;
 use Illuminate\Http\RedirectResponse;
@@ -112,7 +113,8 @@ class MeetingSummonsController extends Controller
         }
 
         app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
-        app(ClubNotifier::class)->toFollowers($club, $meeting);
+        $reached = app(PlatformSummons::class)->publish($club, $meeting);
+        app(ClubNotifier::class)->toFollowers($club, $meeting, $reached);
 
         return redirect()->back()->with('success', "Summons published and emailed to {$sent} ".Str::plural('person', $sent).', each with their own RSVP link.');
     }

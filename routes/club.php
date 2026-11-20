@@ -95,6 +95,8 @@ use App\Http\Controllers\PagePlacesController;
 use App\Http\Controllers\PageRedirectController;
 use App\Http\Controllers\PageSiteSettingsController;
 use App\Http\Controllers\PageThemeController;
+use App\Http\Controllers\PassedOnController;
+use App\Http\Controllers\PassOnController;
 use App\Http\Controllers\PaymentOptionsController;
 use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\ProvinceLodgeController;
@@ -550,6 +552,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/meetings', [MemberListController::class, 'meetings'])->name('members.meetings');
     Route::get('/members/dues', [MemberListController::class, 'dues'])->name('members.dues');
     Route::post('/members/dues/{id}/said-paid', [MemberListController::class, 'saidPaidDues'])->middleware('throttle:20,1')->whereNumber('id')->name('members.dues.said_paid');
+    // What other lodges, Province and Grand Lodge have had passed on to the member, and their choices (PassedOnController)
+    Route::get('/members/passed-on/{delivery}', [PassedOnController::class, 'show'])->whereNumber('delivery')->name('members.passed_on.show');
+    Route::get('/members/passed-on/{delivery}/attachment', [PassedOnController::class, 'attachment'])->whereNumber('delivery')->name('members.passed_on.attachment');
+    Route::post('/members/passed-on/{delivery}/mute', [PassedOnController::class, 'mute'])->whereNumber('delivery')->middleware('throttle:30,1')->name('members.passed_on.mute');
+    Route::get('/members/passed-on-choices', [PassedOnController::class, 'choices'])->name('members.passed_on.choices');
+    Route::post('/members/passed-on-choices', [PassedOnController::class, 'updateChoices'])->middleware('throttle:30,1')->name('members.passed_on.choices.update');
     Route::get('/members/notifications', [NotificationController::class, 'index'])->name('members.notifications');
     Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
@@ -581,6 +589,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/{slug}/events/{id}/rsvp', [MemberRsvpController::class, 'updateRsvp'])->name('member.rsvp');
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
     Route::get('/members/{slug}/record', [MemberRecordController::class, 'show'])->name('member.record');
+    // Passing on other lodges', Provincial and Grand Lodge communications (PassOnController::canSend)
+    Route::get('/members/{slug}/pass-on', [PassOnController::class, 'index'])->name('member.pass_on');
+    Route::post('/members/{slug}/pass-on', [PassOnController::class, 'store'])->middleware('throttle:10,60')->name('member.pass_on.store');
+    Route::get('/members/{slug}/pass-on/{item}/attachment', [PassOnController::class, 'attachment'])->whereNumber('item')->name('member.pass_on.attachment');
+    Route::get('/members/{slug}/pass-on/lists', [PassOnController::class, 'lists'])->name('member.pass_on.lists');
+    Route::post('/members/{slug}/pass-on/lists', [PassOnController::class, 'updateLists'])->middleware('throttle:60,1')->name('member.pass_on.lists.update');
     Route::get('/members/{slug}/accounts', [MemberAccountsController::class, 'show'])->name('member.accounts');
     Route::get('/members/{slug}/accounts/dues', [MemberAccountsController::class, 'dues'])->name('member.accounts.dues');
     Route::post('/members/{slug}/accounts/dues/reminders', [MemberAccountsController::class, 'duesReminders'])->middleware('throttle:20,1')->name('member.accounts.dues.reminders');

@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Input from '@/Components/Ui/Input.vue';
@@ -90,6 +90,7 @@ const toggleLock = async (on) => {
                         {{ kind.label }}
                     </label>
                 </div>
+                <Link :href="route('members.passed_on.choices')" class="mt-3 inline-block text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Choose what is passed on to you from other lodges</Link>
             </Card>
 
             <Card v-if="signIn?.available">

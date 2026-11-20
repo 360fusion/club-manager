@@ -47,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'closure_requested_at' => 'datetime',
             'purged_at' => 'datetime',
             'push_muted' => 'array',
+            'passed_on_prefs' => 'array',
         ];
     }
 

@@ -27,8 +27,8 @@ class MemberCalendarController extends Controller
         $to = $month->endOfMonth()->endOfWeek();
 
         // Meetings and events hold the lodge's wall-clock time; the browser needs the real moment to show it. Followed
-        // lodges' expected dates are already in UK time.
-        $moment = fn (array $item, \DateTimeInterface $time) => $item['type'] === 'lodge' ? $time : ($scope->clubFor($item['club']['id'])?->atLocalTime($time) ?? $time);
+        // lodges' expected dates and passed-on meetings are already in UK time.
+        $moment = fn (array $item, \DateTimeInterface $time) => in_array($item['type'], ['lodge', 'passed_on'], true) ? $time : ($scope->clubFor($item['club']['id'])?->atLocalTime($time) ?? $time);
         $items = $this->calendar->items($scope, $from, $to)->map(fn (array $item) => [
             ...$item,
             'start' => CarbonImmutable::instance($moment($item, $item['start']))->toIso8601String(),
@@ -64,8 +64,10 @@ class MemberCalendarController extends Controller
         $items = $this->calendar->items($scope, CarbonImmutable::now()->subMonth(), CarbonImmutable::now()->addMonths(12));
 
         foreach ($items as $item) {
-            if ($item['type'] === 'lodge') {
-                $note = 'Expected date from the lodge\'s published meeting pattern. Confirm with the lodge before you travel.';
+            if (in_array($item['type'], ['lodge', 'passed_on'], true)) {
+                $note = $item['type'] === 'lodge'
+                    ? 'Expected date from the lodge\'s published meeting pattern. Confirm with the lodge before you travel.'
+                    : 'From a summons passed on to you.';
 
                 if ($item['all_day']) {
                     $ics->addAllDay($item['key'], $item['club']['name'].': '.$item['title'], $item['start'], $item['where'], $note, url($item['url']));
