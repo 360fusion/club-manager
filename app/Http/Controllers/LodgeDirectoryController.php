@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\Member;
+use App\Enums\ClubMemberStatus;
 use App\Http\Requests\LodgeDirectory\IndexLodgeDirectoryRequest;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -251,10 +253,31 @@ class LodgeDirectoryController extends Controller
             'can_request' => $visibility === VisitorSummons::APPROVED_VISITORS && $viewer !== null && ! $isMember && ! in_array($status, [ClubVisitorAccess::PENDING, ClubVisitorAccess::APPROVED], true),
             // Asking to attend a meeting is open to anyone signed in who is not already a member.
             'can_visit' => $viewer !== null && ! $isMember,
+            'about_you' => $viewer && ! $isMember ? $this->aboutVisitor($viewer) : null,
             'visits' => $viewer && ! $isMember ? ClubVisitRequest::where('club_id', $club->id)->where('user_id', $viewer->id)
                 ->whereDate('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->get()
                 ->map(fn (ClubVisitRequest $visit) => ['id' => $visit->id, 'date' => $visit->meeting_date->toDateString(), 'status' => $visit->status, 'reply' => $visit->reply])
                 ->all() : [],
+        ];
+    }
+
+    /**
+     * The visitor's own lodge and rank from their roster record in one of their lodges, so the visit form starts filled in.
+     *
+     * @return array{home_lodge_name: string, home_lodge_number: string, rank: string}|null
+     */
+    private function aboutVisitor(User $viewer): ?array
+    {
+        $clubIds = $viewer->clubs()->wherePivot('status', ClubMemberStatus::Active->value)->pluck('clubs.id');
+        $member = Member::whereIn('club_id', $clubIds)->where('user_id', $viewer->id)->with('club')->orderBy('id')->first();
+        if (! $member || ! $member->club) {
+            return null;
+        }
+
+        return [
+            'home_lodge_name' => $member->club->name,
+            'home_lodge_number' => (string) $member->club->lodge_number,
+            'rank' => implode(', ', array_filter([$member->masonic_rank, $member->grand_rank ?: $member->provincial_rank])),
         ];
     }
 

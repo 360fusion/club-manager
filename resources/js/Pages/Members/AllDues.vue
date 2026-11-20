@@ -1,8 +1,10 @@
 <script setup>
+import { router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Card from '@/Components/Ui/Card.vue';
 import ClubChips from '@/Components/ClubChips.vue';
+import Button from '@/Components/Ui/Button.vue';
 
 defineProps({
     subscriptions: { type: Array, default: () => [] },
@@ -13,6 +15,9 @@ defineProps({
 
 const day = (date) => (date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 // Where the member stands (DuesTracker::pace).
+function saidPaid(item) {
+    router.post(route('members.dues.said_paid', item.id), {}, { preserveScroll: true });
+}
 const PACE = { paid: ['Paid', 'success'], on_track: ['On track', 'success'], due: ['To pay', 'info'], behind: ['Behind', 'warning'], overdue: ['Overdue', 'danger'] };
 </script>
 
@@ -62,6 +67,9 @@ const PACE = { paid: ['Paid', 'success'], on_track: ['On track', 'success'], due
                         <p v-if="item.bank.iban">IBAN: <strong class="font-mono">{{ item.bank.iban }}</strong></p>
                         <p v-if="item.reference">Reference: <strong class="font-mono">{{ item.reference }}</strong> (please use it, so the Treasurer can match your payments)</p>
                     </div>
+
+                    <p v-if="item.outstanding && item.said_paid_on" class="text-sm text-slate-600 dark:text-slate-300">You told us you'd paid on {{ item.said_paid_on }}. The Treasurer will mark it once it shows in the bank.</p>
+                    <Button v-else-if="item.outstanding && item.pace.state !== 'on_track'" variant="secondary" size="sm" @click="saidPaid(item)">I've paid or set up a standing order</Button>
                 </Card>
                 <Card v-if="!subscriptions.length"><p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">No subscription records yet.</p></Card>
             </section>

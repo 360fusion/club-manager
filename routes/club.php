@@ -549,6 +549,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/news', [MemberListController::class, 'news'])->name('members.news');
     Route::get('/members/meetings', [MemberListController::class, 'meetings'])->name('members.meetings');
     Route::get('/members/dues', [MemberListController::class, 'dues'])->name('members.dues');
+    Route::post('/members/dues/{id}/said-paid', [MemberListController::class, 'saidPaidDues'])->middleware('throttle:20,1')->whereNumber('id')->name('members.dues.said_paid');
     Route::get('/members/notifications', [NotificationController::class, 'index'])->name('members.notifications');
     Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
@@ -582,6 +583,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/record', [MemberRecordController::class, 'show'])->name('member.record');
     Route::get('/members/{slug}/accounts', [MemberAccountsController::class, 'show'])->name('member.accounts');
     Route::get('/members/{slug}/accounts/dues', [MemberAccountsController::class, 'dues'])->name('member.accounts.dues');
+    Route::post('/members/{slug}/accounts/dues/reminders', [MemberAccountsController::class, 'duesReminders'])->middleware('throttle:20,1')->name('member.accounts.dues.reminders');
     Route::get('/members/{slug}/accounts/import', [MemberAccountsController::class, 'import'])->name('member.accounts.import');
     Route::post('/members/{slug}/accounts/import', [MemberAccountsController::class, 'preview'])->middleware('throttle:20,1')->name('member.accounts.import.preview');
     Route::post('/members/{slug}/accounts/import/confirm', [MemberAccountsController::class, 'store'])->middleware('throttle:20,1')->name('member.accounts.import.store');

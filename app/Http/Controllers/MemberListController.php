@@ -15,10 +15,12 @@ use App\Models\Post;
 use App\Services\DuesTracker;
 use App\Services\Events\EventPayload;
 use App\Services\MemberCalendar;
+use App\Support\ClubAccess;
 use App\Support\MemberScope;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -271,6 +273,24 @@ class MemberListController extends Controller
             ]);
 
         return Inertia::render('Members/AllDues', [...$this->scopeProps($scope), 'subscriptions' => $subscriptions, 'invoices' => $invoices]);
+    }
+
+    /**
+     * The member says they have paid (or set up a standing order) by bank transfer. Nothing is marked paid: that waits for
+     * the Treasurer to see it in the bank. It only pauses dues reminders for four weeks.
+     */
+    public function saidPaidDues(Request $request, int $id): RedirectResponse
+    {
+        $subscription = MemberSubscription::where('id', $id)
+            ->whereHas('member', fn ($member) => $member->where('user_id', $request->user()->id))
+            ->firstOrFail();
+        abort_unless(ClubAccess::isActiveMember($request->user(), $subscription->club), 403);
+
+        if ($subscription->status->isOutstanding()) {
+            $subscription->forceFill(['said_paid_at' => now()])->save();
+        }
+
+        return back()->with('success', 'Thank you. The Treasurer will mark it paid once it shows in the bank.');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Services\Lodges;
 use App\Models\Club;
 use App\Models\ClubVisitorAccess;
 use App\Models\ClubVisitRequest;
+use App\Models\MemberVisit;
 use App\Models\User;
 use App\Notifications\ClubNotification;
 use App\Notifications\LodgeClaimNotification;
@@ -98,7 +99,16 @@ class VisitorAccessService
             'decided_at' => now(),
         ])->save();
 
-        $this->notifier->toUser($visit->user, LodgeClaimNotification::visitAnswered($visit->load('club.lodge'), $visit->club));
+        $visit->load('club.lodge');
+        if ($accept) {
+            // On the visitor's own record from the start; it counts as a visit once the day has passed.
+            MemberVisit::firstOrCreate(
+                ['user_id' => $visit->user_id, 'lodge_name' => $visit->club->name, 'visited_on' => $visit->meeting_date->toDateString()],
+                ['lodge_id' => $visit->club->lodge?->id],
+            );
+        }
+
+        $this->notifier->toUser($visit->user, LodgeClaimNotification::visitAnswered($visit, $visit->club));
     }
 
     public function withdraw(ClubVisitorAccess $access): void

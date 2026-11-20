@@ -217,6 +217,8 @@ class SubscriptionBillingService
                 'amount_paid' => $newPaid,
                 'status' => $status,
                 'notes' => trim($noteText),
+                // The money they said they had sent has now been seen, so reminders go back to their usual schedule.
+                'said_paid_at' => null,
             ]);
 
             return $subscription->fresh();

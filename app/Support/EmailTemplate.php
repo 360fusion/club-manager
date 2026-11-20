@@ -34,6 +34,7 @@ class EmailTemplate
         'meeting_numbers' => 'numbers',
         'meeting_numbers_changed' => 'numbers',
         'meeting_numbers_caterer' => 'numbers',
+        'dues_reminder' => null,
     ];
 
     /**

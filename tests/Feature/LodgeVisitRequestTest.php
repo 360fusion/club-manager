@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\ClubVisitRequest;
 use App\Models\Lodge;
+use App\Models\MemberVisit;
 use App\Models\User;
 use App\Notifications\LodgeClaimNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -100,10 +102,33 @@ class LodgeVisitRequestTest extends TestCase
         $this->assertSame(ClubVisitRequest::ACCEPTED, $visit->fresh()->status);
         $this->assertSame($this->secretary->id, $visit->fresh()->decided_by);
         Notification::assertSentTo($this->visitor, LodgeClaimNotification::class, fn (LodgeClaimNotification $notice) => $notice->body === 'Tyled at 6.30pm.');
+        // On the visitor's record from the start, and counted as a visit once the day has passed.
+        $recorded = MemberVisit::sole();
+        $this->assertSame([$this->visitor->id, $this->club->name, $visit->meeting_date->toDateString(), $this->lodge->id], [$recorded->user_id, $recorded->lodge_name, $recorded->visited_on->toDateString(), $recorded->lodge_id]);
 
         $this->actingAs($this->secretary)
             ->post(route('admin.visitors.visits.answer', ['clubSlug' => $this->club->slug, 'id' => $visit->id]), ['accept' => false])
             ->assertSessionHasErrors(['visit' => 'That request has already been answered.']);
+    }
+
+    public function test_a_declined_visit_is_not_recorded(): void
+    {
+        $this->askToVisit();
+        $visit = ClubVisitRequest::sole();
+
+        $this->actingAs($this->secretary)->post(route('admin.visitors.visits.answer', ['clubSlug' => $this->club->slug, 'id' => $visit->id]), ['accept' => false]);
+
+        $this->assertSame(0, MemberVisit::count());
+    }
+
+    public function test_the_visit_form_starts_with_the_visitors_own_lodge_and_rank(): void
+    {
+        $home = Club::factory()->create(['name' => 'Lodge of Fraternity', 'lodge_number' => '4800']);
+        $home->users()->attach($this->visitor->id, ['role' => 'member', 'status' => 'active']);
+        Member::create(['club_id' => $home->id, 'user_id' => $this->visitor->id, 'first_name' => 'Vic', 'last_name' => 'Visitor', 'masonic_rank' => 'WBro', 'provincial_rank' => 'PPrJGW', 'membership_status' => 'active']);
+
+        $this->actingAs($this->visitor)->get(route('lodges.show', $this->lodge->slug))
+            ->assertInertia(fn (Assert $page) => $page->where('lodge.visitor.about_you', ['home_lodge_name' => 'Lodge of Fraternity', 'home_lodge_number' => '4800', 'rank' => 'WBro, PPrJGW']));
     }
 
     public function test_a_plain_member_or_another_lodges_admin_cannot_answer(): void

@@ -70,7 +70,8 @@ const years = (count) => (count === 0 ? 'this year' : `${count} ${count === 1 ? 
                         <h3 :class="overline">Visits to other lodges</h3>
                         <p class="text-sm text-slate-700 dark:text-slate-200"><strong class="text-lg">{{ record.visits.count }}</strong> recorded</p>
                         <p v-for="(visit, index) in record.visits.recent" :key="index" class="truncate text-xs text-slate-500 dark:text-slate-400">{{ visit.date }} · {{ visit.lodge }}</p>
-                        <Link :href="route('members.lodges')" class="inline-block pt-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Record a visit</Link>
+                        <p v-for="(visit, index) in record.visits.upcoming" :key="`up-${index}`" class="truncate text-xs font-medium text-blue-700 dark:text-blue-300">Coming up: {{ visit.date }} · {{ visit.lodge }}</p>
+                        <Link :href="route('lodges.index')" class="inline-block pt-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Find a lodge to visit</Link>
                     </Card>
                 </div>
 

@@ -56,7 +56,9 @@ class MasonicRecord
 
         $book = $this->book->attendance($club, now()->subYear());
         $attendance = collect($book['members'])->firstWhere('user_id', $user->id);
-        $visits = MemberVisit::where('user_id', $user->id)->orderByDesc('visited_on')->get(['lodge_name', 'visited_on']);
+        [$upcoming, $visits] = MemberVisit::where('user_id', $user->id)->orderByDesc('visited_on')->get(['lodge_name', 'visited_on'])
+            ->partition(fn (MemberVisit $visit) => $visit->visited_on->isAfter(today()));
+        $visitRow = fn (MemberVisit $visit) => ['lodge' => $visit->lodge_name, 'date' => $visit->visited_on->format('j M Y')];
 
         return [
             'name' => $member->formatted_rank_name,
@@ -70,7 +72,7 @@ class MasonicRecord
             'current_office' => ($office = LodgeOffice::tryFrom((string) $member->getRawOriginal('current_office'))) && ! in_array($office, [LodgeOffice::Member, LodgeOffice::CommitteeMember], true) ? $office->label() : null,
             // Only meetings where the signing-in book was used count, so a lodge that doesn't use it shows nothing.
             'attendance' => $attendance && $book['meetings'] > 0 ? ['attended' => $attendance['attended'], 'meetings' => $book['meetings'], 'last' => $attendance['last_attended']] : null,
-            'visits' => ['count' => $visits->count(), 'recent' => $visits->take(5)->map(fn (MemberVisit $visit) => ['lodge' => $visit->lodge_name, 'date' => $visit->visited_on->format('j M Y')])->values()->all()],
+            'visits' => ['count' => $visits->count(), 'recent' => $visits->take(5)->map($visitRow)->values()->all(), 'upcoming' => $upcoming->reverse()->map($visitRow)->values()->all()],
         ];
     }
 

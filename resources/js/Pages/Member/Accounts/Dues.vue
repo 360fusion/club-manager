@@ -1,15 +1,21 @@
 <script setup>
 // The Treasurer's dues list on a phone: everyone's subscription for the year, behind and overdue first (DuesTracker).
 import { computed, ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
+import ToggleSwitch from '@/Components/Ui/ToggleSwitch.vue';
 
 const props = defineProps({
     club: { type: Object, required: true },
     dues: { type: Object, required: true },
+    reminders: { type: Object, required: true },
 });
+
+function setReminders(on) {
+    router.post(route('member.accounts.dues.reminders', { slug: props.club.slug }), { on }, { preserveScroll: true });
+}
 
 const PACE = { paid: ['Paid', 'success'], on_track: ['On track', 'success'], due: ['To pay', 'info'], behind: ['Behind', 'warning'], overdue: ['Overdue', 'danger'] };
 const filter = ref('all');
@@ -26,6 +32,15 @@ const rows = computed(() => props.dues.rows.filter((row) => filter.value === 'al
                 <Link :href="route('member.accounts', { slug: club.slug })" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Back to the accounts</Link>
                 <h2 class="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-white">{{ dues.year ? `Dues for ${dues.year}` : 'Dues' }}</h2>
             </div>
+
+            <Card padding="sm" class="flex items-start justify-between gap-3">
+                <div class="text-sm">
+                    <p class="font-medium text-slate-900 dark:text-white">Reminders by email and in the app</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Sent to anyone behind, overdue or two weeks from the due date, at most every four weeks. Not to anyone on track or who says they've paid.</p>
+                </div>
+                <ToggleSwitch v-if="reminders.can_change" :model-value="reminders.on" label="Send dues reminders" on-text="On" off-text="Off" @update:model-value="setReminders" />
+                <Badge v-else :variant="reminders.on ? 'success' : 'neutral'">{{ reminders.on ? 'On' : 'Off' }}</Badge>
+            </Card>
 
             <Card v-if="!dues.rows.length"><p class="text-sm text-slate-600 dark:text-slate-300">No subscriptions have been raised yet.</p></Card>
 
@@ -55,6 +70,7 @@ const rows = computed(() => props.dues.rows.filter((row) => filter.value === 'al
                         </summary>
                         <div class="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
                             <p>{{ row.pace.message }}</p>
+                            <p v-if="row.said_paid_on" class="font-medium text-amber-700 dark:text-amber-400">Says they paid on {{ row.said_paid_on }}: look for it in the bank.</p>
                             <p v-if="row.reference">Reference {{ row.reference }}</p>
                             <p v-for="(payment, index) in row.payments" :key="index">{{ payment.date }} · {{ payment.amount }}</p>
                         </div>

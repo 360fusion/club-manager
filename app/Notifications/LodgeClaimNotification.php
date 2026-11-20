@@ -125,7 +125,7 @@ class LodgeClaimNotification extends Notification
         return new self(
             ClubNotification::MEMBERSHIP,
             $club->name.($accepted ? ' looks forward to your visit on ' : ' cannot host you on ').$visit->meeting_date->format('j M Y'),
-            $visit->reply ?: ($accepted ? 'See the lodge page for the time and venue.' : 'You can ask about another date.'),
+            $visit->reply ?: ($accepted ? 'It is on your record of visits. See the lodge page for the time and venue.' : 'You can ask about another date.'),
             $club->name,
             $lodge ? 'lodges.show' : 'members.lodges',
             $lodge ? ['slug' => $lodge->slug] : [],

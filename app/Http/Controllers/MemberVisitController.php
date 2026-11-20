@@ -61,6 +61,8 @@ class MemberVisitController extends Controller
 
         $visits = MemberVisit::whereIn('user_id', $members)
             ->where('visited_on', '>=', now()->subYear()->toDateString())
+            // Visits a lodge has accepted are recorded ahead of the day; only ones that have happened are listed.
+            ->where('visited_on', '<=', now()->toDateString())
             ->with(['user', 'lodge:id,slug'])
             ->orderByDesc('visited_on')->orderByDesc('id')
             ->limit(500)

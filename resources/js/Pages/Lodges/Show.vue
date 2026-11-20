@@ -40,7 +40,8 @@ function withdrawRequest() {
     router.delete(route('lodges.visitor_access.withdraw', props.lodge.slug), { preserveScroll: true });
 }
 
-const visit = useForm({ meeting_date: '', home_lodge_name: '', home_lodge_number: '', rank: '', dining: false, message: '' });
+// Starts with their own lodge and rank (about_you), so a brother only picks the date.
+const visit = useForm({ meeting_date: '', home_lodge_name: '', home_lodge_number: '', rank: '', ...(props.lodge.visitor?.about_you ?? {}), dining: false, message: '' });
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 const VISIT_STATUS = { pending: 'Waiting for the secretary', accepted: 'Accepted', declined: 'Declined' };
 

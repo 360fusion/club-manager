@@ -40,6 +40,7 @@ class DuesTracker
             'reference' => $subscription->invoice_reference,
             'status' => $subscription->status->value,
             'status_label' => $subscription->status->label(),
+            'said_paid_on' => $subscription->said_paid_at?->format('j M Y'),
             'pace' => $this->pace($subscription, $left, $money),
             'payments' => $subscription->payments->map(fn (SubscriptionPayment $payment) => [
                 'date' => $payment->paid_on->format('j M Y'),
@@ -84,6 +85,21 @@ class DuesTracker
         }
 
         return ['state' => 'due', 'message' => $money($left).' due by '.$dueDate->format('j M Y').'.'];
+    }
+
+    /**
+     * Whether to remind the member today (app:send-dues-reminders): they are behind, overdue, or paying in one go with
+     * the due date two weeks off; someone on track or paid is left alone. They are not chased within four weeks of the
+     * last reminder, nor for four weeks after saying they have paid, while the Treasurer waits for the statement.
+     */
+    public function shouldRemind(MemberSubscription $subscription, string $paceState): bool
+    {
+        $wanted = in_array($paceState, ['behind', 'overdue'], true)
+            || ($paceState === 'due' && $subscription->due_date->lte(now()->addDays(14)));
+
+        return $wanted
+            && ($subscription->reminder_sent_at === null || $subscription->reminder_sent_at->lte(now()->subDays(28)))
+            && ($subscription->said_paid_at === null || $subscription->said_paid_at->lte(now()->subDays(28)));
     }
 
     /**

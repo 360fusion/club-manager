@@ -29,6 +29,8 @@ class MemberSubscription extends Model
         'status',
         'invoice_reference',
         'notes',
+        'reminder_sent_at',
+        'said_paid_at',
     ];
 
     protected function casts(): array
@@ -38,6 +40,8 @@ class MemberSubscription extends Model
             'amount_due' => 'decimal:2',
             'amount_paid' => 'decimal:2',
             'status' => SubscriptionStatus::class,
+            'reminder_sent_at' => 'datetime',
+            'said_paid_at' => 'datetime',
         ];
     }
 

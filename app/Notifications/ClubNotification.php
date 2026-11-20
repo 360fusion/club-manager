@@ -140,6 +140,12 @@ class ClubNotification extends Notification
         );
     }
 
+    /** Dues behind, overdue or nearly due (app:send-dues-reminders), opening the member's dues page. */
+    public static function dues(Club $club, string $left, string $message): self
+    {
+        return new self(self::PAYMENT, 'Dues: '.$left.' still to pay', $message, $club, 'members.dues', [], true);
+    }
+
     /** A step of a meeting's reply schedule, opening the member's summons where they can reply or change it. */
     public static function meetingReply(Meeting $meeting, Club $club, string $title, bool $reminder): self
     {

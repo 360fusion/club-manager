@@ -53,7 +53,20 @@ class MemberAccountsController extends Controller
         return Inertia::render('Member/Accounts/Dues', [
             'club' => ['slug' => $club->slug, 'name' => $club->name],
             'dues' => $tracker->forLodge($club),
+            'reminders' => ['on' => ! empty($club->settings['dues_reminders']), 'can_change' => LodgeAccountsOverview::canImport($request->user(), $club)],
         ]);
+    }
+
+    /** Switches the lodge's dues reminders (app:send-dues-reminders) on or off. */
+    public function duesReminders(Request $request, string $slug): RedirectResponse
+    {
+        $club = $this->findClub($slug);
+        abort_unless(LodgeAccountsOverview::canImport($request->user(), $club), 403);
+        $on = $request->validate(['on' => ['required', 'boolean']])['on'];
+
+        $club->forceFill(['settings' => [...($club->settings ?? []), 'dues_reminders' => (bool) $on]])->save();
+
+        return back()->with('success', $on ? 'Dues reminders are on.' : 'Dues reminders are off.');
     }
 
     public function import(Request $request, string $slug): Response

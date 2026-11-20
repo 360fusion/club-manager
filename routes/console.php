@@ -13,6 +13,8 @@ Artisan::command('inspire', function () {
 
 // Needs the server's scheduler running (a cron entry that runs `php artisan schedule:run` every minute).
 Schedule::command('app:send-event-payment-reminders')->dailyAt('09:00')->withoutOverlapping();
+// Dues behind, overdue or nearly due, in lodges that have switched it on.
+Schedule::command('app:send-dues-reminders')->dailyAt('09:15')->withoutOverlapping();
 // The day before an event, a reminder to everyone booked (from 9am lodge time; each booking once).
 Schedule::command('app:send-event-day-reminders')->hourly()->withoutOverlapping();
 // Each meeting's reply schedule from 9am lodge time: ask who has not replied, last call, the Secretary's numbers, the reminder.
