@@ -14,6 +14,8 @@ const props = defineProps({
 });
 
 const signedIn = computed(() => Boolean(usePage().props.auth?.user));
+// The viewer's own lodge: no point following it, so it offers the lodge's members page instead.
+const ownLodge = computed(() => Boolean(props.lodge.club_slug) && (usePage().props.auth?.clubs ?? []).some((club) => club.slug === props.lodge.club_slug && club.status === 'active'));
 const webcalUrl = computed(() => props.lodge.ics_url.replace(/^https?:/, 'webcal:'));
 
 function follow() {
@@ -84,7 +86,8 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     <p v-if="lodge.description" class="mt-3 text-sm">{{ lodge.description }}</p>
 
                     <div class="mt-4 flex flex-wrap items-center gap-3">
-                        <template v-if="signedIn">
+                        <Link v-if="ownLodge" :href="route('member.dashboard', { slug: lodge.club_slug })" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Your lodge's members page</Link>
+                        <template v-else-if="signedIn">
                             <button v-if="!lodge.following" type="button" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500" @click="follow">Follow this lodge</button>
                             <template v-else>
                                 <button type="button" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" @click="unfollow">Following <UiIcon name="check" class="inline-block align-text-bottom" /> unfollow</button>
@@ -201,7 +204,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     </div>
                 </section>
 
-                <section v-if="signedIn" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="visited-heading">
+                <section v-if="signedIn && !ownLodge" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="visited-heading">
                     <h2 id="visited-heading" class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Your visits</h2>
                     <p v-if="lodge.visited_on.length" class="mt-2 text-sm text-slate-700 dark:text-slate-300">You visited on {{ lodge.visited_on.join(', ') }}.</p>
                     <form class="mt-3 flex flex-wrap items-end gap-2" @submit.prevent="recordVisit">

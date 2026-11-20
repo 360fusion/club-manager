@@ -20,7 +20,8 @@ const tabs = computed(() => [
     {
         key: 'lodge',
         label: 'Lodge',
-        href: props.club ? route('member.dashboard', { slug: props.club.slug }) : route('members.lodges'),
+        // Always My lodges: the member's own lodges (each opens its members page), suggestions and those they follow.
+        href: route('members.lodges'),
         icon: 'M3 21h18M5 21V10M19 21V10M9.5 21V10M14.5 21V10M2 10l10-6 10 6z',
     },
 ]);
