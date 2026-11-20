@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $shared = DB::table('lodge_sources')->select('url')->groupBy('url')->havingRaw('count(*) > 1');
+        // Plucked first: MySQL refuses an update whose subquery reads the same table (error 1093).
+        $shared = DB::table('lodge_sources')->groupBy('url')->havingRaw('count(*) > 1')->pluck('url');
 
-        DB::table('lodge_sources')->whereIn('url', $shared)->update(['content_hash' => null]);
+        $shared->chunk(500)->each(fn ($urls) => DB::table('lodge_sources')->whereIn('url', $urls)->update(['content_hash' => null]));
     }
 
     public function down(): void
