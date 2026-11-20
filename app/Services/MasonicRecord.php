@@ -18,7 +18,13 @@ use Carbon\CarbonInterface;
  */
 class MasonicRecord
 {
-    public function __construct(private SigningInBook $book) {}
+    /** The usual progression through the offices to the Chair; most lodges follow it, though the lodge decides. */
+    public const PROGRESSION = [
+        LodgeOffice::Steward, LodgeOffice::InnerGuard, LodgeOffice::JuniorDeacon, LodgeOffice::SeniorDeacon,
+        LodgeOffice::JuniorWarden, LodgeOffice::SeniorWarden, LodgeOffice::WorshipfulMaster,
+    ];
+
+    public function __construct(private SigningInBook $book, private MasonicAnniversaries $anniversaries) {}
 
     /**
      * @return array<string, mixed>|null null when the lodge has no roster record for this person yet
@@ -56,8 +62,11 @@ class MasonicRecord
 
         $book = $this->book->attendance($club, now()->subYear());
         $attendance = collect($book['members'])->firstWhere('user_id', $user->id);
+        $before = $this->book->attendance($club, now()->subYears(2), now()->subYear()->subDay());
+        $attendedBefore = collect($before['members'])->firstWhere('user_id', $user->id);
         [$upcoming, $visits] = MemberVisit::where('user_id', $user->id)->orderByDesc('visited_on')->get(['lodge_name', 'visited_on'])
             ->partition(fn (MemberVisit $visit) => $visit->visited_on->isAfter(today()));
+        $currentOffice = LodgeOffice::tryFrom((string) $member->getRawOriginal('current_office'));
         $visitRow = fn (MemberVisit $visit) => ['lodge' => $visit->lodge_name, 'date' => $visit->visited_on->format('j M Y')];
 
         return [
@@ -73,6 +82,57 @@ class MasonicRecord
             // Only meetings where the signing-in book was used count, so a lodge that doesn't use it shows nothing.
             'attendance' => $attendance && $book['meetings'] > 0 ? ['attended' => $attendance['attended'], 'meetings' => $book['meetings'], 'last' => $attendance['last_attended']] : null,
             'visits' => ['count' => $visits->count(), 'recent' => $visits->take(5)->map($visitRow)->values()->all(), 'upcoming' => $upcoming->reverse()->map($visitRow)->values()->all()],
+            'path' => $this->path($member, $currentOffice, $offices->pluck('office')->all()),
+            'year' => [
+                'meetings' => $attendance && $book['meetings'] > 0 ? $attendance['attended'] : null,
+                'meetings_before' => $attendedBefore && $before['meetings'] > 0 ? $attendedBefore['attended'] : null,
+                'visits' => $visits->filter(fn (MemberVisit $visit) => $visit->visited_on->gte(now()->subYear()))->count(),
+                'visits_before' => $visits->filter(fn (MemberVisit $visit) => $visit->visited_on->between(now()->subYears(2), now()->subYear()))->count(),
+                'next_anniversary' => $this->anniversaries->nextFor($member),
+            ],
+        ];
+    }
+
+    /**
+     * Where the brother is on his way: the three degrees, then the usual offices to the Chair, with his place and the
+     * usual next step. Past Masters (anyone recorded as Master) have completed it.
+     *
+     * @param  list<string>  $officesHeld  labels of the offices he has held
+     * @return array<string, mixed>
+     */
+    private function path(Member $member, ?LodgeOffice $current, array $officesHeld): array
+    {
+        $degrees = [
+            ['label' => 'Initiated', 'done' => $member->date_of_initiation !== null],
+            ['label' => 'Passed', 'done' => $member->date_of_passing !== null],
+            ['label' => 'Raised', 'done' => $member->date_of_raising !== null],
+        ];
+        $held = fn (LodgeOffice $office) => in_array($office->label(), $officesHeld, true);
+        $pastMaster = $held(LodgeOffice::WorshipfulMaster) || $current === LodgeOffice::IPM;
+        $place = $current && in_array($current, self::PROGRESSION, true) ? array_search($current, self::PROGRESSION, true) : null;
+
+        $next = match (true) {
+            ! $degrees[0]['done'] => null,
+            ! $degrees[1]['done'] => 'Passing to the Second Degree',
+            ! $degrees[2]['done'] => 'Raising to the Third Degree',
+            $current === LodgeOffice::WorshipfulMaster => 'Immediate Past Master',
+            $pastMaster => null,
+            $place !== null => self::PROGRESSION[$place + 1]->label(),
+            default => null,
+        };
+
+        return [
+            'degrees' => $degrees,
+            'offices' => array_map(fn (LodgeOffice $office, int $index) => [
+                'label' => $office->label(),
+                'state' => match (true) {
+                    $office === $current => 'now',
+                    $held($office) || $pastMaster || ($place !== null && $index < $place) => 'done',
+                    default => 'to_come',
+                },
+            ], self::PROGRESSION, array_keys(self::PROGRESSION)),
+            'past_master' => $pastMaster,
+            'next' => $next,
         ];
     }
 

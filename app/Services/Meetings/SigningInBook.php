@@ -100,15 +100,15 @@ class SigningInBook
     }
 
     /**
-     * Each member's attendance at the meetings since a date where the book was used, most absent first, with how many of
-     * the latest meetings in a row they have missed.
+     * Each member's attendance at the meetings since a date (up to today, or `$until`) where the book was used, most
+     * absent first, with how many of the latest meetings in a row they have missed.
      *
      * @return array{meetings: int, members: list<array{user_id: int, name: string, email: ?string, phone: ?string, attended: int, last_attended: ?string, missed_in_a_row: int}>}
      */
-    public function attendance(Club $club, CarbonInterface $since): array
+    public function attendance(Club $club, CarbonInterface $since, ?CarbonInterface $until = null): array
     {
         $meetings = Meeting::where('club_id', $club->id)
-            ->whereBetween('meeting_date', [$since->toDateString(), now()->toDateString()])
+            ->whereBetween('meeting_date', [$since->toDateString(), ($until ?? now())->toDateString()])
             ->orderByDesc('meeting_date')
             ->get()
             ->filter(fn (Meeting $meeting) => self::wasUsed($meeting))

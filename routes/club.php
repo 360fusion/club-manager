@@ -592,6 +592,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/{slug}/events/{id}/rsvp', [MemberRsvpController::class, 'updateRsvp'])->name('member.rsvp');
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
     Route::get('/members/{slug}/record', [MemberRecordController::class, 'show'])->name('member.record');
+    Route::get('/members/{slug}/anniversaries', [MemberRecordController::class, 'anniversaries'])->name('member.anniversaries');
     // Passing on other lodges', Provincial and Grand Lodge communications (PassOnController::canSend)
     Route::get('/members/{slug}/pass-on', [PassOnController::class, 'index'])->name('member.pass_on');
     Route::post('/members/{slug}/pass-on', [PassOnController::class, 'store'])->middleware('throttle:10,60')->name('member.pass_on.store');

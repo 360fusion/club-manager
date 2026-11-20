@@ -194,6 +194,10 @@ class MemberPortalController extends Controller
             $links[] = ['key' => 'send_notice', 'label' => 'Send notice', 'href' => route('admin.notices.index', ['clubSlug' => $club->slug])];
         }
 
+        if (MemberRecordController::canSeeAnniversaries($user, $club)) {
+            $links[] = ['key' => 'anniversaries', 'label' => 'Anniversaries', 'href' => route('member.anniversaries', ['slug' => $club->slug])];
+        }
+
         if (PassOnController::canSend($user, $club)) {
             $links[] = ['key' => 'pass_on', 'label' => 'Pass on', 'href' => route('member.pass_on', ['slug' => $club->slug])];
         }

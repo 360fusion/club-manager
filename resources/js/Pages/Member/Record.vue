@@ -12,6 +12,13 @@ defineProps({
 });
 
 const overline = 'text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+const STEP = {
+    done: 'border-emerald-600 bg-emerald-600 text-white dark:border-emerald-500 dark:bg-emerald-500',
+    now: 'border-blue-600 bg-white text-blue-700 ring-2 ring-blue-600/30 dark:border-blue-400 dark:bg-slate-900 dark:text-blue-300',
+    to_come: 'border-slate-300 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500',
+};
+// "12, up from 9": this year against the year before, when both are known.
+const compared = (now, before) => (before === null || before === undefined || (now === 0 && before === 0) ? '' : now > before ? `, up from ${before}` : now < before ? `, down from ${before}` : ', the same as the year before');
 const years = (count) => (count === 0 ? 'this year' : `${count} ${count === 1 ? 'year' : 'years'} ago`);
 </script>
 
@@ -34,6 +41,37 @@ const years = (count) => (count === 0 ? 'this year' : `${count} ${count === 1 ? 
                     <p v-for="rank in record.ranks" :key="rank.label" class="text-sm text-slate-600 dark:text-slate-300">{{ rank.label }}: {{ rank.value }}</p>
                     <p v-if="record.grand_lodge_number" class="text-xs text-slate-500 dark:text-slate-400">Grand Lodge registration {{ record.grand_lodge_number }}</p>
                 </Card>
+
+                <section class="space-y-2" aria-labelledby="path-heading">
+                    <h3 id="path-heading" :class="overline">Your path</h3>
+                    <Card class="space-y-4">
+                        <ol class="flex items-center gap-2" aria-label="Degrees">
+                            <li v-for="degree in record.path.degrees" :key="degree.label" class="flex items-center gap-1.5 text-sm">
+                                <span :class="['flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold', degree.done ? STEP.done : STEP.to_come]" aria-hidden="true">{{ degree.done ? '✓' : '' }}</span>
+                                <span :class="degree.done ? 'font-medium text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">{{ degree.label }}<span class="sr-only">{{ degree.done ? ', done' : ', to come' }}</span></span>
+                            </li>
+                        </ol>
+                        <ol class="space-y-1.5" aria-label="The usual offices to the Chair">
+                            <li v-for="office in record.path.offices" :key="office.label" class="flex items-center gap-2.5 text-sm">
+                                <span :class="['h-3 w-3 shrink-0 rounded-full border', STEP[office.state]]" aria-hidden="true"></span>
+                                <span :class="office.state === 'now' ? 'font-semibold text-blue-700 dark:text-blue-300' : office.state === 'done' ? 'text-slate-800 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'">{{ office.label }}</span>
+                                <span class="sr-only">{{ office.state === 'now' ? ', this year' : office.state === 'done' ? ', held' : ', to come' }}</span>
+                                <Badge v-if="office.state === 'now'" variant="info">This year</Badge>
+                            </li>
+                        </ol>
+                        <p v-if="record.path.past_master" class="text-sm font-medium text-slate-900 dark:text-white">You are a Past Master of the lodge.</p>
+                        <p v-else-if="record.path.next" class="text-sm text-slate-700 dark:text-slate-200">Usually next: <strong>{{ record.path.next }}</strong>. The lodge decides each step, so speak to the Director of Ceremonies.</p>
+                    </Card>
+                </section>
+
+                <section class="space-y-2" aria-labelledby="year-heading">
+                    <h3 id="year-heading" :class="overline">Your year</h3>
+                    <Card class="space-y-1.5 text-sm text-slate-700 dark:text-slate-200">
+                        <p v-if="record.year.meetings !== null"><strong>{{ record.year.meetings }}</strong> {{ record.year.meetings === 1 ? 'meeting' : 'meetings' }} in the last 12 months{{ compared(record.year.meetings, record.year.meetings_before) }}.</p>
+                        <p><strong>{{ record.year.visits }}</strong> {{ record.year.visits === 1 ? 'visit' : 'visits' }} to other lodges{{ compared(record.year.visits, record.year.visits_before) }}.</p>
+                        <p v-if="record.year.next_anniversary" :class="record.year.next_anniversary.milestone ? 'font-medium text-amber-800 dark:text-amber-300' : ''">Next: {{ record.year.next_anniversary.label }} on {{ record.year.next_anniversary.date }}.</p>
+                    </Card>
+                </section>
 
                 <section class="space-y-2" aria-labelledby="degrees-heading">
                     <h3 id="degrees-heading" :class="overline">Degrees</h3>

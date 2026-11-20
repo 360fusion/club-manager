@@ -55,6 +55,11 @@ ClubPaymentMethod::updateOrCreate(['club_id' => $club->id, 'type' => ClubPayment
 
 BankAccount::updateOrCreate(['club_id' => $club->id, 'account_number' => '12345678'], ['bank_name' => 'Example Bank', 'account_name' => 'Lodge of Fraternity No. 4567', 'account_type' => 'current', 'sort_code' => '12-34-56', 'currency' => 'GBP', 'opening_balance' => 2468.40, 'is_active' => true]);
 
+// Degrees and offices for the Masonic record and the anniversaries page.
+Member::where('club_id', $club->id)->where('email', 'member@example.com')->update(['current_office' => 'jd', 'date_of_initiation' => now()->subYears(3)->subMonths(2)->toDateString(), 'date_of_passing' => now()->subYears(3)->toDateString(), 'date_of_raising' => now()->subYears(2)->subMonths(9)->toDateString()]);
+Member::where('club_id', $club->id)->where('email', 'coach@example.com')->update(['date_of_initiation' => now()->subYears(50)->addDays(12)->toDateString(), 'date_of_joining' => now()->subYears(21)->addDays(40)->toDateString()]);
+Member::where('club_id', $club->id)->where('email', 'admin@example.com')->update(['date_of_initiation' => now()->subYears(18)->addDays(30)->toDateString()]);
+
 $thomas = Member::where('club_id', $club->id)->where('email', 'member@example.com')->first();
 $david = Member::where('club_id', $club->id)->where('email', 'coach@example.com')->first();
 MemberSubscription::updateOrCreate(['club_id' => $club->id, 'member_id' => $thomas->id, 'billing_year' => 2027], ['due_date' => now()->addDays(10)->toDateString(), 'amount_due' => 180, 'amount_paid' => 0, 'status' => SubscriptionStatus::Unpaid, 'invoice_reference' => 'SUB-2027-014']);
