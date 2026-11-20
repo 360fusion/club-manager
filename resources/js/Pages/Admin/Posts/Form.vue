@@ -16,6 +16,7 @@ import Alert from '@/Components/Ui/Alert.vue';
 import Modal from '@/Components/Ui/Modal.vue';
 import { orderColour } from '@/Utils/orderColour';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 const props = defineProps({
   club: Object,
@@ -865,11 +866,11 @@ const submitWithAction = (actionType) => {
 
         <div v-if="blocks && blocks.length" class="space-y-6">
           <div v-for="block in blocks" :key="block.id">
-            <div
+            <SanitizedHtml
               v-if="block.type === 'text'"
               class="prose prose-slate max-w-none space-y-3 text-sm leading-relaxed text-slate-800 dark:text-slate-100"
-              v-html="block.content || '<p class=\'text-slate-500 dark:text-slate-400 italic\'>[Empty text block]</p>'"
-            ></div>
+              :html="block.content || '<p class=\'text-slate-500 dark:text-slate-400 italic\'>[Empty text block]</p>'"
+            />
 
             <div
               v-else-if="block.type === 'image' && block.url"

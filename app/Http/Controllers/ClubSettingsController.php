@@ -176,6 +176,6 @@ class ClubSettingsController extends Controller
 
         MasonicRanks::resetClub($club);
 
-        return redirect()->back()->with('success', 'Rank lists reset to the '.($club->province?->grandLodge?->name ?? 'standard').' list.');
+        return redirect()->back()->with('success', 'Rank lists reset to the '.($club->province?->grandLodge->name ?? 'standard').' list.');
     }
 }

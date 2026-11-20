@@ -12,11 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Str;
 
 /**
  * A lodge, chapter or other body in the public directory. Most are unmanaged listings; a managed
  * one points at the club account that runs it through `club_id`.
+ *
+ * @property-read Pivot $pivot Only when loaded through User::followedLodges() (in_calendar, notify_summons).
  */
 class Lodge extends Model
 {

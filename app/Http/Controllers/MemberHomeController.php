@@ -126,7 +126,7 @@ class MemberHomeController extends Controller
                 'club_name' => $club->name,
                 'club_colour' => $club->colourKey(),
                 'title' => $meeting->title,
-                'at' => ($meeting->starts_at ? $meeting->meeting_date->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)?->toIso8601String(),
+                'at' => ($meeting->starts_at ? $meeting->meeting_date->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)->toIso8601String(),
                 'where' => $meeting->venue,
                 'reply' => $rsvp?->attendance_status,
                 'guests' => $rsvp ? MeetingReplies::listedGuests($rsvp)->count() : 0,

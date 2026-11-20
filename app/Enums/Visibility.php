@@ -71,7 +71,6 @@ enum Visibility: string
         return match ($this) {
             self::Network => $viewer->activeClubIds()->isNotEmpty(),
             self::Club => $viewer->activeClubIds()->contains($clubId),
-            self::Public => true,
         };
     }
 

@@ -22,6 +22,7 @@ class MeetingFinancialReturn extends Model
         'return_date',
         'dining_fee_per_head',
         'paid_diners_count',
+        'prepaid_diners_count',
         'waived_diners_count',
         'waived_reason',
         'kitchen_cost_per_head',

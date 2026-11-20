@@ -195,7 +195,7 @@ class BankStatementParserService
         $duplicateCount = 0;
         $existingHashes = $this->getExistingHashes($clubId);
 
-        foreach ($transactions[1] ?? [] as $n => $trnXml) {
+        foreach ($transactions[1] as $n => $trnXml) {
             $dateStr = $this->extractOfxTag($trnXml, 'DTPOSTED');
             $parsedDate = $this->parseOfxDate($dateStr);
             if (! $parsedDate) {

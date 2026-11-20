@@ -219,7 +219,7 @@ class EventPaymentService
             'amount' => $row->amount,
             'method' => $row->method,
             'comment' => $row->comment,
-            'by' => $row->user?->name ?? match ($row->source) {
+            'by' => $row->user->name ?? match ($row->source) {
                 'stripe_webhook' => 'Stripe',
                 'paypal' => 'PayPal',
                 'bank_reconciliation' => 'Bank reconciliation',
@@ -228,7 +228,7 @@ class EventPaymentService
             },
             'source' => $row->source,
             'received_at' => $row->received_at?->format('j M Y'),
-            'at' => $row->created_at?->format('j M Y H:i'),
+            'at' => $row->created_at->format('j M Y H:i'),
         ])->all();
     }
 

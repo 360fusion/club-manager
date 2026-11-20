@@ -74,7 +74,7 @@ class CommitteeNotesParserService
                     });
 
                     // Also check meeting attendees if available
-                    if (! $matched && $meeting && $meeting->attendees) {
+                    if (! $matched && $meeting) {
                         $attendee = $meeting->attendees->first(function ($att) use ($rawTag) {
                             return stripos($att->name, $rawTag) !== false || stripos($rawTag, $att->name) !== false;
                         });
@@ -90,7 +90,7 @@ class CommitteeNotesParserService
                         $assignedName = $matched->name;
                     } else {
                         // Handle mock strings like @MemberName or placeholder @member, @brother, @officer, etc.
-                        $fallbackUser = $meeting?->chair ?? $meeting?->secretary ?? $clubMembers->first();
+                        $fallbackUser = $meeting->chair ?? $meeting->secretary ?? $clubMembers->first();
                         $taskAssignedUser = $fallbackUser;
                         $assignedName = $rawTag;
                     }
@@ -99,7 +99,7 @@ class CommitteeNotesParserService
                 $extractedTasks[] = [
                     'title' => $taskContent,
                     'assigned_to_id' => $taskAssignedUser?->id,
-                    'assigned_to_name' => $assignedName ?: ($taskAssignedUser?->name ?? 'Unassigned'),
+                    'assigned_to_name' => $assignedName ?: ($taskAssignedUser->name ?? 'Unassigned'),
                     'due_date' => $dueDate,
                 ];
             }
@@ -202,7 +202,7 @@ class CommitteeNotesParserService
                         'club_id' => $meeting->club_id,
                         'committee_meeting_id' => $meeting->id,
                         'proposer_user_id' => $proposerId,
-                        'proposer_name' => $meeting->chair?->name ?? 'Committee Chair',
+                        'proposer_name' => $meeting->chair->name ?? 'Committee Chair',
                         'title' => $motionData['title'],
                         'motion_text' => $motionData['motion_text'],
                         'status' => 'draft_committee',

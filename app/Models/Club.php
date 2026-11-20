@@ -27,6 +27,9 @@ use Launchpad\Models\Workspace;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/**
+ * @property-read ClubUser $pivot Only when loaded through User::clubs().
+ */
 #[ObservedBy(RebuildsStaticSite::class)]
 class Club extends Model implements HasMedia
 {
@@ -76,7 +79,7 @@ class Club extends Model implements HasMedia
      */
     public function colourKey(): string
     {
-        return $this->clubType?->colour ?? OrderColours::DEFAULT;
+        return $this->clubType->colour ?? OrderColours::DEFAULT;
     }
 
     protected static function booted(): void

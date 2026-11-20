@@ -170,10 +170,8 @@ class CandidateDetail extends Component
 
     /**
      * Remove a candidate entered by mistake. Owner and admin only, and never once initiated.
-     *
-     * @return null
      */
-    public function deleteCandidate()
+    public function deleteCandidate(): void
     {
         $club = $this->getClub();
         $candidate = $this->candidateFor((int) $this->candidateId);
@@ -181,19 +179,19 @@ class CandidateDetail extends Component
         if (! auth()->user()->actsAsSuperAdmin() && ! in_array(ClubAccess::role(auth()->user(), $club), ['owner', 'admin'], true)) {
             session()->flash('error', 'Only an owner or admin can delete a candidate.');
 
-            return null;
+            return;
         }
 
         if ($candidate->stage === CandidateStage::Initiated) {
             session()->flash('error', 'An initiated candidate is now a member and cannot be deleted here.');
 
-            return null;
+            return;
         }
 
         $candidate->delete();
         session()->flash('success', "Candidate '{$candidate->full_name}' deleted.");
 
-        return $this->redirectRoute('admin.club_acc.candidates.index', ['clubSlug' => $club->slug], navigate: false);
+        $this->redirectRoute('admin.club_acc.candidates.index', ['clubSlug' => $club->slug], navigate: false);
     }
 
     protected function getClub(): Club

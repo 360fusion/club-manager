@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/**
+ * @property-read int $visible_posts_count Only when loaded with withCount() under that alias (the tag list does).
+ */
 class NewsTag extends Model
 {
     /** @use HasFactory<NewsTagFactory> */

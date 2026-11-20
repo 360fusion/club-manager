@@ -284,7 +284,7 @@ class LodgeClaimService
             'decided_by' => $by?->id,
             'decided_at' => now(),
             'decision_note' => $note,
-            'club_id' => $club?->id ?? $claim->club_id,
+            'club_id' => $club->id ?? $claim->club_id,
         ])->save();
     }
 

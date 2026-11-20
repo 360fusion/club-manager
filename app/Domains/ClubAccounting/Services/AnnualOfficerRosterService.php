@@ -195,7 +195,7 @@ class AnnualOfficerRosterService
                 // Primary office preference: Progressive office first, then first Administrative office in order of insertion
                 $orderedAssignments = $assignments->sortBy('id');
                 $progressive = $orderedAssignments->first(fn ($a) => $a->lodge_office?->isProgressive());
-                $primaryOffice = $progressive ? $progressive->office : ($orderedAssignments->first()?->office ?? 'member');
+                $primaryOffice = $progressive ? $progressive->office : ($orderedAssignments->first()->office ?? 'member');
 
                 $member->update([
                     'current_office' => $primaryOffice,

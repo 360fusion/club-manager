@@ -20,6 +20,7 @@ class UpdateGrandLodgeRequest extends AppRequest
             'country' => 'required|string|max:100',
             'website_url' => 'nullable|url|max:255',
             'description' => 'nullable|string|max:10000',
+            'per_capita_rate' => 'nullable|numeric|min:0|max:99999.99',
 
         ];
     }

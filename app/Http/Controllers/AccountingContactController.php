@@ -43,7 +43,7 @@ class AccountingContactController extends Controller
 
         // Auto-split the user's name into parts if not already set
         $nameParts = explode(' ', trim($user->name), 3);
-        $defaultFirst = $nameParts[0] ?? '';
+        $defaultFirst = $nameParts[0];
         $defaultMiddle = count($nameParts) === 3 ? $nameParts[1] : null;
         $defaultLast = count($nameParts) >= 2 ? end($nameParts) : null;
 
@@ -218,7 +218,7 @@ class AccountingContactController extends Controller
         } else {
             $fullName = trim($validated['name'] ?? '');
             $parts = explode(' ', $fullName, 2);
-            $firstName = $parts[0] ?? $fullName;
+            $firstName = $parts[0];
             $lastName = $parts[1] ?? null;
         }
 
@@ -268,7 +268,7 @@ class AccountingContactController extends Controller
         } else {
             $fullName = trim($validated['name'] ?? $contact->name);
             $parts = explode(' ', $fullName, 2);
-            $firstName = $contact->first_name ?: ($parts[0] ?? $fullName);
+            $firstName = $contact->first_name ?: $parts[0];
             $lastName = $contact->last_name ?: ($parts[1] ?? null);
         }
 

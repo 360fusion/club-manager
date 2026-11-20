@@ -187,7 +187,7 @@ class AnnualTreasurerReportService
                 'method' => $r->method === 'typed' ? 'Typed name' : 'Drawn signature',
                 'signed_at' => $r->signed_at?->format('j F Y, H:i'),
                 'requested_by' => $r->requestedBy?->name,
-                'requested_at' => $r->requested_at?->format('j F Y'),
+                'requested_at' => $r->requested_at->format('j F Y'),
                 'ip' => $r->consent_ip,
                 'document_hash' => $r->document_hash,
             ])

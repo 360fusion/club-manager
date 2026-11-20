@@ -12,6 +12,7 @@ import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Modal from '@/Components/Ui/Modal.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -275,8 +276,7 @@ const openMeetingRsvpModal = (meeting) => {
 
     <!-- Read Newsletter Modal -->
     <Modal :open="Boolean(selectedNewsletter)" :title="selectedNewsletter?.subject ?? ''" :subtitle="selectedNewsletter ? `Sent ${selectedNewsletter.sent_at}` : ''" size="lg" @close="selectedNewsletter = null">
-      <div class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed max-h-80 overflow-y-auto prose prose-sm dark:prose-invert" v-html="selectedNewsletter.content">
-      </div>
+      <SanitizedHtml class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed max-h-80 overflow-y-auto prose prose-sm dark:prose-invert" :html="selectedNewsletter.content" />
 
       <template #footer>
         <Button variant="secondary" @click="selectedNewsletter = null">Close</Button>

@@ -103,12 +103,14 @@ class SignatureRequestService
      */
     public function signerUser(SignatureRequest $request): ?User
     {
-        if ($request->signer_type === User::class) {
-            return $request->signer;
+        $signer = $request->signer;
+
+        if ($signer instanceof User) {
+            return $signer;
         }
 
-        if ($request->signer_type === Member::class) {
-            return $request->signer?->user;
+        if ($signer instanceof Member) {
+            return $signer->user;
         }
 
         return null;

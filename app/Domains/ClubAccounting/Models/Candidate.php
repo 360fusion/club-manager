@@ -8,8 +8,6 @@ use App\Models\Club;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,8 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Candidate extends Model implements Signable
 {
-    /** @use HasFactory<Factory<self>> */
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
     protected $table = 'club_acc_candidates';
 

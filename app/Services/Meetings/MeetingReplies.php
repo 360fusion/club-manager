@@ -323,6 +323,41 @@ class MeetingReplies
     }
 
     /**
+     * Every dining place (members and their dining guests, counted as numbers() does) by how it was paid, for the
+     * meeting's financial return: bank and online payments are already in the books, cash and unpaid places are money
+     * taken on the night, waived places are meals with no fee.
+     *
+     * @return array{dining: int, prepaid: int, paid_cash: int, unpaid: int, waived: int}
+     */
+    public function diningPayments(Meeting $meeting): array
+    {
+        $counts = ['dining' => 0, 'prepaid' => 0, 'paid_cash' => 0, 'unpaid' => 0, 'waived' => 0];
+        $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)->whereIn('attendance_status', self::ATTENDING)->with('guests')->get();
+
+        $count = function (?string $status, ?string $method) use (&$counts): void {
+            $counts['dining']++;
+            $kind = match (true) {
+                $status === 'waived' => 'waived',
+                $status === 'paid' && in_array($method, ['bank', 'online'], true) => 'prepaid',
+                $status === 'paid' => 'paid_cash',
+                default => 'unpaid',
+            };
+            $counts[$kind]++;
+        };
+
+        foreach ($rsvps as $rsvp) {
+            if ($rsvp->attendance_status === 'attending_dining') {
+                $count($rsvp->payment_status, $rsvp->payment_method);
+            }
+            foreach ($rsvp->guests->where('attending_dining', true) as $guest) {
+                $count($guest->payment_status, $guest->payment_method);
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * The numbers the Secretary and caterer need. Visitors who reply count towards the dining and attendance totals;
      * only the lodge's own members are chased for a reply.
      *

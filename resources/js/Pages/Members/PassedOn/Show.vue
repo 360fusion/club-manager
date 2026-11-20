@@ -4,6 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Button from '@/Components/Ui/Button.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 const props = defineProps({
     item: { type: Object, required: true },
@@ -31,7 +32,7 @@ function setMuted(muted) {
             </Card>
 
             <!-- Sanitised when it was saved (SanitizedHtml). -->
-            <Card v-if="item.body"><div class="prose prose-sm max-w-none dark:prose-invert" v-html="item.body"></div></Card>
+            <Card v-if="item.body"><SanitizedHtml class="prose prose-sm max-w-none dark:prose-invert" :html="item.body" /></Card>
 
             <div class="flex flex-wrap gap-2">
                 <a v-if="item.attachment_url" :href="item.attachment_url" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">Open the PDF</a>

@@ -33,6 +33,7 @@ use App\Http\Controllers\AccountingYearEndController;
 use App\Http\Controllers\ActivityAdminController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AnnualReturnOfMembersController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\TwoFactorAuthController;
 use App\Http\Controllers\BillingController;
@@ -381,6 +382,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin Accounting & ERP Routes
     Route::get('/{clubSlug}/admin/accounting/meetings/{id}/treasurer-report', MeetingTreasurerReportController::class)->name('admin.accounting.meeting_report');
+    Route::get('/{clubSlug}/admin/accounting/annual-return', AnnualReturnOfMembersController::class)->name('admin.accounting.annual_return');
     Route::post('/{clubSlug}/admin/accounting/accounts', [AccountingSettingsController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/store', [AccountingGatewayController::class, 'storeBankAccount'])->name('admin.accounting.bank_accounts.store');
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/paypal/connect', [AccountingGatewayController::class, 'connectPayPal'])->name('admin.accounting.bank_accounts.paypal.connect');

@@ -6,6 +6,7 @@ import UiIcon from '@/Components/Ui/UiIcon.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 defineProps({
   clubMatrix: Array,
@@ -150,10 +151,10 @@ const tabClass = (isActive) => [
 
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ item.subject }}</h3>
 
-            <div
+            <SanitizedHtml
               class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 prose max-w-none"
-              v-html="item.content"
-            ></div>
+              :html="item.content"
+            />
           </Card>
         </div>
 

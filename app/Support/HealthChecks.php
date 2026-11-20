@@ -5,6 +5,8 @@ namespace App\Support;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Launchpad\Health\Heartbeat;
+use RuntimeException;
 
 /**
  * Whether this install is set up to be live: what `php artisan app:doctor` runs after a deploy. Each check says what to
@@ -12,6 +14,28 @@ use Illuminate\Support\Facades\DB;
  */
 final class HealthChecks
 {
+    /**
+     * What /up checks for an uptime monitor: the database answers, and the scheduler and a queue worker have each left
+     * Launchpad's heartbeat in the last five minutes (both beat every minute). Throws, so /up answers 500, saying what
+     * is wrong. The scheduler and queue are not checked on local and test installs, where they usually are not running.
+     */
+    public static function assertLive(): void
+    {
+        DB::select('select 1');
+
+        if (app()->environment('local', 'testing')) {
+            return;
+        }
+
+        if (! Heartbeat::seen('scheduler')) {
+            throw new RuntimeException('The scheduler has not run in the last five minutes (cron: php artisan schedule:run every minute).');
+        }
+
+        if (! Heartbeat::seen('queue')) {
+            throw new RuntimeException('No queue worker has run a job in the last five minutes: start or restart the workers.');
+        }
+    }
+
     /**
      * @return list<array{name: string, ok: bool, detail: string}>
      */
@@ -54,6 +78,8 @@ final class HealthChecks
         $pending = array_diff(array_keys($migrator->getMigrationFiles($migrator->paths() + [database_path('migrations')])), $migrator->getRepository()->getRan());
         $add('Migrations', $pending === [], $pending === [] ? 'All have run' : count($pending).' not run yet (php artisan migrate --force)');
 
+        $alertsTo = OpsAlerts::recipients();
+        $add('Alerts', $alertsTo !== [], $alertsTo === [] ? 'Nobody would hear about failed jobs or new errors: set OPS_ALERT_EMAILS (or make someone a superadmin)' : 'Failed jobs and new errors are emailed to '.implode(', ', $alertsTo).'. Point an uptime monitor at '.url('/up'));
         $add('Security contact', filled(config('app.security_contact')), 'SECURITY_CONTACT_EMAIL: shown at /.well-known/security.txt so people know where to report a problem');
         $add('Storage link', is_link(public_path('storage')) || is_dir(public_path('storage')), 'php artisan storage:link: uploaded photos and files are served from it');
 

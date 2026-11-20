@@ -50,14 +50,14 @@ class CharityAdminController extends Controller
             ->map(fn ($col) => [
                 'id' => $col->id,
                 'created_at' => $col->created_at ? $col->created_at->format('d M Y') : date('d M Y'),
-                'collection_type' => $col->collection_type?->label() ?? 'Alms Plate',
+                'collection_type' => $col->collection_type->label(),
                 'cash_amount' => (float) $col->cash_amount,
                 'cheque_amount' => (float) $col->cheque_amount,
                 'total_amount' => (float) $col->total_amount,
                 'formatted_total' => Currencies::format((float) $col->total_amount, $club),
                 'donor_name' => $col->donor_display_name,
-                'counted_by' => $col->countedBy?->full_name ?? 'Charity Steward',
-                'witnessed_by' => $col->witnessedBy?->full_name ?? 'Assistant DC',
+                'counted_by' => $col->countedBy->full_name ?? 'Charity Steward',
+                'witnessed_by' => $col->witnessedBy->full_name ?? 'Assistant DC',
                 'gift_aid_status' => $col->gift_aid_status ?: 'pending',
                 'notes' => $col->notes,
             ]);

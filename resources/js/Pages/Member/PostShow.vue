@@ -4,6 +4,7 @@ import MembersLayout from '@/Layouts/MembersLayout.vue';
 import NewsTagPill from '@/Components/NewsTagPill.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 const props = defineProps({
   club: Object,
@@ -90,11 +91,11 @@ const getFileIcon = (mimeOrName) => {
           <div v-for="block in post.blocks" :key="block.id">
             
             <!-- 1. Text Block -->
-            <div
+            <SanitizedHtml
               v-if="block.type === 'text'"
               class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 dark:text-slate-100 space-y-3"
-              v-html="block.content"
-            ></div>
+              :html="block.content"
+            />
 
             <!-- 2. Single Image with Positioning & Sizing -->
             <div
@@ -173,11 +174,11 @@ const getFileIcon = (mimeOrName) => {
         </div>
 
         <!-- Fallback Raw Content -->
-        <div
+        <SanitizedHtml
           v-else-if="post.content"
           class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 dark:text-slate-100 space-y-4"
-          v-html="post.content"
-        ></div>
+          :html="post.content"
+        />
 
         <!-- Downloadable Attachments Section -->
         <div v-if="post.attachments && post.attachments.length" class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">

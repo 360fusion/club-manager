@@ -110,7 +110,7 @@ class MemberInvitationService
         $club->users()->updateExistingPivot($member->user_id, [
             'invitation_token' => self::hash($token),
             'invited_at' => now(),
-            'invited_by' => $actor?->id ?? $pivot->invited_by,
+            'invited_by' => $actor->id ?? $pivot->invited_by,
             'invitation_reminded_at' => null,
         ]);
 

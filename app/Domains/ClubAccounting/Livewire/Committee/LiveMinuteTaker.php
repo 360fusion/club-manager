@@ -282,7 +282,7 @@ class LiveMinuteTaker extends Component
     public function insertAgendaItem(int $itemId): void
     {
         $item = ClubCommitteeAgendaItem::where('committee_meeting_id', $this->meetingId)->findOrFail($itemId);
-        $typeLabel = $item->item_type?->label() ?? 'General Business';
+        $typeLabel = $item->item_type->label();
         $snippet = "\n\n### {$item->order}. {$item->title} [{$typeLabel}]\n";
         if ($item->description) {
             $snippet .= "{$item->description}\n";
@@ -318,7 +318,7 @@ class LiveMinuteTaker extends Component
         }
 
         foreach ($items as $item) {
-            $typeLabel = $item->item_type?->label() ?? 'General Business';
+            $typeLabel = $item->item_type->label();
             $outline .= "### {$item->order}. {$item->title} [{$typeLabel}]\n";
             if ($item->description) {
                 $outline .= "{$item->description}\n";

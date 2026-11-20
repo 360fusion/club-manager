@@ -37,6 +37,7 @@ const editForm = useForm({
     country: 'Scotland',
     website_url: '',
     description: '',
+    per_capita_rate: '',
 });
 
 function openCreateModal() {
@@ -60,6 +61,7 @@ function startEdit(gl) {
     editForm.country = gl.country || 'England';
     editForm.website_url = gl.website_url || '';
     editForm.description = gl.description || '';
+    editForm.per_capita_rate = gl.per_capita_rate ?? '';
 }
 
 function submitUpdate() {
@@ -230,6 +232,7 @@ function deleteGrandLodge(gl) {
                 </div>
                 <Input v-model="editForm.website_url" type="url" label="Official website URL" />
                 <Textarea v-model="editForm.description" :rows="3" label="Description" />
+                <Input v-model="editForm.per_capita_rate" type="number" step="0.01" min="0" label="Grand Lodge dues per member" hint="What each lodge pays this Grand Lodge for each subscribing member a year; used on the lodges' annual return of members" :error="editForm.errors.per_capita_rate" />
 
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <Button variant="secondary" @click="editingGrandLodge = null">Cancel</Button>

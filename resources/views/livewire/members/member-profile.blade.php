@@ -156,6 +156,7 @@
                         <x-input label="Passed" type="date" wire:model="date_of_passing" />
                         <x-input label="Raised" type="date" wire:model="date_of_raising" />
                         <x-input label="Joined the lodge" type="date" wire:model="date_of_joining" />
+                        <x-input label="Left the lodge" type="date" wire:model="left_on" hint="Resigned, excluded or died; filled in when the status changes" />
                     </div>
                 </div>
 
@@ -213,7 +214,7 @@
                     </x-slot:header>
 
                     <dl class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        @foreach(['Initiated' => $member->date_of_initiation, 'Passed' => $member->date_of_passing, 'Raised' => $member->date_of_raising, 'Joined the lodge' => $member->date_of_joining] as $dateLabel => $date)
+                        @foreach(['Initiated' => $member->date_of_initiation, 'Passed' => $member->date_of_passing, 'Raised' => $member->date_of_raising, 'Joined the lodge' => $member->date_of_joining] + ($member->left_on ? ['Left the lodge' => $member->left_on] : []) as $dateLabel => $date)
                             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/50">
                                 <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ $dateLabel }}</dt>
                                 <dd class="mt-1 font-semibold text-slate-900 dark:text-white">{{ $date ? $date->format('d M Y') : '—' }}</dd>

@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property bool $is_visitor Only set by the meeting admin page, for its reply list.
+ * @property string|null $visitor_home_club Likewise.
+ */
 #[ObservedBy(MeetingRsvpTeamEvents::class)]
 class MeetingRsvp extends Model
 {

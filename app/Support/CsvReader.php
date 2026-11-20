@@ -68,7 +68,7 @@ class CsvReader
 
         $rows = array_map(fn (array $row) => array_slice(array_pad($row, $width, ''), 0, $width), $rows);
 
-        return ['delimiter' => $delimiter, 'headers' => array_values($headers), 'rows' => $rows];
+        return ['delimiter' => $delimiter, 'headers' => $headers, 'rows' => $rows];
     }
 
     private static function toUtf8(string $content): string

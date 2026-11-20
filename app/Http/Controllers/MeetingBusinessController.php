@@ -12,6 +12,7 @@ use App\Models\Meeting;
 use App\Services\AccountingService;
 use App\Services\MeetingFinancialReturns;
 use App\Services\Meetings\MeetingCollections;
+use App\Services\Meetings\MeetingReplies;
 use App\Support\ClubAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -31,29 +32,15 @@ class MeetingBusinessController extends Controller
     public function financialReturn(string $clubSlug, int $id): Response
     {
         $club = $this->findClub($clubSlug);
-        $meeting = Meeting::where('club_id', $club->id)
-            ->where('id', $id)
-            ->with(['rsvps.guests', 'financialReturn'])
-            ->firstOrFail();
-
-        // Calculate confirmed dining count from RSVPs
-        $confirmedDiningCount = $meeting->rsvps
-            ->where('attendance_status', 'attending_dining')
-            ->count();
-
-        $guestDiningCount = 0;
-        foreach ($meeting->rsvps as $r) {
-            if ($r->attendance_status === 'attending_dining') {
-                $guestDiningCount += $r->guests->where('attending_dining', true)->count();
-            }
-        }
-
-        $totalConfirmedDiners = $confirmedDiningCount + $guestDiningCount;
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->with('financialReturn')->firstOrFail();
+        $dining = app(MeetingReplies::class)->diningPayments($meeting);
 
         return Inertia::render('Admin/Meetings/FinancialReturn', [
             'club' => $club,
             'meeting' => $meeting,
-            'confirmedDiningCount' => $totalConfirmedDiners,
+            'confirmedDiningCount' => $dining['dining'],
+            // How the dining places were paid, to fill in the return: prepaid ones are already in the books.
+            'diningPayments' => $dining,
             'financialReturn' => $meeting->financialReturn,
             'treasurerReportUrl' => ClubAccess::can(request()->user(), $club, 'manage_billing') ? route('admin.accounting.meeting_report', ['clubSlug' => $club->slug, 'id' => $meeting->id]) : null,
             // Alms and raffle entered on the phone: shown on the return, already in the books.
@@ -80,6 +67,7 @@ class MeetingBusinessController extends Controller
                 'return_date' => 'nullable|date',
                 'dining_fee_per_head' => 'nullable|numeric|min:0|max:99999999.99',
                 'paid_diners_count' => 'nullable|integer|min:0|max:1000000',
+                'prepaid_diners_count' => 'nullable|integer|min:0|max:1000000',
                 'waived_diners_count' => 'nullable|integer|min:0|max:1000000',
                 'waived_reason' => 'nullable|string|max:10000',
                 'kitchen_cost_per_head' => 'nullable|numeric|min:0|max:99999999.99',
@@ -101,6 +89,7 @@ class MeetingBusinessController extends Controller
             'return_date' => 'required|date',
             'dining_fee_per_head' => 'required|numeric|min:0|max:99999999.99',
             'paid_diners_count' => 'required|integer|min:0|max:1000000',
+            'prepaid_diners_count' => 'nullable|integer|min:0|max:1000000',
             'waived_diners_count' => 'nullable|integer|min:0|max:1000000',
             'waived_reason' => 'nullable|string|max:10000',
             'kitchen_cost_per_head' => 'required|numeric|min:0|max:99999999.99',

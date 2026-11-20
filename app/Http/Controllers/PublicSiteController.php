@@ -128,7 +128,7 @@ class PublicSiteController extends Controller
             'title' => $post->title,
             'excerpt' => $post->excerpt,
             'cover_image_url' => $post->cover_image_url ?: ($post->getFirstMediaUrl('cover') ?: null),
-            'author_name' => $post->author?->name ?? 'Club Admin',
+            'author_name' => $post->author->name ?? 'Club Admin',
             'published_at' => ($post->published_at ?? $post->created_at)?->format('j F Y'),
             'back_url' => route('public.site', array_filter(['clubSlug' => $club->slug, 'pageSlug' => $newsPage && ! $newsPage->is_homepage ? $newsPage->slug : null])),
             'back_label' => $newsPage?->title ?: 'News',
@@ -243,7 +243,7 @@ class PublicSiteController extends Controller
                 'excerpt' => $p->excerpt,
                 'content' => $p->content,
                 'cover_image_url' => $p->cover_image_url ?: ($p->getFirstMediaUrl('cover') ?: null),
-                'author_name' => $p->author?->name ?? 'Club Admin',
+                'author_name' => $p->author->name ?? 'Club Admin',
                 'published_at' => ($p->published_at ?? $p->created_at)?->format('j M Y'),
             ]),
             'upcomingEvents' => $club->events()->published()->visibleTo($viewer)->limit(3)->get()->map(fn ($e) => [

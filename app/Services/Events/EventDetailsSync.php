@@ -76,7 +76,7 @@ class EventDetailsSync
     /**
      * Update dishes in place, in the order shown, so bookings keep pointing at the same dish.
      *
-     * @param  list<array<string, mixed>>  $incoming
+     * @param  array<int, array<string, mixed>>  $incoming
      */
     public function menu(Event $event, array $incoming): void
     {

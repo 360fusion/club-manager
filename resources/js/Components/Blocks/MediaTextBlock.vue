@@ -3,6 +3,7 @@
 // either side; on a phone it stacks above the text.
 import { Link } from '@inertiajs/vue3';
 import SectionHeader from '@/Components/Blocks/SectionHeader.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 defineProps({
     block: { type: Object, required: true },
@@ -25,7 +26,7 @@ const isInternal = (url) => typeof url === 'string' && url.startsWith('/');
 
             <div class="space-y-5">
                 <SectionHeader :eyebrow="block.eyebrow" :title="block.title" :divider="block.show_divider !== false" align="left" :theme="theme" />
-                <div v-if="block.content" :class="['prose max-w-none prose-p:leading-relaxed prose-li:my-1', theme.onDark ? 'prose-invert' : 'dark:prose-invert', theme.bodyText]" v-html="block.content"></div>
+                <SanitizedHtml v-if="block.content" :class="['prose max-w-none prose-p:leading-relaxed prose-li:my-1', theme.onDark ? 'prose-invert' : 'dark:prose-invert', theme.bodyText]" :html="block.content" />
                 <div v-if="block.button_label && (block.button_url || !interactive)">
                     <component
                         :is="interactive ? (isInternal(block.button_url) ? Link : 'a') : 'span'"

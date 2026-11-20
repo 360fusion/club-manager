@@ -195,8 +195,8 @@ final class MemberImportFields
     public static function exportRow(Member $member): array
     {
         return array_map(fn (string $field) => match ($field) {
-            'current_office' => $member->current_office?->label(),
-            'membership_status' => $member->membership_status?->label(),
+            'current_office' => $member->current_office->label(),
+            'membership_status' => $member->membership_status->label(),
             default => self::valueOf($member, $field),
         }, array_values(self::EXPORT_COLUMNS));
     }

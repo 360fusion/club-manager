@@ -35,6 +35,7 @@ class MeetingFinancialReturns
 
             $diningFee = (float) ($data['dining_fee_per_head'] ?? 0);
             $paidDiners = (int) ($data['paid_diners_count'] ?? 0);
+            $prepaidDiners = (int) ($data['prepaid_diners_count'] ?? 0);
             $waivedDiners = (int) ($data['waived_diners_count'] ?? 0);
             $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
             $kitchenVendor = ! empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
@@ -44,7 +45,7 @@ class MeetingFinancialReturns
             $donationsAmount = (float) ($data['donations_amount'] ?? 0);
             $bequestAmount = (float) ($data['bequest_amount'] ?? 0);
 
-            $totalMeals = $paidDiners + $waivedDiners;
+            $totalMeals = $paidDiners + $prepaidDiners + $waivedDiners;
             $totalDiningRevenue = round($paidDiners * $diningFee, 2);
             $totalKitchenBill = round($totalMeals * $kitchenCostPerHead, 2);
             $netDiningSurplus = round($totalDiningRevenue - $totalKitchenBill, 2);
@@ -115,6 +116,7 @@ class MeetingFinancialReturns
                     'return_date' => $returnDate,
                     'dining_fee_per_head' => $diningFee,
                     'paid_diners_count' => $paidDiners,
+                    'prepaid_diners_count' => $prepaidDiners,
                     'waived_diners_count' => $waivedDiners,
                     'waived_reason' => $data['waived_reason'] ?? null,
                     'kitchen_cost_per_head' => $kitchenCostPerHead,
@@ -148,6 +150,7 @@ class MeetingFinancialReturns
     {
         $diningFee = (float) ($data['dining_fee_per_head'] ?? 0);
         $paidDiners = (int) ($data['paid_diners_count'] ?? 0);
+        $prepaidDiners = (int) ($data['prepaid_diners_count'] ?? 0);
         $waivedDiners = (int) ($data['waived_diners_count'] ?? 0);
         $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
         $kitchenVendor = ! empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
@@ -156,7 +159,7 @@ class MeetingFinancialReturns
         $donationsAmount = (float) ($data['donations_amount'] ?? 0);
         $bequestAmount = (float) ($data['bequest_amount'] ?? 0);
 
-        $totalMeals = $paidDiners + $waivedDiners;
+        $totalMeals = $paidDiners + $prepaidDiners + $waivedDiners;
         $totalDiningRevenue = round($paidDiners * $diningFee, 2);
         $totalKitchenBill = round($totalMeals * $kitchenCostPerHead, 2);
         $netDiningSurplus = round($totalDiningRevenue - $totalKitchenBill, 2);
@@ -180,6 +183,7 @@ class MeetingFinancialReturns
                 'return_date' => $returnDate,
                 'dining_fee_per_head' => $diningFee,
                 'paid_diners_count' => $paidDiners,
+                'prepaid_diners_count' => $prepaidDiners,
                 'waived_diners_count' => $waivedDiners,
                 'waived_reason' => $data['waived_reason'] ?? null,
                 'kitchen_cost_per_head' => $kitchenCostPerHead,

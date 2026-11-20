@@ -39,7 +39,7 @@ class AttendanceController extends Controller
                 'organisation' => $attendee->organisation,
                 'is_guest' => $attendee->is_guest,
                 'booked_by' => $attendee->is_guest ? $registration->contact_name : null,
-                'email' => $registration->contact_email ?? $registration->user?->email ?? '',
+                'email' => $registration->contact_email ?? $registration->user->email ?? '',
                 'attendance_status' => $registration->status,
                 'attending_dining' => $attendee->attending_dining,
                 'meal' => $attendee->mealSummary(),

@@ -190,22 +190,22 @@ class ClubSettingsScreenData
             $user = $m->user_id ? $userAccounts->get($m->user_id) : null;
 
             return [
-                'id' => $user?->id ?? $m->id,
+                'id' => $user->id ?? $m->id,
                 'user_id' => $m->user_id,
                 'member_id' => $m->id,
-                'name' => $m->full_name ?: ($user?->name ?? 'Unknown Member'),
+                'name' => $m->full_name ?: ($user->name ?? 'Unknown Member'),
                 'formatted_rank_name' => $m->formatted_rank_name,
-                'email' => $m->email ?: ($user?->email ?? ''),
+                'email' => $m->email ?: ($user->email ?? ''),
                 'role' => $user?->pivot->role ?? 'member',
                 'rank' => $m->masonic_rank ?: ($user?->pivot->rank ?? ''),
                 'member_number' => $user?->pivot->member_number ?? '',
-                'status' => $m->membership_status?->value ?? ($user?->pivot->status ?? 'active'),
+                'status' => $m->membership_status->value,
                 // The lodge office (Worshipful Master, Secretary, ...) is owned by the annual
                 // officer roster (see admin.officers.*), never editable from here.
-                'current_office_label' => $m->current_office && $m->current_office !== LodgeOffice::Member
+                'current_office_label' => $m->current_office !== LodgeOffice::Member
                     ? $m->current_office->label()
                     : null,
-                'current_office_badge_class' => $m->current_office?->badgeClass(),
+                'current_office_badge_class' => $m->current_office->badgeClass(),
             ];
         });
 

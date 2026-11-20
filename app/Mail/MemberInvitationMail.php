@@ -40,7 +40,7 @@ class MemberInvitationMail extends EventTemplatedMail
                 'club_name' => $this->club->name,
                 'invite_url' => $this->acceptUrl,
                 'expiry_days' => $this->club->inviteExpirationDays(),
-                'inviter_name' => $this->inviter?->name ?? $this->club->name,
+                'inviter_name' => $this->inviter->name ?? $this->club->name,
             ],
             'html' => [],
         ];

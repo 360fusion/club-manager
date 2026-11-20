@@ -44,8 +44,8 @@ class OfficerRosterAdminController extends Controller
                 'id' => $m->id,
                 'name' => $m->formatted_rank_name,
                 'full_name' => $m->full_name,
-                'current_office' => $m->current_office?->value,
-                'current_office_label' => $m->current_office?->label(),
+                'current_office' => $m->current_office->value,
+                'current_office_label' => $m->current_office->label(),
             ];
         });
 
@@ -169,8 +169,8 @@ class OfficerRosterAdminController extends Controller
             'id' => $member->id,
             'name' => $member->formatted_rank_name,
             'full_name' => $member->full_name,
-            'current_office' => $member->current_office?->value,
-            'current_office_label' => $member->current_office?->label(),
+            'current_office' => $member->current_office->value,
+            'current_office_label' => $member->current_office->label(),
         ];
 
         if ($request->wantsJson()) {

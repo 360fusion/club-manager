@@ -84,18 +84,18 @@ class MemberProfileController extends Controller
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
         abort_if($memberPivot === null && ! $user?->actsAsSuperAdmin(), 403, 'You are not a member of this club.');
 
-        $accMember = $user ? Member::where('club_id', $club->id)->where('user_id', $user->id)->first() : null;
+        $accMember = Member::where('club_id', $club->id)->where('user_id', $user->id)->first();
 
         return Inertia::render('Member/Profile', [
             'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
-            'user' => $user ? [
+            'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar_url' => $user->avatar_url ? (str_starts_with($user->avatar_url, 'http') ? $user->avatar_url : asset('storage/'.$user->avatar_url)) : null,
                 'pending_email' => $user->pending_email,
                 'two_factor_enabled' => ! empty($user->two_factor_secret),
-            ] : null,
+            ],
             'memberRole' => $memberPivot->role ?? 'member',
             'memberNumber' => $memberPivot?->member_number,
             'memberProfile' => [
@@ -105,10 +105,10 @@ class MemberProfileController extends Controller
                 'emergency_contact' => $memberPivot->emergency_contact ?? '',
                 'dietary_notes' => $memberPivot->dietary_notes ?? '',
                 'address' => $accMember?->only(self::ADDRESS_FIELDS),
-                'masonic_rank' => $accMember?->masonic_rank ?? 'Bro',
-                'grand_rank' => $accMember?->grand_rank ?? null,
-                'provincial_rank' => $accMember?->provincial_rank ?? null,
-                'grand_lodge_number' => $accMember?->grand_lodge_number ?? null,
+                'masonic_rank' => $accMember->masonic_rank ?? 'Bro',
+                'grand_rank' => $accMember->grand_rank ?? null,
+                'provincial_rank' => $accMember->provincial_rank ?? null,
+                'grand_lodge_number' => $accMember->grand_lodge_number ?? null,
                 'date_of_initiation' => $accMember?->date_of_initiation?->format('d M Y') ?? null,
                 'date_of_passing' => $accMember?->date_of_passing?->format('d M Y') ?? null,
                 'date_of_raising' => $accMember?->date_of_raising?->format('d M Y') ?? null,

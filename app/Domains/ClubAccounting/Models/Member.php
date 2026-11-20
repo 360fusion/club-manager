@@ -13,8 +13,6 @@ use App\Models\Club;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,9 +23,6 @@ use Illuminate\Support\Facades\DB;
 #[ObservedBy(MemberObserver::class)]
 class Member extends Model
 {
-    /** @use HasFactory<Factory<self>> */
-    use HasFactory;
-
     /**
      * The masonic ranks a member can hold, as stored value => label for a dropdown. A member's title (Bro, WBro,
      * and so on) is not entered: it is their rank, worked out by title() below, so the two can never disagree.
@@ -71,7 +66,27 @@ class Member extends Model
         'date_of_joining',
         'annual_dues_override',
         'notes',
+        'left_on',
     ];
+
+    /**
+     * A member who resigns, is excluded or dies is stamped with the day it was recorded (unless a date was given), and
+     * the stamp goes again if they come back, so the annual return can tell who left during the year.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Member $member): void {
+            if (! $member->isDirty('membership_status')) {
+                return;
+            }
+
+            if ($member->membership_status->hasLeft()) {
+                $member->left_on ??= now()->toDateString();
+            } else {
+                $member->left_on = null;
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -82,6 +97,7 @@ class Member extends Model
             'date_of_passing' => 'date',
             'date_of_raising' => 'date',
             'date_of_joining' => 'date',
+            'left_on' => 'date',
             'annual_dues_override' => 'decimal:2',
             'passed_on_prefs' => 'array',
         ];

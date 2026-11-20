@@ -96,7 +96,7 @@ class VisitorSummons
             'festive_board' => [
                 'theme' => $meeting->festive_board_theme,
                 'menu' => is_string($menu) ? $menu : null,
-                'guest_cost' => $meeting->dining_cost_guest !== null && (float) $meeting->dining_cost_guest > 0
+                'guest_cost' => (float) $meeting->dining_cost_guest > 0
                     ? Currencies::format((float) $meeting->dining_cost_guest, $club)
                     : null,
             ],

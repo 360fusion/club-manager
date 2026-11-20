@@ -68,9 +68,9 @@ class NewsletterAdminController extends Controller
                 return [
                     'id' => $newsletter->id,
                     'newsletter_type_id' => $newsletter->newsletter_type_id,
-                    'type_name' => $newsletter->newsletterType?->name ?? 'General Broadcast',
-                    'type_color' => $newsletter->newsletterType?->color ?? '#4f46e5',
-                    'type_icon' => $newsletter->newsletterType?->icon ?? '✉️',
+                    'type_name' => $newsletter->newsletterType->name ?? 'General Broadcast',
+                    'type_color' => $newsletter->newsletterType->color ?? '#4f46e5',
+                    'type_icon' => $newsletter->newsletterType->icon ?? '✉️',
                     'subject' => $newsletter->subject,
                     'content' => $newsletter->content,
                     'attachments' => $newsletter->attachments ?? [],

@@ -18,7 +18,7 @@ class LegacyClubUrlController extends Controller
     public function __invoke(Request $request, string $legacySlug, ?string $path = null): RedirectResponse
     {
         $slug = $legacySlug === 'oxford-boating'
-            ? (Club::first()?->slug ?? 'lodge-of-fraternity')
+            ? (Club::first()->slug ?? 'lodge-of-fraternity')
             : $legacySlug;
 
         $path = trim((string) $path, '/');

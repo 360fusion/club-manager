@@ -87,7 +87,7 @@ class EventRegistrationService
         }
 
         $status = $data['status'] ?? 'attending';
-        $attendees = $this->prepareAttendees($event, $user, $status, $data['attendees'] ?? [], $data['contact_name'] ?? $user?->name ?? '', $organiser !== null);
+        $attendees = $this->prepareAttendees($event, $user, $status, $data['attendees'] ?? [], $data['contact_name'] ?? $user->name ?? '', $organiser !== null);
         $going = in_array($status, EventRegistration::HOLDING_PLACE, true);
 
         // A booking that already holds its places keeps them when an edit adds nobody (lowering capacity later must not bump it).
@@ -100,7 +100,7 @@ class EventRegistrationService
         $plainToken = null;
         $previousTotal = $existing?->total;
         $fields = [
-            'contact_name' => $data['contact_name'] ?? $user?->name ?? '',
+            'contact_name' => $data['contact_name'] ?? $user->name ?? '',
             'contact_email' => $data['contact_email'] ?? $user?->email,
             'contact_phone' => $data['contact_phone'] ?? null,
             'notes' => $data['notes'] ?? null,

@@ -311,7 +311,7 @@ trait HandlesCandidateActions
 
         return collect($roles)
             ->reject(fn (array $role) => $active->has($role['purpose']))
-            ->map(fn (array $role) => ['name' => $members->get($role['id'])?->full_name ?? '—', 'email' => $members->get($role['id'])?->email])
+            ->map(fn (array $role) => ['name' => $members->get($role['id'])->full_name ?? '—', 'email' => $members->get($role['id'])?->email])
             ->all();
     }
 
@@ -346,7 +346,7 @@ trait HandlesCandidateActions
             $signerMember = $members->get($memberId);
 
             if (! $signerMember?->email) {
-                session()->flash('error', ($signerMember?->full_name ?? 'The member').' has no email address on file, so cannot be sent a signature request.');
+                session()->flash('error', ($signerMember->full_name ?? 'The member').' has no email address on file, so cannot be sent a signature request.');
 
                 continue;
             }

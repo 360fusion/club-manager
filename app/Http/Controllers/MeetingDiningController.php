@@ -52,7 +52,7 @@ class MeetingDiningController extends Controller
             $diners->push([
                 'kind' => 'member',
                 'id' => $rsvp->id,
-                'name' => $rsvp->user?->name ?? 'Unknown member',
+                'name' => $rsvp->user->name ?? 'Unknown member',
                 'host' => null,
                 'fee' => (float) $meeting->dining_cost_member,
                 'dietary' => $rsvp->dietary_requirements,
@@ -154,7 +154,7 @@ class MeetingDiningController extends Controller
             if (! $isSettled) {
                 $rsvp->forceFill(['said_paid_at' => null, 'bank_transaction_id' => null])->save();
             }
-            $who = $rsvp->user?->name ?? 'member';
+            $who = $rsvp->user->name ?? 'member';
         } else {
             $guest = MeetingRsvpGuest::where('id', $validated['diner_id'])
                 ->whereHas('rsvp', fn ($q) => $q->where('meeting_id', $meeting->id))

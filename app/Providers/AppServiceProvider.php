@@ -15,15 +15,20 @@ use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
 use App\Support\Currencies;
+use App\Support\HealthChecks;
+use App\Support\OpsAlerts;
 use App\Support\ReservedClubSlugs;
 use App\Support\SafeFileAdder;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\DevCommands;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -61,6 +66,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // When someone last signed in on this session: turning on Face ID sign-in soon after needs no password again.
         Event::listen(Login::class, fn () => session()->put('auth.signed_in_at', time()));
+
+        // Whoever runs the platform hears when a background job fails, and /up fails when the site cannot work.
+        Queue::failing(fn (JobFailed $event) => OpsAlerts::jobFailed($event->job->resolveName(), $event->exception));
+        Event::listen(DiagnosingHealth::class, fn () => HealthChecks::assertLive());
 
         // `composer dev`'s worker runs the email and newsletter queues too (the default one only takes `default`). Not
         // `sites`: a website build refuses to run while the Vite dev server does, so start that worker by hand.

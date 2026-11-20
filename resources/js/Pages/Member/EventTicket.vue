@@ -5,6 +5,7 @@ import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import { formatMoney } from '@/Utils/currency';
 import { formatEventTime } from '@/Utils/localDateTime';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 defineProps({
     club: { type: Object, required: true },
@@ -28,7 +29,7 @@ const meal = (attendee) => [attendee.meal?.starter, attendee.meal?.main, attende
                 </div>
 
                 <!-- Always dark on white, so a camera can read it in dark mode too. -->
-                <div class="mx-auto my-5 w-64 max-w-full rounded-xl bg-white p-3 [&_svg]:h-auto [&_svg]:w-full" v-html="qrSvg" />
+                <SanitizedHtml class="mx-auto my-5 w-64 max-w-full rounded-xl bg-white p-3 [&_svg]:h-auto [&_svg]:w-full" :html="qrSvg" />
                 <p class="text-center text-sm text-slate-600 dark:text-slate-300">Show this at the door. The organiser scans it to check your party in.</p>
 
                 <div class="mt-4 flex justify-center">

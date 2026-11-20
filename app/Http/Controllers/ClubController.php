@@ -79,7 +79,7 @@ class ClubController extends Controller
                 'name' => $c->name,
                 'slug' => $c->slug,
                 'custom_domain' => $c->custom_domain,
-                'type_name' => $c->clubType?->name ?? 'General',
+                'type_name' => $c->clubType->name ?? 'General',
                 'role' => $c->pivot->role ?? 'member',
                 'member_number' => $c->pivot->member_number ?? '',
                 'status' => $c->pivot->status ?? 'active',

@@ -124,8 +124,8 @@ class CommitteePackCompilerService
     {
         $club = $meeting->club;
         $dateStr = $meeting->meeting_date->format('l, jS F Y \a\t H:i');
-        $chairName = $meeting->chair?->name ?? 'Worshipful Master / Chairman';
-        $secretaryName = $meeting->secretary?->name ?? 'Lodge Secretary';
+        $chairName = $meeting->chair->name ?? 'Worshipful Master / Chairman';
+        $secretaryName = $meeting->secretary->name ?? 'Lodge Secretary';
 
         $body = "Dear Brethren,\n\n";
         $body .= "Please find enclosed the official Agenda Pack for the upcoming meeting: {$meeting->title} of {$club->name}.\n\n";
@@ -140,7 +140,7 @@ class CommitteePackCompilerService
         if ($items->isNotEmpty()) {
             $body .= "ORDER OF BUSINESS / AGENDA:\n";
             foreach ($items as $item) {
-                $type = $item->item_type?->label() ?? 'General';
+                $type = $item->item_type->label();
                 $body .= "{$item->order}. {$item->title} [{$type}]\n";
                 if ($item->description) {
                     $body .= "   Details: {$item->description}\n";
@@ -156,7 +156,7 @@ class CommitteePackCompilerService
         if ($tasks->isNotEmpty()) {
             $body .= "OUTSTANDING ACTION POINTS:\n";
             foreach ($tasks as $task) {
-                $assignee = $task->assigned_to_name ?: ($task->assignedTo?->name ?? 'Unassigned');
+                $assignee = $task->assigned_to_name ?: ($task->assignedTo->name ?? 'Unassigned');
                 $body .= "• [ ] {$task->title} (Assigned: {$assignee})\n";
             }
             $body .= "\n";

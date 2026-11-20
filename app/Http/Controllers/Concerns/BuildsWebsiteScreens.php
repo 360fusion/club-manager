@@ -66,7 +66,7 @@ trait BuildsWebsiteScreens
                 'excerpt' => $p->excerpt,
                 'content' => $p->content,
                 'cover_image_url' => $p->cover_image_url ?: ($p->getFirstMediaUrl('cover') ?: null),
-                'author_name' => $p->author?->name ?? 'Club Admin',
+                'author_name' => $p->author->name ?? 'Club Admin',
                 'published_at' => ($p->published_at ?? $p->created_at)?->format('j M Y'),
             ]),
             'upcomingEvents' => $club->events->take(3)->values()->map(fn ($e) => [

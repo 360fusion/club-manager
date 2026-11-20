@@ -5,6 +5,7 @@ import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Alert from '@/Components/Ui/Alert.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 defineProps({
   club: Object,
@@ -84,11 +85,11 @@ const noticeVariant = (style) => ({ warning: 'warning', success: 'success' }[sty
 
             <div v-if="post.blocks && post.blocks.length" class="space-y-6">
               <div v-for="block in post.blocks" :key="block.id">
-                <div
+                <SanitizedHtml
                   v-if="block.type === 'text'"
                   class="prose prose-slate max-w-none space-y-3 text-sm leading-relaxed text-slate-800 dark:text-slate-100"
-                  v-html="block.content"
-                ></div>
+                  :html="block.content"
+                />
 
                 <div
                   v-else-if="block.type === 'image' && block.url"
@@ -149,11 +150,11 @@ const noticeVariant = (style) => ({ warning: 'warning', success: 'success' }[sty
               </div>
             </div>
 
-            <div
+            <SanitizedHtml
               v-else-if="post.content"
               class="prose prose-slate max-w-none space-y-4 text-sm leading-relaxed text-slate-800 dark:text-slate-100"
-              v-html="post.content"
-            ></div>
+              :html="post.content"
+            />
 
             <div v-if="post.attachments && post.attachments.length" class="space-y-3 border-t border-slate-100 pt-6 dark:border-slate-800">
               <h4 class="text-sm font-semibold text-slate-900 dark:text-white">

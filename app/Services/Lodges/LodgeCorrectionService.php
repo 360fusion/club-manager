@@ -54,8 +54,8 @@ class LodgeCorrectionService
      */
     public function apply(LodgeCorrection $correction, User $admin, array $values, ?string $note = null): void
     {
-        unset($values['hall_text']);
         $values = array_intersect_key($values, LodgeCorrection::FIELDS);
+        unset($values['hall_text']);
 
         if ($values === []) {
             throw ValidationException::withMessages(['fields' => 'Tick at least one change to apply, or turn the suggestion down.']);

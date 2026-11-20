@@ -272,12 +272,12 @@ class MeetingAdminController extends Controller
                 'home_club_number' => $pivot->home_club_number,
                 'home_club_info' => trim(($pivot->home_club_name ?? '').($pivot->home_club_number ? ' No '.$pivot->home_club_number : '')),
                 'phone' => $pivot->phone,
-                'dietary_notes' => $rsvp?->dietary_requirements ?? $pivot->dietary_notes,
+                'dietary_notes' => $rsvp->dietary_requirements ?? $pivot->dietary_notes,
                 'attendance_status' => $rsvp?->attendance_status ?: ($summonsSent ? 'awaiting' : 'not_sent'),
                 'summons_sent' => $summonsSent,
                 'responded_at' => $rsvp?->responded_at?->format('d M Y H:i'),
                 'payment_reference' => $rsvp?->payment_reference,
-                'payment_status' => $rsvp?->payment_status ?? 'unpaid',
+                'payment_status' => $rsvp->payment_status ?? 'unpaid',
             ];
         });
 

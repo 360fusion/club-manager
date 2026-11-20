@@ -96,7 +96,7 @@ final class MemberScope
 
     public function roleIn(int $clubId): string
     {
-        return $this->memberClubs->firstWhere('id', $clubId)?->pivot?->role ?? 'member';
+        return $this->memberClubs->firstWhere('id', $clubId)?->pivot->role ?? 'member';
     }
 
     public function isStaffIn(int $clubId): bool

@@ -52,7 +52,7 @@ class SuperAdminClubTypeController extends Controller
                 'name' => $c->name,
                 'slug' => $c->slug,
                 'lodge_number' => $c->lodge_number ?? '—',
-                'province' => $c->province?->name ?? '—',
+                'province' => $c->province->name ?? '—',
                 'members_count' => $c->users_count,
                 'created_at' => $c->created_at ? $c->created_at->format('d M Y') : '—',
             ]);

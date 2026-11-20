@@ -34,7 +34,7 @@ class PageAdminController extends Controller
         $pages = Page::where('club_id', $club->id)->orderBy('sort_order')->orderBy('id')->get();
         $selectedId = $request->query('page')
             ? (int) $request->query('page')
-            : ($pages->firstWhere('is_homepage', true)?->id ?? $pages->first()?->id);
+            : ($pages->firstWhere('is_homepage', true)->id ?? $pages->first()?->id);
 
         return Inertia::render('Admin/PageList', array_merge([
             'club' => $club,

@@ -68,7 +68,7 @@ class PageThemeController extends Controller
         }
 
         $settings = $club->settings ?? [];
-        $settings['custom_color_schemes'] = array_values($schemes);
+        $settings['custom_color_schemes'] = $schemes;
         $club->settings = $settings;
         $club->save();
 

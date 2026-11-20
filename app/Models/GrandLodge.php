@@ -22,11 +22,13 @@ class GrandLodge extends Model
         'description',
         'grand_ranks',
         'provincial_ranks',
+        'per_capita_rate',
     ];
 
     protected function casts(): array
     {
         return [
+            'per_capita_rate' => 'decimal:2',
             'grand_ranks' => 'array',
             'provincial_ranks' => 'array',
         ];

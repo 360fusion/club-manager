@@ -2,6 +2,7 @@
 // FAQ: native <details> rows (keyboard and screen-reader friendly, no JS needed), optionally one open at a time,
 // always expanded, numbered, two columns or searchable. Answers are rich text that was sanitised when saved.
 import { computed, ref } from 'vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -48,7 +49,7 @@ const isOpen = (index) => !!query.value.trim() || (props.block.first_open === tr
             <template v-for="(item, index) in visible" :key="item.id || index">
                 <div v-if="expanded" :class="['p-5 space-y-2 border', radiusMd, theme.cardBg]">
                     <h3 :class="['font-bold text-base', theme.headingText]"><span v-if="block.numbered" class="opacity-60 mr-1">{{ index + 1 }}.</span>{{ item.question }}</h3>
-                    <div :class="['prose dark:prose-invert max-w-none text-sm', theme.bodyText]" v-html="item.answer"></div>
+                    <SanitizedHtml :class="['prose dark:prose-invert max-w-none text-sm', theme.bodyText]" :html="item.answer" />
                 </div>
 
                 <details v-else :name="groupName" :open="isOpen(index)" :class="['group border', radiusMd, theme.cardBg]">
@@ -56,7 +57,7 @@ const isOpen = (index) => !!query.value.trim() || (props.block.first_open === tr
                         <span><span v-if="block.numbered" class="opacity-60 mr-1">{{ index + 1 }}.</span>{{ item.question }}</span>
                         <svg viewBox="0 0 20 20" class="w-5 h-5 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </summary>
-                    <div :class="['prose dark:prose-invert max-w-none px-5 pb-5 text-sm', theme.bodyText]" v-html="item.answer"></div>
+                    <SanitizedHtml :class="['prose dark:prose-invert max-w-none px-5 pb-5 text-sm', theme.bodyText]" :html="item.answer" />
                 </details>
             </template>
         </div>

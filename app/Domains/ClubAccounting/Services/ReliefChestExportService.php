@@ -40,8 +40,8 @@ class ReliefChestExportService
             $cash = number_format((float) $col->cash_amount, 2, '.', '');
             $cheque = number_format((float) $col->cheque_amount, 2, '.', '');
             $total = number_format((float) $col->total_amount, 2, '.', '');
-            $counter = $col->countedBy?->full_name ?? '';
-            $witness = $col->witnessedBy?->full_name ?? '';
+            $counter = $col->countedBy->full_name ?? '';
+            $witness = $col->witnessedBy->full_name ?? '';
 
             $csv .= Csv::line([$chestRef, $provincialRef, $date, $type, $cash, $cheque, $total, $counter, $witness]);
         }

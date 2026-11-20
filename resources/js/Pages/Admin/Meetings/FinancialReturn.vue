@@ -13,6 +13,11 @@ import Textarea from '@/Components/Ui/Textarea.vue';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
 import { formatMoney } from '@/Utils/currency';
 const props = defineProps({
+  // The dining places by how they were paid: { dining, prepaid, paid_cash, unpaid, waived }.
+  diningPayments: {
+    type: Object,
+    default: () => ({ dining: 0, prepaid: 0, paid_cash: 0, unpaid: 0, waived: 0 }),
+  },
   // The meeting's Treasurer's report, for those who may see the lodge's money; null for everyone else.
   treasurerReportUrl: {
     type: String,
@@ -57,10 +62,13 @@ const defaultDate = computed(() => {
 const form = useForm({
   return_date: defaultDate.value,
   kitchen_vendor_name: props.financialReturn?.kitchen_vendor_name || 'Masonic Hall Catering Ltd',
-  paid_diners_count: props.financialReturn ? props.financialReturn.paid_diners_count : (props.confirmedDiningCount || 0),
+  // Filled in from the replies: paid ahead by bank or card is already in the books, so only cash and unpaid places are
+  // money taken on the night.
+  paid_diners_count: props.financialReturn ? props.financialReturn.paid_diners_count : props.diningPayments.paid_cash + props.diningPayments.unpaid,
+  prepaid_diners_count: props.financialReturn ? (props.financialReturn.prepaid_diners_count ?? 0) : props.diningPayments.prepaid,
   dining_fee_per_head: props.financialReturn ? parseFloat(props.financialReturn.dining_fee_per_head) : (parseFloat(props.meeting.dining_cost_member) || 35.00),
   kitchen_cost_per_head: props.financialReturn ? parseFloat(props.financialReturn.kitchen_cost_per_head) : 28.00,
-  waived_diners_count: props.financialReturn ? props.financialReturn.waived_diners_count : 0,
+  waived_diners_count: props.financialReturn ? props.financialReturn.waived_diners_count : props.diningPayments.waived,
   waived_reason: props.financialReturn?.waived_reason || 'Official Guests / Visiting Speakers',
   raffle_amount: props.phoneCollections ? props.phoneCollections.raffle : (props.financialReturn ? parseFloat(props.financialReturn.raffle_amount) : 0),
   alms_amount: props.phoneCollections ? props.phoneCollections.alms : (props.financialReturn ? parseFloat(props.financialReturn.alms_amount) : 0),
@@ -71,7 +79,7 @@ const form = useForm({
 
 // Computed Calculations
 const calcTotalMeals = computed(() => {
-  return (parseInt(form.paid_diners_count) || 0) + (parseInt(form.waived_diners_count) || 0);
+  return (parseInt(form.paid_diners_count) || 0) + (parseInt(form.prepaid_diners_count) || 0) + (parseInt(form.waived_diners_count) || 0);
 });
 
 const calcDiningRevenue = computed(() => {
@@ -178,9 +186,17 @@ const submit = () => {
           </template>
           <div class="space-y-5">
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              <Input v-model.number="form.paid_diners_count" type="number" min="0" label="Paid diners" hint="Number of paying diners" required :error="form.errors.paid_diners_count" />
+              <Input v-model.number="form.paid_diners_count" type="number" min="0" label="Paid on the night" hint="Diners paying cash or by cheque at the meeting" required :error="form.errors.paid_diners_count" />
               <Input v-model.number="form.dining_fee_per_head" type="number" step="0.01" min="0" label="Dining fee per head" :prefix="$cs" hint="Price charged per diner" required :error="form.errors.dining_fee_per_head" />
               <Input v-model.number="form.kitchen_cost_per_head" type="number" step="0.01" min="0" label="Kitchen cost per head" :prefix="$cs" hint="Caterer fee per meal prepared" required :error="form.errors.kitchen_cost_per_head" />
+            </div>
+
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              From the replies: {{ diningPayments.dining }} dining, {{ diningPayments.prepaid }} paid ahead by bank or card, {{ diningPayments.paid_cash }} paid in cash, {{ diningPayments.unpaid }} still to pay and {{ diningPayments.waived }} waived. Change the figures if the night went differently.
+            </p>
+
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-5">
+              <Input v-model.number="form.prepaid_diners_count" class="sm:col-span-2" type="number" min="0" label="Paid ahead (bank or card)" hint="Meals for the kitchen bill; the money is already in the books" :error="form.errors.prepaid_diners_count" />
             </div>
 
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-5">

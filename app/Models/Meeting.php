@@ -13,11 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[ObservedBy(MeetingTeamEvents::class)]
 /**
  * @property-read int $dining_count Only when loaded with withCount() under that alias (the analytics page does).
  * @property-read int $apologies_count Likewise.
+ * @property int $visitors_count Only when loaded with withCount() under that alias (the meetings list does).
  */
+#[ObservedBy(MeetingTeamEvents::class)]
 class Meeting extends Model
 {
     /** @use HasFactory<Factory<self>> */

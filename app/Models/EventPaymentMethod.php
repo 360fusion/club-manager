@@ -72,7 +72,7 @@ class EventPaymentMethod extends Model
     {
         return [
             'days' => $this->due_days ?? $this->method?->due_days,
-            'basis' => $this->due_basis ?? $this->method?->due_basis ?? 'before_event',
+            'basis' => $this->due_basis ?? $this->method->due_basis ?? 'before_event',
         ];
     }
 }

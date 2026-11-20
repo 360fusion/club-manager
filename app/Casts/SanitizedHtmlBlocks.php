@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * Page and post blocks are stored as JSON and their `content` is rendered with
  * v-html, so the nested values need the same treatment as a plain HTML column.
  *
- * @implements CastsAttributes<array<int|string, mixed>|null, array<int|string, mixed>|null>
+ * @implements CastsAttributes<array<int|string, mixed>|null, array<int|string, mixed>|string|null>
  */
 class SanitizedHtmlBlocks implements CastsAttributes
 {

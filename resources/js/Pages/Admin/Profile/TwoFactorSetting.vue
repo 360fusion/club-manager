@@ -7,6 +7,7 @@ import Card from '@/Components/Ui/Card.vue';
 import Input from '@/Components/Ui/Input.vue';
 import PageHeader from '@/Components/Ui/PageHeader.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import SanitizedHtml from '@/Components/Ui/SanitizedHtml.vue';
 
 defineProps({
   user: Object,
@@ -131,7 +132,7 @@ const generateNewRecoveryCodes = () => {
         <!-- Setup step 2: pending confirmation (QR code) -->
         <div v-if="twoFactorPending" class="space-y-6">
           <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-6">
-            <div v-if="qrCodeSvg" v-html="qrCodeSvg" class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0"></div>
+            <SanitizedHtml v-if="qrCodeSvg" :html="qrCodeSvg" class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0" />
 
             <div class="space-y-3">
               <h4 class="font-semibold text-slate-900 dark:text-white text-sm">Scan with your authenticator app</h4>

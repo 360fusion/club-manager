@@ -104,7 +104,7 @@ class NewsletterMail extends Mailable
             'body' => self::mergeTags($this->contentOverride ?? (string) $this->newsletter->content, $this->recipientName, $club),
             'colour' => preg_match('/^#[0-9a-fA-F]{6}$/', $colour) ? $colour : '#4f46e5',
             'logo' => $absolute($club->logo_url),
-            'attachments' => collect($this->newsletter->attachments ?? [])->map(fn ($file) => ['name' => $file['name'] ?? 'Download', 'url' => $absolute($file['url'] ?? null)])->filter(fn ($file) => $file['url'])->values()->all(),
+            'attachments' => collect($this->newsletter->attachments ?? [])->map(fn ($file) => ['name' => $file['name'] ?? 'Download', 'url' => $absolute($file['url'] ?? null)])->filter(fn ($file) => ! empty($file['url']))->values()->all(),
             'unsubscribeUrl' => $this->unsubscribeUrl,
             'viewUrl' => $web ? null : $this->viewUrl,
             'web' => $web,

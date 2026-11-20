@@ -6,6 +6,8 @@ use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Meeting;
+use App\Models\MeetingRsvp;
+use App\Models\MeetingRsvpGuest;
 use App\Models\User;
 use App\Services\AccountingReports;
 use App\Services\AccountingService;
@@ -220,6 +222,36 @@ class MeetingFinancialReturnTest extends TestCase
             'raffle_amount' => 120.00,
             'vendor_bill_id' => null,
             'journal_entry_id' => null,
+        ]);
+    }
+
+    public function test_the_return_is_filled_in_from_how_dining_was_paid_and_prepaid_meals_are_not_banked_again(): void
+    {
+        $reply = function (string $paid, ?string $method) {
+            $user = User::factory()->create();
+
+            return MeetingRsvp::create(['meeting_id' => $this->meeting->id, 'user_id' => $user->id, 'token_hash' => 'x'.$user->id, 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'attending_dining', 'payment_status' => $paid, 'payment_method' => $method, 'responded_at' => now()]);
+        };
+        $reply('paid', 'bank');
+        $reply('paid', 'online');
+        $reply('paid', 'cash');
+        $host = $reply('unpaid', null);
+        MeetingRsvpGuest::create(['meeting_rsvp_id' => $host->id, 'guest_name' => 'Speaker', 'attending_dining' => true, 'payment_status' => 'waived']);
+
+        $this->actingAs($this->user)->get(route('admin.meetings.financial_return.show', ['clubSlug' => $this->club->slug, 'id' => $this->meeting->id]))
+            ->assertInertia(fn ($page) => $page->where('diningPayments', ['dining' => 5, 'prepaid' => 2, 'paid_cash' => 1, 'unpaid' => 1, 'waived' => 1]));
+
+        app(MeetingFinancialReturns::class)->postMeetingFinancialReturn($this->club, $this->meeting, [
+            'dining_fee_per_head' => 35, 'paid_diners_count' => 2, 'prepaid_diners_count' => 2, 'waived_diners_count' => 1,
+            'kitchen_cost_per_head' => 20, 'kitchen_vendor_name' => 'Hall',
+        ]);
+
+        $this->assertDatabaseHas('meeting_financial_returns', [
+            'meeting_id' => $this->meeting->id,
+            'prepaid_diners_count' => 2,
+            'total_dining_revenue' => 70.00,   // only the two paid on the night
+            'total_kitchen_bill' => 100.00,    // all five meals
+            'net_bank_deposit' => 70.00,
         ]);
     }
 }

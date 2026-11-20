@@ -22,7 +22,7 @@ class PageBlocks
         $isMember = ClubAccess::isActiveMember($viewer, $club);
 
         // An element switched off in the builder is not sent at all, so nothing in it can be read from the page's data.
-        $blocks = array_values(array_filter($blocks, fn ($block) => ! (is_array($block) && ! empty($block['hidden']))));
+        $blocks = array_values(array_filter($blocks, fn ($block) => empty($block['hidden'])));
 
         return array_map(function (array $block) use ($isMember) {
             // Where a contact form sends its messages is read on the server, so the addresses can't be harvested from the page.

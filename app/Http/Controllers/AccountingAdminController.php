@@ -127,7 +127,7 @@ class AccountingAdminController extends Controller
                 'formatted_ledger_balance' => Currencies::format($ledger, $club),
                 'unreconciled_count' => $b->unreconciled_count,
                 'is_active' => $b->is_active,
-                'account_code' => $b->account?->code ?? '1000',
+                'account_code' => $b->account->code ?? '1000',
             ];
         });
 
@@ -295,7 +295,7 @@ class AccountingAdminController extends Controller
                 'id' => $log->id,
                 'action' => $log->action,
                 'summary' => $log->summary,
-                'user_name' => $log->user?->name ?? 'System',
+                'user_name' => $log->user->name ?? 'System',
                 'created_at' => $log->created_at->format('d M Y H:i'),
             ]);
 

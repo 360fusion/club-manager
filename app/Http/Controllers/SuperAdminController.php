@@ -44,8 +44,8 @@ class SuperAdminController extends Controller
                 'name' => $c->name,
                 'slug' => $c->slug,
                 'lodge_number' => $c->lodge_number ?? '—',
-                'club_type' => $c->clubType?->name ?? 'General',
-                'province' => $c->province?->name ?? '—',
+                'club_type' => $c->clubType->name ?? 'General',
+                'province' => $c->province->name ?? '—',
                 'members_count' => $c->users_count,
                 'created_at' => $c->created_at ? $c->created_at->format('d M Y') : '—',
             ]);

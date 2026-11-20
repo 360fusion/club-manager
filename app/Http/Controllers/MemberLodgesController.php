@@ -77,7 +77,7 @@ class MemberLodgesController extends Controller
                 'id' => $correction->id,
                 'lodge' => ['name' => $correction->lodge->displayName(), 'slug' => $correction->lodge->status === 'active' ? $correction->lodge->slug : null],
                 'status' => $correction->status,
-                'what' => array_values(array_map(fn (string $field) => LodgeCorrection::FIELDS[$field] ?? $field, array_keys($correction->changes))),
+                'what' => array_map(fn (string $field) => LodgeCorrection::FIELDS[$field] ?? $field, array_keys($correction->changes)),
                 'decision_note' => $correction->status === LodgeCorrection::REJECTED ? $correction->decision_note : null,
                 'created_at' => $correction->created_at->toDateString(),
             ]);

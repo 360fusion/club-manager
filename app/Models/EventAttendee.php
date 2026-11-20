@@ -92,9 +92,9 @@ class EventAttendee extends Model
         $legacy = $this->legacy_menu ?? [];
 
         return [
-            'starter' => $this->starter?->name ?? ($legacy['starter'] ?? null),
-            'main' => $this->main?->name ?? ($legacy['main'] ?? null),
-            'dessert' => $this->dessert?->name ?? ($legacy['dessert'] ?? null),
+            'starter' => $this->starter->name ?? ($legacy['starter'] ?? null),
+            'main' => $this->main->name ?? ($legacy['main'] ?? null),
+            'dessert' => $this->dessert->name ?? ($legacy['dessert'] ?? null),
         ];
     }
 }

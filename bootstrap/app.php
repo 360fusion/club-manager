@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IdentifyTenantByDomain;
 use App\Http\Middleware\SecurityHeaders;
+use App\Support\OpsAlerts;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -49,6 +50,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // The first time a new kind of error happens, whoever runs the platform is emailed (OpsAlerts, at most hourly).
+        $exceptions->reportable(fn (Throwable $e) => OpsAlerts::error($e));
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

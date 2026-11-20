@@ -113,7 +113,7 @@ class MemberInbox
                 $club = $scope->clubFor($subscription->club_id);
                 $arrears = $subscription->status->isArrears();
 
-                return $this->item('dues', $arrears ? 3 : 2, ($arrears ? 'Overdue dues' : 'Dues to pay').' at '.$club->name, $club, Currencies::format($subscription->balance_due, $club).($subscription->due_date ? ' · due '.$subscription->due_date->format('j M Y') : ''), $subscription->due_date, null, route('members.dues', ['club' => $club->slug], false));
+                return $this->item('dues', $arrears ? 3 : 2, ($arrears ? 'Overdue dues' : 'Dues to pay').' at '.$club->name, $club, Currencies::format($subscription->balance_due, $club).' · due '.$subscription->due_date->format('j M Y'), $subscription->due_date, null, route('members.dues', ['club' => $club->slug], false));
             })->values();
     }
 

@@ -79,6 +79,9 @@ class MemberProfile extends Component
 
     public ?string $date_of_joining = null;
 
+    /** The day they resigned, were excluded or died; filled in automatically when the status changes. */
+    public ?string $left_on = null;
+
     public ?string $annual_dues_override = null;
 
     public string $notes = '';
@@ -118,6 +121,7 @@ class MemberProfile extends Component
         $this->date_of_passing = $member->date_of_passing?->format('Y-m-d');
         $this->date_of_raising = $member->date_of_raising?->format('Y-m-d');
         $this->date_of_joining = $member->date_of_joining?->format('Y-m-d');
+        $this->left_on = $member->left_on?->format('Y-m-d');
         $this->annual_dues_override = $member->annual_dues_override;
         $this->notes = $member->notes ?? '';
         $this->customer_account_id = $member->customer_account_id;
@@ -157,6 +161,7 @@ class MemberProfile extends Component
             'date_of_passing' => 'nullable|date',
             'date_of_raising' => 'nullable|date',
             'date_of_joining' => 'nullable|date',
+            'left_on' => 'nullable|date',
             'customer_account_id' => ['nullable', 'integer', Rule::exists('accounting_contacts', 'id')->where('club_id', $stored->club_id)],
         ]);
 
@@ -185,6 +190,7 @@ class MemberProfile extends Component
             'date_of_passing' => $this->date_of_passing ?: null,
             'date_of_raising' => $this->date_of_raising ?: null,
             'date_of_joining' => $this->date_of_joining ?: null,
+            'left_on' => $this->left_on ?: null,
             'annual_dues_override' => $this->annual_dues_override ? (float) $this->annual_dues_override : null,
             'notes' => $this->notes ?: null,
             'customer_account_id' => $this->customer_account_id ?: null,

@@ -210,7 +210,7 @@ class ClubNotification extends Notification
         return new self(
             self::SIGNATURE,
             'Signature needed: '.$request->signable->signatureLabel($request->purpose),
-            'Requested by '.($request->requestedBy?->name ?? $club->name).'.',
+            'Requested by '.($request->requestedBy->name ?? $club->name).'.',
             $club,
             'member.signatures.show',
             ['slug' => $club->slug, 'id' => $request->id],

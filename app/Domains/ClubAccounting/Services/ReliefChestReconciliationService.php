@@ -123,7 +123,7 @@ class ReliefChestReconciliationService
                     ->where('source_id', $tx->id)
                     ->exists();
 
-                if ($bankAcc && $targetAcc && ! $alreadyPosted) {
+                if ($bankAcc && ! $alreadyPosted) {
                     $accountingService->postJournalEntry($clubObj, [
                         'entry_date' => $txDate,
                         'reference_number' => 'GA-RECON-'.$tx->id,
@@ -186,12 +186,12 @@ class ReliefChestReconciliationService
 
         foreach ($collections as $col) {
             $date = $col->created_at ? $col->created_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
-            $type = $col->collection_type?->label() ?? 'Alms Plate';
+            $type = $col->collection_type->label();
             $donation = number_format((float) $col->total_amount, 2, '.', '');
             $giftAid = number_format($col->calculated_gift_aid, 2, '.', '');
             $status = ucfirst($col->gift_aid_status ?? 'pending');
-            $counter = $col->countedBy?->full_name ?? 'Charity Steward';
-            $witness = $col->witnessedBy?->full_name ?? 'Assistant DC';
+            $counter = $col->countedBy->full_name ?? 'Charity Steward';
+            $witness = $col->witnessedBy->full_name ?? 'Assistant DC';
 
             $csv .= Csv::line([$chestRef, $date, $type, $donation, $giftAid, $status, $counter, $witness]);
         }
@@ -278,7 +278,7 @@ class ReliefChestReconciliationService
                 'id' => $col->id,
                 'created_at' => $col->created_at ? $col->created_at->format('d M Y') : date('d M Y'),
                 'raw_date' => $col->created_at ? $col->created_at->format('Y-m-d') : date('Y-m-d'),
-                'collection_type' => $col->collection_type?->label() ?? 'Alms Plate / Donation',
+                'collection_type' => $col->collection_type->label(),
                 'donor_name' => $col->donor_display_name,
                 'donor_id' => $col->donor_member_id,
                 'cash_amount' => (float) $col->cash_amount,
@@ -298,8 +298,8 @@ class ReliefChestReconciliationService
                     'amount' => (float) $col->bankTransaction->amount,
                     'formatted_amount' => Currencies::format((float) $col->bankTransaction->amount, $clubObj),
                 ] : null,
-                'counted_by' => $col->countedBy?->full_name ?? 'Charity Steward',
-                'witnessed_by' => $col->witnessedBy?->full_name ?? 'Assistant DC',
+                'counted_by' => $col->countedBy->full_name ?? 'Charity Steward',
+                'witnessed_by' => $col->witnessedBy->full_name ?? 'Assistant DC',
                 'notes' => $col->notes,
             ];
         });

@@ -11,9 +11,12 @@ defineProps({
 
 <template>
     <div class="space-y-4">
-      <div>
-        <h4 class="text-base font-semibold text-slate-900 dark:text-white">What's due to Province</h4>
-        <p v-if="reports.provincial_due?.province_name" class="text-xs text-slate-500 dark:text-slate-400">{{ reports.provincial_due.province_name }}</p>
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h4 class="text-base font-semibold text-slate-900 dark:text-white">What's due to Province</h4>
+          <p v-if="reports.provincial_due?.province_name" class="text-xs text-slate-500 dark:text-slate-400">{{ reports.provincial_due.province_name }}</p>
+        </div>
+        <a :href="route('admin.accounting.annual_return', { clubSlug: route().params?.clubSlug })" target="_blank" rel="noopener" class="inline-flex min-h-8 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Annual return of members</a>
       </div>
       <p v-if="!reports.provincial_due?.has_province" class="text-sm text-slate-500 dark:text-slate-400">This lodge is not linked to a Province, so no rates apply.</p>
       <template v-else>

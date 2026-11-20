@@ -59,7 +59,7 @@ class PostAdminController extends Controller
                 'cover_image_url' => $post->cover_image_url,
                 'status' => $post->status,
                 'published_at' => ($post->published_at ?? $post->created_at)?->format('j M Y'),
-                'author_name' => $post->author?->name ?? 'Club Admin',
+                'author_name' => $post->author->name ?? 'Club Admin',
             ],
         ]);
     }
@@ -84,7 +84,7 @@ class PostAdminController extends Controller
         $postArray = $post->toArray();
         $postArray['tag_ids'] = $post->exists ? $post->tags()->pluck('news_tags.id')->all() : [];
         $publishedAt = $post->published_at ?? ($post->created_at ?? Carbon::now());
-        $postArray['published_at'] = $publishedAt ? $publishedAt->format('Y-m-d\TH:i') : Carbon::now()->format('Y-m-d\TH:i');
+        $postArray['published_at'] = $publishedAt->format('Y-m-d\TH:i');
         $postArray['expires_at'] = $post->expires_at ? $post->expires_at->format('Y-m-d\TH:i') : null;
 
         return Inertia::render('Admin/Posts/Form', [

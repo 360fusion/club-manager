@@ -57,6 +57,10 @@ return [
     // Where to report a security problem; /.well-known/security.txt is only served when this is set.
     'security_contact' => env('SECURITY_CONTACT_EMAIL'),
 
+    // Who hears when a job fails or a new kind of error happens (comma-separated); empty means the superadmins.
+    'ops_alert_emails' => env('OPS_ALERT_EMAILS'),
+    'ops_alerts_always' => (bool) env('OPS_ALERTS_ALWAYS', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

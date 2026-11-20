@@ -11,6 +11,12 @@ enum MembershipStatus: string
     case Deceased = 'deceased';
     case Historical = 'historical';
 
+    /** No longer a member: resigned, excluded or died. */
+    public function hasLeft(): bool
+    {
+        return in_array($this, [self::Resigned, self::ExcludedRule181, self::Deceased], true);
+    }
+
     public function label(): string
     {
         return match ($this) {

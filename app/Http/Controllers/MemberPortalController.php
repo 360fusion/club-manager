@@ -50,9 +50,7 @@ class MemberPortalController extends Controller
             ->when($isPending, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('meeting_date', 'asc')
             ->get();
-        $myMeetingRsvps = $user
-            ? MeetingRsvp::whereIn('meeting_id', $meetingModels->pluck('id'))->where('user_id', $user->id)->with('guests')->get()->keyBy('meeting_id')
-            : collect();
+        $myMeetingRsvps = MeetingRsvp::whereIn('meeting_id', $meetingModels->pluck('id'))->where('user_id', $user->id)->with('guests')->get()->keyBy('meeting_id');
 
         $meetings = $meetingModels
             ->map(function ($meeting) use ($myMeetingRsvps, $club) {
@@ -271,10 +269,10 @@ class MemberPortalController extends Controller
             ->orderBy('meeting_date', 'asc')
             ->get()
             ->map(function ($meeting) use ($user, $club) {
-                $userRsvp = $user ? MeetingRsvp::where('meeting_id', $meeting->id)
+                $userRsvp = MeetingRsvp::where('meeting_id', $meeting->id)
                     ->where('user_id', $user->id)
                     ->with('guests')
-                    ->first() : null;
+                    ->first();
 
                 return [
                     'id' => $meeting->id,
@@ -363,7 +361,7 @@ class MemberPortalController extends Controller
                 'attachments' => $post->attachments ?? [],
                 'cover_image_url' => $post->cover_image_url,
                 'published_at' => ($post->published_at ?? $post->created_at)?->format('j M Y'),
-                'author_name' => $post->author?->name ?? 'Club Secretary',
+                'author_name' => $post->author->name ?? 'Club Secretary',
                 'tags' => $post->tags->map(fn (NewsTag $tag) => ['name' => $tag->name, 'slug' => $tag->slug, 'color' => $tag->color])->values(),
             ],
             'tagOptions' => NewsTag::browsableFor([$club->id], $user),
