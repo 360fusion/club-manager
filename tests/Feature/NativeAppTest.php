@@ -62,7 +62,8 @@ class NativeAppTest extends TestCase
             ->assertSee('native-app', false)
             ->assertSee('Member area');
 
-        $this->flushHeaders()->actingAs($admin)->get($page)->assertOk()->assertDontSee('Member area');
+        // On the website it is in the phone-only top bar too: added to a home screen there is no back button either.
+        $this->flushHeaders()->actingAs($admin)->get($page)->assertOk()->assertDontSee('native-app', false)->assertSee('Member area');
     }
 
     public function test_a_signed_in_member_registers_their_phone_for_push(): void
@@ -74,6 +75,91 @@ class NativeAppTest extends TestCase
             ->assertSessionHas('push_token', 'abc123');
 
         $this->assertDatabaseHas('push_devices', ['user_id' => $user->id, 'token' => 'abc123', 'platform' => 'ios']);
+    }
+
+    public function test_a_browser_turns_on_notifications_from_the_website(): void
+    {
+        $user = User::factory()->create();
+        $endpoint = 'https://fcm.googleapis.com/fcm/send/'.str_repeat('a', 300);
+
+        $this->actingAs($user)->postJson(route('members.push_devices.store'), [
+            'platform' => 'web',
+            'subscription' => ['endpoint' => $endpoint, 'expirationTime' => null, 'keys' => ['p256dh' => 'BPublicKey', 'auth' => 'secret']],
+        ])->assertOk()->assertSessionHas('push_token', PushDevice::webToken($endpoint));
+
+        $device = PushDevice::sole();
+        $this->assertSame('web', $device->platform);
+        $this->assertSame(['endpoint' => $endpoint, 'keys' => ['p256dh' => 'BPublicKey', 'auth' => 'secret']], $device->subscription);
+        $this->assertStringNotContainsString('secret', (string) $device->getRawOriginal('subscription'));
+
+        $this->actingAs($user)->deleteJson(route('members.push_devices.destroy'), ['endpoint' => $endpoint])->assertOk();
+        $this->assertDatabaseCount('push_devices', 0);
+    }
+
+    public function test_a_browser_subscription_must_be_one_of_the_browsers_push_services(): void
+    {
+        foreach (['https://evil.example/push', 'http://fcm.googleapis.com/fcm/send/x', 'https://169.254.169.254/latest', 'https://fcm.googleapis.com.evil.example/x'] as $endpoint) {
+            $this->actingAs(User::factory()->create())->postJson(route('members.push_devices.store'), [
+                'platform' => 'web',
+                'subscription' => ['endpoint' => $endpoint, 'keys' => ['p256dh' => 'k', 'auth' => 'a']],
+            ])->assertJsonValidationErrors('subscription.endpoint');
+        }
+
+        $this->assertDatabaseCount('push_devices', 0);
+    }
+
+    public function test_a_browser_is_sent_nothing_until_the_websites_push_keys_are_set(): void
+    {
+        config(['services.webpush.public_key' => null, 'services.webpush.private_key' => null]);
+        $device = PushDevice::factory()->create(['platform' => 'web', 'token' => PushDevice::webToken('https://fcm.googleapis.com/x'), 'subscription' => ['endpoint' => 'https://fcm.googleapis.com/x', 'keys' => ['p256dh' => 'k', 'auth' => 'a']]]);
+
+        $this->assertSame(PushSender::SKIPPED, app(PushSender::class)->send($device, 'Hello', 'World'));
+    }
+
+    public function test_the_website_shares_its_public_push_key_only_with_signed_in_members_outside_the_app(): void
+    {
+        config(['services.webpush.public_key' => 'BPublic', 'services.webpush.private_key' => 'private']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route('members.dashboard'))->assertInertia(fn ($page) => $page->where('webPushKey', 'BPublic'));
+        $this->actingAs($user)->withHeaders(['User-Agent' => 'Mozilla/5.0 (iPhone) ClubManagerApp'])->get(route('members.dashboard'))
+            ->assertInertia(fn ($page) => $page->where('webPushKey', null));
+    }
+
+    public function test_one_broken_device_does_not_stop_the_others_getting_the_push(): void
+    {
+        $user = User::factory()->create();
+        $broken = PushDevice::factory()->create(['user_id' => $user->id, 'platform' => 'web']);
+        $phone = PushDevice::factory()->create(['user_id' => $user->id, 'platform' => 'ios']);
+        $sent = [];
+        $this->mock(PushSender::class, function ($mock) use ($broken, &$sent) {
+            $mock->shouldReceive('send')->andReturnUsing(function (PushDevice $device) use ($broken, &$sent) {
+                if ($device->is($broken)) {
+                    throw new \RuntimeException('Web push failed: 403');
+                }
+                $sent[] = $device->id;
+
+                return PushSender::SENT;
+            });
+        });
+
+        (new SendPushNotification($user->id, 'Hello', 'World'))->handle(app(PushSender::class));
+
+        $this->assertSame([$phone->id], $sent);
+    }
+
+    public function test_a_member_keeps_at_most_ten_browsers_for_notifications(): void
+    {
+        $user = User::factory()->create();
+        foreach (range(1, 12) as $n) {
+            $this->actingAs($user)->postJson(route('members.push_devices.store'), [
+                'platform' => 'web',
+                'subscription' => ['endpoint' => 'https://fcm.googleapis.com/fcm/send/'.$n, 'keys' => ['p256dh' => 'k', 'auth' => 'a']],
+            ])->assertOk();
+        }
+
+        $this->assertSame(10, PushDevice::where('user_id', $user->id)->where('platform', 'web')->count());
+        $this->assertTrue(PushDevice::where('token', PushDevice::webToken('https://fcm.googleapis.com/fcm/send/12'))->exists());
     }
 
     public function test_registering_a_phone_needs_someone_signed_in(): void

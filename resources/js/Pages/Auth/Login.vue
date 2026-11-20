@@ -1,7 +1,8 @@
 <script setup>
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
-import { biometricSignIn, signInWithBiometrics } from '@/Support/nativeApp';
+import { biometricSignIn, isNativeApp, signInWithBiometrics } from '@/Support/nativeApp';
+import { passkeysSupported, signInWithPasskey } from '@/Support/passkeys';
 import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -36,6 +37,25 @@ const useBiometrics = () => {
     signInWithBiometrics({ onFinish: () => { biometricBusy.value = false; refreshBiometric(); } });
 };
 
+// On the website, a passkey (Face ID, fingerprint or the computer's own lock) signs in without the password. The app has
+// its own Face ID sign-in above.
+const canUsePasskey = ref(false);
+onMounted(() => { canUsePasskey.value = !isNativeApp && passkeysSupported(); });
+const passkeyBusy = ref(false);
+const passkeyError = ref('');
+const usePasskey = async () => {
+    passkeyBusy.value = true;
+    passkeyError.value = '';
+    try {
+        await signInWithPasskey(form.remember);
+    } catch (error) {
+        passkeyError.value = error?.name === 'NotAllowedError'
+            ? 'Cancelled, or there is no passkey for this site on this device. Add one on your security page after signing in with your password.'
+            : error.message;
+        passkeyBusy.value = false;
+    }
+};
+
 const submit = () => {
     form.post('/login', {
         onFinish: () => form.reset('password'),
@@ -64,6 +84,11 @@ const submit = () => {
             <div v-if="biometric" class="flex flex-col gap-2">
                 <Button size="lg" block :loading="biometricBusy" @click="useBiometrics">{{ biometricLabel }}</Button>
                 <p class="text-center text-xs text-slate-500 dark:text-slate-400">As {{ biometric.owner.name }}. Or sign in with your password below.</p>
+            </div>
+
+            <div v-if="canUsePasskey && !biometric" class="flex flex-col gap-2">
+                <Button variant="secondary" size="lg" block :loading="passkeyBusy" @click="usePasskey">Sign in with your face or fingerprint</Button>
+                <p v-if="passkeyError" class="text-center text-xs text-rose-600 dark:text-rose-400" role="alert">{{ passkeyError }}</p>
             </div>
 
             <!-- Demo credentials, only sent on a local install -->

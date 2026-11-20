@@ -6,6 +6,7 @@ import Badge from '@/Components/Ui/Badge.vue';
 import Card from '@/Components/Ui/Card.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { isNativeApp } from '@/Support/nativeApp';
+import WebPushCard from '@/Components/WebPushCard.vue';
 
 const props = defineProps({
     notifications: { type: Object, required: true },
@@ -90,6 +91,8 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
             </section>
 
             <Card v-if="!notifications.data.length" padding="sm"><p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ filters.unread || filters.category ? 'Nothing matches those filters.' : "No notifications yet. Summonses, news and notices from your clubs will appear here." }}</p></Card>
+
+            <WebPushCard v-if="!isNativeApp" />
 
             <p v-if="isNativeApp" class="text-center text-xs text-slate-500 dark:text-slate-400">
                 <Link :href="route('members.app_settings')" class="inline-flex min-h-11 items-center font-medium text-blue-600 hover:underline dark:text-blue-400">Choose which notifications alert this phone</Link>

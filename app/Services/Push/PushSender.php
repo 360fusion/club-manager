@@ -7,11 +7,13 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Minishlink\WebPush\Subscription;
+use Minishlink\WebPush\WebPush;
 use RuntimeException;
 
 /**
- * The only code that talks to Apple's (APNs) and Google's (FCM) push services. Each signs its
- * own short-lived JWT, so no SDK is needed; an unconfigured service sends nothing.
+ * The only code that talks to Apple's (APNs) and Google's (FCM) push services, and to browsers' push services for
+ * notifications from the website (Web Push, through minishlink/web-push). An unconfigured service sends nothing.
  */
 class PushSender
 {
@@ -30,9 +32,11 @@ class PushSender
      */
     public function send(PushDevice $device, string $title, string $body, ?string $url = null, ?int $badge = null): string
     {
-        return $device->platform === 'ios'
-            ? $this->sendApns($device->token, $title, $body, $url, $badge)
-            : $this->sendFcm($device->token, $title, $body, $url, $badge);
+        return match ($device->platform) {
+            'ios' => $this->sendApns($device->token, $title, $body, $url, $badge),
+            'web' => $this->sendWeb($device, $title, $body, $url, $badge),
+            default => $this->sendFcm($device->token, $title, $body, $url, $badge),
+        };
     }
 
     /** $badge is the number shown on the app icon: the person's unread inbox count. */
@@ -87,6 +91,35 @@ class PushSender
         }
 
         return $this->checked($response, 'FCM');
+    }
+
+    /** The browser's service worker (public/sw.js) shows it, opens $url when tapped, and puts $badge on the icon. */
+    private function sendWeb(PushDevice $device, string $title, string $body, ?string $url, ?int $badge): string
+    {
+        $config = config('services.webpush');
+        $subscription = $device->subscription;
+        if (! $config['public_key'] || ! $config['private_key'] || ! is_array($subscription)
+            || ! preg_match(PushDevice::WEB_PUSH_HOSTS, (string) parse_url((string) ($subscription['endpoint'] ?? ''), PHP_URL_HOST))) {
+            return self::SKIPPED;
+        }
+
+        $webPush = new WebPush(['VAPID' => ['subject' => $config['subject'], 'publicKey' => $config['public_key'], 'privateKey' => $config['private_key']]]);
+        $report = $webPush->sendOneNotification(
+            Subscription::create($subscription),
+            (string) json_encode(['title' => $title, 'body' => $body, 'url' => $url, 'badge' => $badge]),
+        );
+
+        if ($report->isSubscriptionExpired()) {
+            return self::GONE;
+        }
+
+        if (! $report->isSuccess()) {
+            Log::warning('Web push failed', ['reason' => $report->getReason()]);
+
+            throw new RuntimeException('Web push failed: '.$report->getReason());
+        }
+
+        return self::SENT;
     }
 
     /**

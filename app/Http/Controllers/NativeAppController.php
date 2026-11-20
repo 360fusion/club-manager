@@ -38,26 +38,49 @@ class NativeAppController extends Controller
     public function storeDevice(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'token' => ['required', 'string', 'max:255'],
             'platform' => ['required', Rule::in(PushDevice::PLATFORMS)],
+            'token' => ['exclude_if:platform,web', 'required', 'string', 'max:255'],
+            // A browser's push subscription: only the browsers' own push services are accepted (PushDevice::WEB_PUSH_HOSTS).
+            'subscription' => ['exclude_unless:platform,web', 'required', 'array:endpoint,expirationTime,keys'],
+            'subscription.endpoint' => ['exclude_unless:platform,web', 'required', 'string', 'max:2000', 'url:https', fn (string $attribute, mixed $value, \Closure $fail) => preg_match(PushDevice::WEB_PUSH_HOSTS, (string) parse_url((string) $value, PHP_URL_HOST)) ? null : $fail('That is not a push service this site sends to.')],
+            'subscription.keys.p256dh' => ['exclude_unless:platform,web', 'required', 'string', 'max:200'],
+            'subscription.keys.auth' => ['exclude_unless:platform,web', 'required', 'string', 'max:100'],
         ]);
+
+        $web = $validated['platform'] === 'web';
+        $token = $web ? PushDevice::webToken($validated['subscription']['endpoint']) : $validated['token'];
 
         // A token belongs to one phone; if someone else signs in on it, it moves to them.
         PushDevice::updateOrCreate(
-            ['token' => $validated['token']],
-            ['user_id' => $request->user()->id, 'platform' => $validated['platform'], 'last_seen_at' => now()],
+            ['token' => $token],
+            [
+                'user_id' => $request->user()->id,
+                'platform' => $validated['platform'],
+                'subscription' => $web ? ['endpoint' => $validated['subscription']['endpoint'], 'keys' => $validated['subscription']['keys']] : null,
+                'last_seen_at' => now(),
+            ],
         );
+        // A person's browsers are kept to the ten used most lately, so nobody can pile up subscriptions to send to.
+        if ($web) {
+            $keep = $request->user()->pushDevices()->where('platform', 'web')->latest('last_seen_at')->latest('id')->limit(PushDevice::MAX_WEB_PER_USER)->pluck('id');
+            $request->user()->pushDevices()->where('platform', 'web')->whereNotIn('id', $keep)->delete();
+        }
+
         // Signing out on this phone forgets the token (ForgetPushDeviceOnLogout), so the next person to sign in doesn't get these pushes.
-        $request->session()->put('push_token', $validated['token']);
+        $request->session()->put('push_token', $token);
 
         return response()->json(['ok' => true]);
     }
 
     public function destroyDevice(Request $request): JsonResponse
     {
-        $validated = $request->validate(['token' => ['required', 'string', 'max:255']]);
+        $validated = $request->validate([
+            'token' => ['required_without:endpoint', 'string', 'max:255'],
+            'endpoint' => ['required_without:token', 'string', 'max:2000'],
+        ]);
 
-        $request->user()->pushDevices()->where('token', $validated['token'])->delete();
+        $token = isset($validated['endpoint']) ? PushDevice::webToken($validated['endpoint']) : $validated['token'];
+        $request->user()->pushDevices()->where('token', $token)->delete();
 
         return response()->json(['ok' => true]);
     }

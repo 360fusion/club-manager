@@ -6,6 +6,7 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { currencySymbol, formatMoney } from './Utils/currency';
 import focusTrap from './Directives/focusTrap';
 import { startNativeApp } from './Support/nativeApp';
+import { startWebApp } from './Support/webPush';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -31,6 +32,7 @@ createInertiaApp({
         app.directive('focus-trap', focusTrap);
 
         startNativeApp(props.initialPage);
+        startWebApp(props.initialPage);
 
         return app
             .use(plugin)

@@ -83,6 +83,8 @@ final class HealthChecks
         $add('Security contact', filled(config('app.security_contact')), 'SECURITY_CONTACT_EMAIL: shown at /.well-known/security.txt so people know where to report a problem');
         $add('Storage link', is_link(public_path('storage')) || is_dir(public_path('storage')), 'php artisan storage:link: uploaded photos and files are served from it');
 
+        $add('Website notifications', filled(config('services.webpush.public_key')) && filled(config('services.webpush.private_key')), 'WEB_PUSH_PUBLIC_KEY and WEB_PUSH_PRIVATE_KEY (php artisan app:make-web-push-keys, once): without them the website cannot send phone notifications');
+
         if (config('platform_payments.enabled')) {
             $missing = array_keys(array_filter([
                 'PLATFORM_STRIPE_SECRET' => blank(config('platform_payments.stripe_secret')),

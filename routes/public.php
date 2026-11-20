@@ -36,6 +36,7 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\VisitorRegistrationController;
 use App\Models\Club;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Http\Controllers\ConfirmablePasswordController;
 
 // Public and sign-in routes: authentication, the public lodge directory and club websites, passwordless links, webhooks.
 // Authentication Routes
@@ -62,9 +63,16 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->nam
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update')->middleware('throttle:auth-forms');
 
-// Fortify's own 2FA management routes send anyone without a recently confirmed password here. The app has no separate
-// confirm page: its security page asks for the password inline.
-Route::redirect('/user/confirm-password', '/members/security')->middleware('auth')->name('password.confirm');
+// Fortify's own 2FA and passkey routes send anyone without a recently confirmed password here. The app has no separate
+// confirm page: its security page asks for the password inline. GET only, so Fortify's POST /user/confirm-password works.
+Route::get('/user/confirm-password', fn () => redirect('/members/security'))->middleware('auth')->name('password.confirm');
+// Fortify's password check, rate limited (unnamed: Fortify already names its own copy, which this replaces).
+Route::post('/user/confirm-password', [ConfirmablePasswordController::class, 'store'])->middleware(['auth', 'throttle:auth-forms']);
+// Fortify's own two-factor management routes are not used: the security page above does all of it and asks for the password
+// each time. Answering them here stops a confirmed password from opening them (recovery codes, turning 2FA off).
+foreach (['two-factor-authentication', 'confirmed-two-factor-authentication', 'two-factor-qr-code', 'two-factor-secret-key', 'two-factor-recovery-codes'] as $fortifyTwoFactorPath) {
+    Route::any('/user/'.$fortifyTwoFactorPath, fn () => abort(404))->middleware('auth');
+}
 
 // Member Email Invitation Setup Routes
 Route::get('/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept')->middleware('throttle:auth-forms');

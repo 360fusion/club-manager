@@ -73,16 +73,19 @@
 
 /* The iOS and Android app (Support/nativeApp.js adds .native-app) draws the page under the status bar: the navy top bar
    grows to fill it, and a page without one (sign in) starts below it. */
-.native-app header.cm-nav {
+.native-app header.cm-nav,
+.web-app header.cm-nav {
     padding-top: env(safe-area-inset-top);
 }
 
-.native-app body:not(:has(header.cm-nav)) {
+.native-app body:not(:has(header.cm-nav)),
+.web-app body:not(:has(header.cm-nav)) {
     padding-top: env(safe-area-inset-top);
 }
 
 /* A navy strip always sits behind the clock and battery, so a page scrolling up never shows under them. */
-.native-app body::before {
+.native-app body::before,
+.web-app body::before {
     content: '';
     position: fixed;
     inset: 0 0 auto 0;
@@ -92,7 +95,8 @@
 }
 
 /* The Livewire admin pages' top bar sticks just below that strip. */
-.native-app div.cm-nav.sticky {
+.native-app div.cm-nav.sticky,
+.web-app div.cm-nav.sticky {
     top: env(safe-area-inset-top);
 }
 

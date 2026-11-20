@@ -54,6 +54,14 @@ return [
         'credentials_path' => env('FCM_CREDENTIALS_PATH'),
     ],
 
+    // Phone and computer notifications from the website (Web Push). Make a key pair once per install with
+    // `php artisan app:make-web-push-keys`; the public key is sent to browsers, the private key never is.
+    'webpush' => [
+        'public_key' => env('WEB_PUSH_PUBLIC_KEY'),
+        'private_key' => env('WEB_PUSH_PRIVATE_KEY'),
+        'subject' => env('WEB_PUSH_SUBJECT', env('APP_URL')),
+    ],
+
     // OpenStreetMap's Nominatim refuses generic or default User-Agents, so identify the platform (optionally
     // with a contact address) for the Map block's address search.
     'nominatim' => [

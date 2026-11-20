@@ -9,6 +9,7 @@ import Card from '@/Components/Ui/Card.vue';
 import ClubChip from '@/Components/Ui/ClubChip.vue';
 import DateTile from '@/Components/Ui/DateTile.vue';
 import QuickReply from '@/Components/QuickReply.vue';
+import InstallTip from '@/Components/InstallTip.vue';
 import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
@@ -113,6 +114,8 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ subtitle }}</p>
                 <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ greeting }}, {{ firstName }}</h2>
             </div>
+
+            <InstallTip />
 
             <section v-if="nextBooking" aria-labelledby="next-booking-heading" class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-800/40 dark:bg-amber-950/30 lg:max-w-xl">
                 <div class="flex items-start gap-3">

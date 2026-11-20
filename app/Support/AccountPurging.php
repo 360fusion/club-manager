@@ -23,7 +23,7 @@ final class AccountPurging
             $user->tokens()->delete();
             $user->notifications()->delete();
 
-            foreach (['sessions', 'club_user', 'lodge_follows', 'newsletter_subscriptions', 'province_admins', 'club_visitor_access', 'club_visit_requests'] as $table) {
+            foreach (['sessions', 'club_user', 'lodge_follows', 'newsletter_subscriptions', 'province_admins', 'club_visitor_access', 'club_visit_requests', 'passkeys', 'device_sign_in_keys', 'push_devices'] as $table) {
                 DB::table($table)->where('user_id', $user->id)->delete();
             }
 

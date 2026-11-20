@@ -4,7 +4,6 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
-import { isNativeApp } from '@/Support/nativeApp';
 
 const props = defineProps({
   title: {
@@ -93,8 +92,8 @@ provide('layoutHasHeading', true);
         </div>
         <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
       </div>
-      <!-- The app has no browser back button and no tab bar on admin pages: this is the way back to the member area. -->
-      <Link v-if="isNativeApp" :href="route('members.dashboard')" class="ml-auto mr-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-slate-200 hover:text-white">
+      <!-- The app, and the member area added to a home screen, have no back button and no tab bar on admin pages: this is the way back. -->
+      <Link :href="route('members.dashboard')" class="ml-auto mr-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-slate-200 hover:text-white">
         <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
         Member area
       </Link>

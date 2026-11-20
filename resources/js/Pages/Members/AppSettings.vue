@@ -5,7 +5,7 @@ import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Input from '@/Components/Ui/Input.vue';
 import Button from '@/Components/Ui/Button.vue';
-import { appLockOn, appLockSupport, biometricSignIn, setAppLock, turnOffBiometricSignIn, turnOnBiometricSignIn } from '@/Support/nativeApp';
+import { appLockOn, appLockSupport, biometricSignIn, isNativeApp, setAppLock, turnOffBiometricSignIn, turnOnBiometricSignIn } from '@/Support/nativeApp';
 
 const props = defineProps({
     pushMuted: { type: Array, default: () => [] },
@@ -77,13 +77,13 @@ const toggleLock = async (on) => {
 </script>
 
 <template>
-    <MembersLayout title="App settings" active-tab="">
+    <MembersLayout :title="isNativeApp ? 'App settings' : 'Notification settings'" active-tab="">
         <div class="mx-auto max-w-xl space-y-6">
-            <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">App settings</h2>
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ isNativeApp ? 'App settings' : 'Notification settings' }}</h2>
 
             <Card>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Phone notifications</h3>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose what this app alerts you about. Everything still arrives in your inbox, and payments, signatures and membership news always alert you.</p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose what alerts your phones and computers, in the app and from the website. Everything still arrives in your inbox, and payments, signatures and membership news always alert you.</p>
                 <div class="mt-3 grid gap-2">
                     <label v-for="kind in PUSH_KINDS" :key="kind.value" class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-200">
                         <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600" :checked="!pushMuted.includes(kind.value)" @change="togglePush(kind.value, $event.target.checked)" />

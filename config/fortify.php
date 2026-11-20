@@ -176,11 +176,11 @@ return [
             'confirmPassword' => true,
             // 'window' => 0,
         ]),
-        // Switched off: nothing in the app offers passkeys, `User` does not implement Fortify's PasskeyUser contract and
-        // there is no password.confirm route, so every passkey endpoint failed with a 500. To add them, do those three things first.
-        // Features::passkeys([
-        //     'confirmPassword' => true,
-        // ]),
+        // Face ID, fingerprint or a security key (WebAuthn), added on the security page and used on the sign-in page. Adding
+        // one needs the password confirmed first (POST /user/confirm-password), so an open session alone cannot add its own.
+        Features::passkeys([
+            'confirmPassword' => true,
+        ]),
     ],
 
 ];

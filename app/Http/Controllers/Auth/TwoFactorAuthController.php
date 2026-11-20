@@ -42,6 +42,12 @@ class TwoFactorAuthController extends Controller
             'recoveryCodes' => $recoveryCodes,
             'recoveryCodesLeft' => $enabled && $confirmed ? count($user->recoveryCodes()) : 0,
             'devices' => DeviceSessions::for($user, $request->session()->getId()),
+            'passkeys' => $user->passkeys()->latest()->get()->map(fn ($passkey) => [
+                'id' => $passkey->id,
+                'name' => $passkey->name,
+                'added' => $passkey->created_at?->format('j M Y'),
+                'last_used' => $passkey->last_used_at?->format('j M Y'),
+            ])->values(),
         ]);
     }
 

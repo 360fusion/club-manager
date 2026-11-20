@@ -32,7 +32,9 @@ class UpdateUserPassword implements UpdatesUserPasswords
             'password' => Hash::make($input['password']),
         ])->save();
 
-        // A new password signs every phone out of Face ID and fingerprint sign-in, so a lost phone stops working too.
+        // A new password signs every phone out of Face ID and fingerprint sign-in (the app's and the website's passkeys),
+        // so a lost phone, or one someone else added, stops working too.
         $user->deviceSignInKeys()->delete();
+        $user->passkeys()->delete();
     }
 }

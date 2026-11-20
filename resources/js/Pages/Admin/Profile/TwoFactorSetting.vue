@@ -1,5 +1,7 @@
 <script setup>
+import { onMounted, ref } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
+import { addPasskey, passkeysSupported, removePasskey } from '@/Support/passkeys';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
@@ -24,7 +26,46 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  passkeys: {
+    type: Array,
+    default: () => [],
+  },
 });
+
+// Passkeys: Face ID, fingerprint or the computer's own lock signs in to the website without the password.
+const canAddPasskey = ref(false);
+onMounted(() => { canAddPasskey.value = passkeysSupported(); });
+const passkeyName = ref(guessDeviceName());
+const passkeyPassword = ref('');
+const passkeyBusy = ref(false);
+const passkeyError = ref('');
+
+function guessDeviceName() {
+  const agent = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+  if (/iPhone/.test(agent)) return 'iPhone';
+  if (/iPad/.test(agent)) return 'iPad';
+  if (/Android/.test(agent)) return 'Android phone';
+  if (/Mac/.test(agent)) return 'Mac';
+  if (/Windows/.test(agent)) return 'Windows computer';
+  return 'This device';
+}
+
+async function passkeyAction(action) {
+  passkeyBusy.value = true;
+  passkeyError.value = '';
+  try {
+    await action();
+    passkeyPassword.value = '';
+    router.reload({ only: ['passkeys'] });
+  } catch (error) {
+    passkeyError.value = error?.name === 'NotAllowedError' ? 'Cancelled. Nothing was changed.' : error.message;
+  } finally {
+    passkeyBusy.value = false;
+  }
+}
+
+const savePasskey = () => passkeyAction(() => addPasskey(passkeyName.value.trim() || 'This device', passkeyPassword.value));
+const deletePasskey = (passkey) => passkeyAction(() => removePasskey(passkey.id, passkeyPassword.value));
 
 const confirmForm = useForm({
   code: '',
@@ -216,6 +257,33 @@ const generateNewRecoveryCodes = () => {
           </div>
         </div>
 
+      </Card>
+
+      <Card>
+        <form @submit.prevent="savePasskey" class="space-y-4">
+          <div>
+            <h3 class="font-semibold text-slate-900 dark:text-white text-sm">Face ID and fingerprint sign-in</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Sign in to the website with your face, fingerprint or your computer's lock instead of your password. Add each phone or computer you use.
+            </p>
+          </div>
+          <ul v-if="passkeys.length" class="divide-y divide-slate-200 rounded-xl border border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
+            <li v-for="passkey in passkeys" :key="passkey.id" class="flex flex-wrap items-center justify-between gap-2 p-3">
+              <div>
+                <p class="font-medium text-slate-900 dark:text-white">{{ passkey.name }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Added {{ passkey.added }}<template v-if="passkey.last_used"> · last used {{ passkey.last_used }}</template></p>
+              </div>
+              <Button type="button" variant="secondary" size="sm" :disabled="passkeyBusy || !passkeyPassword" @click="deletePasskey(passkey)">Remove</Button>
+            </li>
+          </ul>
+          <p v-if="!canAddPasskey" class="text-sm text-slate-500 dark:text-slate-400">This browser can't use Face ID or fingerprint sign-in.</p>
+          <template v-else>
+            <Input v-model="passkeyName" label="Name for this device" />
+            <Input v-model="passkeyPassword" type="password" label="Your password" hint="Needed to add or remove one." autocomplete="current-password" />
+            <p v-if="passkeyError" class="text-sm text-rose-600 dark:text-rose-400" role="alert">{{ passkeyError }}</p>
+            <Button type="submit" :loading="passkeyBusy" :disabled="!passkeyPassword">Add this device</Button>
+          </template>
+        </form>
       </Card>
 
       <Card>

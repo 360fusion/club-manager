@@ -14,7 +14,9 @@ use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
+use App\Models\User;
 use App\Support\Currencies;
+use App\Support\EmailVerification;
 use App\Support\HealthChecks;
 use App\Support\OpsAlerts;
 use App\Support\ReservedClubSlugs;
@@ -37,6 +39,10 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Cashier\Cashier;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\Events\PasskeyDeleted;
+use Laravel\Passkeys\Events\PasskeyRegistered;
+use Laravel\Passkeys\Passkeys;
 use Laravel\Pennant\Feature;
 use Launchpad\Launchpad;
 use Livewire\Livewire;
@@ -66,6 +72,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // When someone last signed in on this session: turning on Face ID sign-in soon after needs no password again.
         Event::listen(Login::class, fn () => session()->put('auth.signed_in_at', time()));
+        // Adding or removing a passkey needs the password each time, not once for Fortify's three-hour confirmation window.
+        Event::listen([PasskeyRegistered::class, PasskeyDeleted::class], fn () => session()->forget('auth.password_confirmed_at'));
+        // A passkey signs in only who a password could: not a purged account, nor one whose email still needs confirming.
+        Passkeys::authorizeLoginUsing(fn (Request $request, PasskeyUser $user): bool => $user instanceof User && $user->purged_at === null && (! EmailVerification::required() || $user->hasVerifiedEmail()));
 
         // Whoever runs the platform hears when a background job fails, and /up fails when the site cannot work.
         Queue::failing(fn (JobFailed $event) => OpsAlerts::jobFailed($event->job->resolveName(), $event->exception));
@@ -129,6 +139,10 @@ class AppServiceProvider extends ServiceProvider
         ]);
         // Fortify's POST /two-factor-challenge is throttled by this name; FortifyServiceProvider is not registered, so it must exist here.
         RateLimiter::for('two-factor', fn (Request $request) => Limit::perMinute(5)->by((string) $request->session()->get('login.id', $request->ip())));
+        // Fortify's passkey sign-in, confirm and add routes (Face ID or fingerprint on the website).
+        RateLimiter::for('passkeys', fn (Request $request) => [
+            Limit::perMinute(10)->by('passkeys|'.$request->ip()),
+        ]);
         RateLimiter::for('api-token', fn (Request $request) => [
             Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip()),
             // One address trying many accounts (password spraying) is held back too.

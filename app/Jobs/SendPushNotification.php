@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Throwable;
 
 /**
  * Sends one push notification to every phone a person has the app on, and forgets phones
@@ -32,8 +33,13 @@ class SendPushNotification implements ShouldQueue
         $badge = User::find($this->userId)?->unreadNotifications()->count();
 
         PushDevice::where('user_id', $this->userId)->get()->each(function (PushDevice $device) use ($sender, $badge) {
-            if ($sender->send($device, $this->title, $this->body, $this->url, $badge) === PushSender::GONE) {
-                $device->delete();
+            // One device a push service refuses must not stop the others, nor send them repeats on a retry.
+            try {
+                if ($sender->send($device, $this->title, $this->body, $this->url, $badge) === PushSender::GONE) {
+                    $device->delete();
+                }
+            } catch (Throwable $failure) {
+                report($failure);
             }
         });
     }

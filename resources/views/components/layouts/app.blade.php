@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover{{ $inApp ? ', maximum-scale=1' : '' }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ ($title ?? 'Committee') . ' - ClubAdmin' }}</title>
+    @include('partials.web-app-head')
     <script>
         (function () {
             try {
@@ -48,13 +49,11 @@
                 </div>
                 <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
             </div>
-            @if ($inApp)
-                {{-- The app has no browser back button and no tab bar on admin pages: this is the way back to the member area. --}}
-                <a href="{{ route('members.dashboard') }}" class="ml-auto mr-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-slate-200 hover:text-white">
-                    <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                    Member area
-                </a>
-            @endif
+            {{-- The app, and the member area added to a home screen, have no back button and no tab bar on admin pages: this is the way back. --}}
+            <a href="{{ route('members.dashboard') }}" class="ml-auto mr-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-slate-200 hover:text-white">
+                <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                Member area
+            </a>
             <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen.toString()" @click="sidebarOpen = !sidebarOpen" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white cursor-pointer">
                 <svg aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

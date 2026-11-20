@@ -56,8 +56,8 @@ class AccountSecurityTest extends TestCase
 
         $this->actingAs($user)->delete(route('admin.two-factor.disable'))->assertSessionHasErrors('password');
         $this->actingAs($user)->post(route('admin.two-factor.recovery-codes'), ['password' => 'wrong'])->assertSessionHasErrors('password');
-        // Fortify's own route is behind password confirmation too.
-        $this->actingAs($user)->delete('/user/two-factor-authentication')->assertRedirect();
+        // Fortify's own route is closed: the security page is the only way, and it asks for the password each time.
+        $this->actingAs($user)->delete('/user/two-factor-authentication')->assertNotFound();
         $this->assertNotNull($user->fresh()->two_factor_secret);
 
         $this->actingAs($user)->post(route('admin.two-factor.recovery-codes'), ['password' => 'right-password'])

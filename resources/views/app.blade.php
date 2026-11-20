@@ -45,6 +45,7 @@
             @endif
         @else
             <title>{{ config('app.name', 'Laravel') }}</title>
+            @include('partials.web-app-head')
         @endisset
         <script>
             (function () {
