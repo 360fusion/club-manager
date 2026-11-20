@@ -1,0 +1,10 @@
+#!/bin/sh
+# Runs CI's style check before a push, so a Pint failure is caught here instead of in a failed CI run.
+# Turn on once per checkout: git config core.hooksPath .githooks. Skip once: git push --no-verify.
+
+if ! vendor/bin/pint --test --format agent; then
+    echo ""
+    echo "Pint found style issues, so the push was stopped. Fix them with: vendor/bin/pint"
+    echo "Then commit the changes and push again (or push with --no-verify to skip this check)."
+    exit 1
+fi
