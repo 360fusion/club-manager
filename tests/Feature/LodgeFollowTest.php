@@ -314,16 +314,17 @@ class LodgeFollowTest extends TestCase
             ->where('suggested.0.reason', 'Meets at your hall'));
     }
 
-    public function test_my_lodges_finds_lodges_by_name_or_town_and_marks_those_already_followed(): void
+    public function test_my_lodges_finds_lodges_by_name_or_town_but_leaves_out_those_already_followed(): void
     {
-        $this->follow();
         Lodge::factory()->create(['name' => 'Lodge of Industry Chapter Friends', 'masonic_hall_id' => MasonicHall::factory()->create(['town' => 'Hexham'])->id]);
         Lodge::factory()->create(['name' => 'Unrelated Lodge']);
 
         $this->actingAs($this->user)->get(route('members.lodges', ['q' => 'Industry']))->assertInertia(fn ($page) => $page
-            ->has('results', 2)
-            ->where('results', fn ($results) => collect($results)->pluck('following', 'slug')->get('lodge-of-industry-48') === true));
+            ->has('results', 2));
         $this->actingAs($this->user)->get(route('members.lodges', ['q' => 'Gateshead']))->assertInertia(fn ($page) => $page->has('results', 1)->where('results.0.slug', 'lodge-of-industry-48'));
+
+        $this->follow();
+        $this->actingAs($this->user)->get(route('members.lodges', ['q' => 'Industry']))->assertInertia(fn ($page) => $page->has('results', 1)->where('results.0.name', fn ($name) => str_contains($name, 'Chapter Friends')));
         $this->actingAs($this->user)->get(route('members.lodges', ['q' => 'x']))->assertInertia(fn ($page) => $page->has('results', 0));
     }
 }

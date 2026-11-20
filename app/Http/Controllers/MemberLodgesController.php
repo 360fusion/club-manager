@@ -95,18 +95,17 @@ class MemberLodgesController extends Controller
 
         // Find a lodge to follow by its name, number, hall or town, like the directory's own search.
         $search = trim((string) $request->query('q', ''));
-        $followedIds = $user->followedLodges()->pluck('lodges.id')->all();
         $results = mb_strlen($search) < 2 ? collect() : Lodge::listed()
             ->where(fn ($match) => $match->whereLike('name', '%'.$search.'%')->orWhere('number', $search)
                 ->orWhereHas('masonicHall', fn ($hall) => $hall->whereLike('name', '%'.$search.'%')->orWhereLike('town', '%'.$search.'%')))
-            ->whereNotIn('id', $ownClubs->pluck('lodge.id')->filter()->all())
+            // Lodges already followed are listed under Following, and their own lodges above it.
+            ->whereNotIn('id', $skip)
             ->with(['clubType:id,code,name', 'masonicHall:id,name,town'])->orderBy('name')->limit(20)->get()
             ->map(fn (Lodge $lodge) => [
                 'slug' => $lodge->slug,
                 'name' => $lodge->displayName(),
                 // Many lodges share a name: the number and town tell them apart.
                 'detail' => implode(' · ', array_filter([$lodge->clubType?->name, $lodge->number ? 'No. '.$lodge->number : null, $lodge->masonicHall?->town])),
-                'following' => in_array($lodge->id, $followedIds, true),
             ]);
 
         $claims = LodgeClaim::where('user_id', $user->id)

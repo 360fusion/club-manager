@@ -100,15 +100,14 @@ function unfollow(lodge) {
                         <Button type="submit">Find</Button>
                     </form>
                     <p v-if="search && search.length < 2" class="text-sm text-slate-500 dark:text-slate-400">Type at least two letters.</p>
-                    <p v-else-if="search && !results.length" class="text-sm text-slate-500 dark:text-slate-400">No lodge matches "{{ search }}".</p>
+                    <p v-else-if="search && !results.length" class="text-sm text-slate-500 dark:text-slate-400">No lodge you don&apos;t already follow matches "{{ search }}".</p>
                     <ul v-if="results.length" class="divide-y divide-slate-100 dark:divide-slate-800">
                         <li v-for="lodge in results" :key="lodge.slug" class="flex items-center justify-between gap-3 py-2.5">
                             <div class="min-w-0">
                                 <Link :href="route('lodges.show', lodge.slug)" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ lodge.name }}</Link>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.detail }}</p>
                             </div>
-                            <Badge v-if="lodge.following" variant="success">Following</Badge>
-                            <Button v-else size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
+                            <Button size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
                         </li>
                     </ul>
                     <Link :href="route('lodges.index')" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Or browse the directory by area, day and order</Link>
