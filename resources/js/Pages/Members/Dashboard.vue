@@ -63,7 +63,7 @@ const nextBooking = computed(() => props.upNext.find((item) => item.owes && !ite
 // Its dining payment is already the highlighted card, so it is not listed again.
 const attention = computed(() => props.inbox.filter((item) => !(item.kind === 'dining_payment' && item.url === nextBooking.value?.url)));
 
-const subtitle = computed(() => (props.clubs.length === 1 ? props.clubs[0].name : props.clubs.length ? `You belong to ${props.clubs.length} clubs` : 'You are not a member of any club yet'));
+const subtitle = computed(() => (props.clubs.length === 1 ? props.clubs[0].name : props.clubs.length ? `You belong to ${props.clubs.length} lodges` : 'You are not a member of any lodge yet'));
 
 const clubFilter = ref('all');
 const typeFilter = ref('all');
@@ -156,8 +156,8 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
 
             <Card v-if="!clubs.length && !pendingClubs.length">
                 <div class="py-6 text-center">
-                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Find your club</h3>
-                    <p class="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Browse the directory to see public meetings and events, and ask to join a club.</p>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Find your lodge</h3>
+                    <p class="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Browse the directory to see public meetings and events, and ask to join a lodge.</p>
                     <Button class="mt-4" :href="route('directory.index')">Open the directory</Button>
                 </div>
             </Card>
@@ -185,10 +185,10 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
                 </section>
 
                 <section aria-labelledby="feed-heading" class="min-w-0 space-y-2 lg:col-start-1 lg:row-span-2 lg:row-start-1">
-                    <h3 id="feed-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">From your clubs</h3>
+                    <h3 id="feed-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">From your lodges</h3>
 
                     <div v-if="clubs.length > 1" class="flex flex-wrap gap-2">
-                        <button v-for="option in [{ slug: 'all', name: 'All clubs' }, ...clubs]" :key="option.slug" type="button" :class="chip(clubFilter === option.slug)" :aria-pressed="clubFilter === option.slug" @click="clubFilter = option.slug">{{ option.name }}</button>
+                        <button v-for="option in [{ slug: 'all', name: 'All lodges' }, ...clubs]" :key="option.slug" type="button" :class="chip(clubFilter === option.slug)" :aria-pressed="clubFilter === option.slug" @click="clubFilter = option.slug">{{ option.name }}</button>
                     </div>
 
                     <div v-if="feedTypes.length > 1" class="flex flex-wrap gap-2">
@@ -220,13 +220,13 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
                         </ul>
 
                         <Card v-else padding="sm">
-                            <p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your clubs will show up here.' }}</p>
+                            <p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your lodges will show up here.' }}</p>
                         </Card>
                     </Deferred>
                 </section>
 
                 <section aria-labelledby="clubs-heading" class="min-w-0 space-y-2 lg:col-start-2 lg:row-start-2">
-                    <h3 id="clubs-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your clubs</h3>
+                    <h3 id="clubs-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your lodges</h3>
                     <Card padding="none">
                         <ul>
                             <li v-for="club in clubs" :key="club.id" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">

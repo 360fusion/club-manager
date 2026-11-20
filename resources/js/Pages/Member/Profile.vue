@@ -107,7 +107,7 @@ const submitProfile = () => {
         <div class="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between gap-3">
           <div>
             <h3 class="text-base font-semibold text-slate-900 dark:text-white">Member identity and preferences</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Your profile information and preferences for this club.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Your profile information and preferences for this lodge.</p>
           </div>
           <Badge class="capitalize">{{ memberRole }}</Badge>
         </div>

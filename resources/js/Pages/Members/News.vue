@@ -30,7 +30,7 @@ const tags = ref([...(props.filters.tags ?? [])]);
 
 const hasFilters = computed(() => Boolean(search.value || from.value || to.value || club.value || tags.value.length));
 
-const clubSelectOptions = computed(() => [{ value: '', label: 'All clubs' }, ...props.clubOptions.map((option) => ({ value: option.slug, label: option.name }))]);
+const clubSelectOptions = computed(() => [{ value: '', label: 'All lodges' }, ...props.clubOptions.map((option) => ({ value: option.slug, label: option.name }))]);
 
 // Filters live in the query string so a filtered list can be linked to and survives paging.
 const apply = () => {
@@ -127,7 +127,7 @@ const groups = computed(() => {
                     <Input v-model="search" type="search" label="Search" placeholder="Search news…" />
                     <Input v-model="from" type="date" label="From" />
                     <Input v-model="to" type="date" label="To" />
-                    <Select v-if="!urlScoped && clubOptions.length > 1" v-model="club" label="Lodge / club" :options="clubSelectOptions" />
+                    <Select v-if="!urlScoped && clubOptions.length > 1" v-model="club" label="Lodge" :options="clubSelectOptions" />
                 </div>
 
                 <div v-if="tagOptions.length" class="space-y-1.5">

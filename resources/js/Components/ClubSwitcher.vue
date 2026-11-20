@@ -44,13 +44,13 @@ const buttonClasses = computed(() => (props.tone === 'onDark'
             aria-haspopup="listbox"
             @click="open = !open"
         >
-            <span class="truncate">{{ club?.name ?? 'All my clubs' }}</span>
+            <span class="truncate">{{ club?.name ?? 'All my lodges' }}</span>
             <svg class="h-4 w-4 shrink-0 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </button>
 
         <ul v-if="open" role="listbox" class="absolute left-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] space-y-0.5 rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <li>
-                <Link :href="target(null)" role="option" :aria-selected="!club" :class="['block rounded-xl px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800', !club ? 'bg-slate-100 dark:bg-slate-800' : '']" @click="open = false">All my clubs</Link>
+                <Link :href="target(null)" role="option" :aria-selected="!club" :class="['block rounded-xl px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800', !club ? 'bg-slate-100 dark:bg-slate-800' : '']" @click="open = false">All my lodges</Link>
             </li>
             <li v-for="option in clubs" :key="option.id">
                 <Link :href="target(option.slug)" role="option" :aria-selected="option.slug === slug" :class="['flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800', option.slug === slug ? 'bg-slate-100 dark:bg-slate-800' : '']" @click="open = false">

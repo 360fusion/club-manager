@@ -137,7 +137,7 @@ const iconSize = computed(() => (isPhone.value ? 20 : 16));
                 </div>
 
                 <div v-if="adminClubs.length" class="border-t border-slate-100 pt-1 dark:border-slate-800">
-                    <p :class="heading">{{ adminClubs.length === 1 ? (isPhone ? 'Lodge admin' : 'Club admin') : 'Clubs you administer' }}</p>
+                    <p :class="heading">{{ adminClubs.length === 1 ? 'Lodge admin' : 'Lodges you administer' }}</p>
                     <Link v-for="club in adminClubs" :key="club.id" :href="adminHref(club)" role="menuitem" :class="['flex items-center justify-between gap-3 rounded-xl px-3 font-semibold text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-800', isPhone ? 'min-h-11 py-2 text-[15px]' : 'py-2 text-xs']" @click="close">
                         <span class="flex min-w-0 items-center gap-3">
                             <span :class="['h-2.5 w-2.5 shrink-0 rounded-full', orderColour(club.colour).dot]" aria-hidden="true" />

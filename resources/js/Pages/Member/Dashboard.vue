@@ -252,7 +252,7 @@ const openMeetingRsvpModal = (meeting) => {
         <Card>
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="mail" class="text-slate-500 dark:text-slate-400" /> Club broadcasts</h3>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2"><UiIcon name="mail" class="text-slate-500 dark:text-slate-400" /> Lodge broadcasts</h3>
               <Badge>Live feed</Badge>
             </div>
           </template>

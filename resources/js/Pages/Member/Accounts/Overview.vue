@@ -80,7 +80,7 @@ const overline = 'text-[11px] font-bold uppercase tracking-wider text-slate-500 
 
             <p class="text-xs text-slate-500 dark:text-slate-400">
                 The full accounts, reconciling and reports are in
-                <Link :href="route('admin.accounting.index', { clubSlug: club.slug })" class="text-blue-600 hover:underline dark:text-blue-400">the club admin</Link>.
+                <Link :href="route('admin.accounting.index', { clubSlug: club.slug })" class="text-blue-600 hover:underline dark:text-blue-400">the lodge admin</Link>.
             </p>
         </div>
     </MembersLayout>

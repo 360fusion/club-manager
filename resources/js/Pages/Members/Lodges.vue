@@ -91,39 +91,6 @@ function unfollow(lodge) {
                 </div>
             </div>
 
-            <section class="space-y-3" aria-labelledby="find-heading">
-                <Card class="space-y-3">
-                    <h2 id="find-heading" class="text-base font-semibold text-slate-900 dark:text-white">Find a lodge to follow</h2>
-                    <form class="flex gap-2" role="search" @submit.prevent="find">
-                        <label for="lodge-search" class="sr-only">Lodge name, number, hall or town</label>
-                        <input id="lodge-search" v-model="query" type="search" enterkeyhint="search" autocomplete="off" placeholder="Name, number, hall or town" class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
-                        <Button type="submit">Find</Button>
-                    </form>
-                    <p v-if="search && search.length < 2" class="text-sm text-slate-500 dark:text-slate-400">Type at least two letters.</p>
-                    <p v-else-if="search && !results.length" class="text-sm text-slate-500 dark:text-slate-400">No lodge you don&apos;t already follow matches "{{ search }}".</p>
-                    <ul v-if="results.length" class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <li v-for="lodge in results" :key="lodge.slug" class="flex items-center justify-between gap-3 py-2.5">
-                            <div class="min-w-0">
-                                <Link :href="route('lodges.show', lodge.slug)" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ lodge.name }}</Link>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.detail }}</p>
-                            </div>
-                            <Button size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
-                        </li>
-                    </ul>
-                    <Link :href="route('lodges.index')" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Or browse the directory by area, day and order</Link>
-                </Card>
-            </section>
-
-            <Card v-if="province">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <p class="text-sm text-slate-600 dark:text-slate-300">You look after the listings for {{ province.names.join(', ') }}. <strong>{{ province.waiting }}</strong> suggested {{ province.waiting === 1 ? 'fix is' : 'fixes are' }} waiting.</p>
-                    <div class="flex flex-wrap gap-2">
-                        <Link :href="route('members.lodges.fixes.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Review suggested fixes</Link>
-                        <Link :href="route('members.lodges.directory.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit lodge listings</Link>
-                    </div>
-                </div>
-            </Card>
-
             <section v-if="own.length" class="space-y-2" aria-labelledby="own-heading">
                 <h2 id="own-heading" class="text-lg font-semibold text-slate-900 dark:text-white">Your lodges</h2>
                 <ul class="grid gap-3 md:grid-cols-2">
@@ -137,6 +104,16 @@ function unfollow(lodge) {
                     </li>
                 </ul>
             </section>
+
+            <Card v-if="province">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-slate-600 dark:text-slate-300">You look after the listings for {{ province.names.join(', ') }}. <strong>{{ province.waiting }}</strong> suggested {{ province.waiting === 1 ? 'fix is' : 'fixes are' }} waiting.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <Link :href="route('members.lodges.fixes.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Review suggested fixes</Link>
+                        <Link :href="route('members.lodges.directory.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit lodge listings</Link>
+                    </div>
+                </div>
+            </Card>
 
             <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Following</h2>
 
@@ -171,6 +148,29 @@ function unfollow(lodge) {
                     </div>
                 </li>
             </ul>
+
+            <section class="space-y-3" aria-labelledby="find-heading">
+                <Card class="space-y-3">
+                    <h2 id="find-heading" class="text-base font-semibold text-slate-900 dark:text-white">Find a lodge to follow</h2>
+                    <form class="flex gap-2" role="search" @submit.prevent="find">
+                        <label for="lodge-search" class="sr-only">Lodge name, number, hall or town</label>
+                        <input id="lodge-search" v-model="query" type="search" enterkeyhint="search" autocomplete="off" placeholder="Name, number, hall or town" class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        <Button type="submit">Find</Button>
+                    </form>
+                    <p v-if="search && search.length < 2" class="text-sm text-slate-500 dark:text-slate-400">Type at least two letters.</p>
+                    <p v-else-if="search && !results.length" class="text-sm text-slate-500 dark:text-slate-400">No lodge you don&apos;t already follow matches "{{ search }}".</p>
+                    <ul v-if="results.length" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <li v-for="lodge in results" :key="lodge.slug" class="flex items-center justify-between gap-3 py-2.5">
+                            <div class="min-w-0">
+                                <Link :href="route('lodges.show', lodge.slug)" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ lodge.name }}</Link>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.detail }}</p>
+                            </div>
+                            <Button size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
+                        </li>
+                    </ul>
+                    <Link :href="route('lodges.index')" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Or browse the directory by area, day and order</Link>
+                </Card>
+            </section>
 
             <section v-if="suggested.length" class="space-y-2" aria-labelledby="suggested-heading">
                 <div>

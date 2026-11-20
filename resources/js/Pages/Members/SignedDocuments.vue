@@ -30,7 +30,7 @@ defineProps({
                     </li>
                 </ul>
             </Card>
-            <Card v-else><p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">You haven't signed anything yet. Anything you sign, in any of your clubs, will show up here with a downloadable copy.</p></Card>
+            <Card v-else><p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">You haven't signed anything yet. Anything you sign, in any of your lodges, will show up here with a downloadable copy.</p></Card>
 
             <div v-if="documents.prev_page_url || documents.next_page_url" class="flex justify-between">
                 <Link v-if="documents.prev_page_url" :href="documents.prev_page_url" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">← Newer</Link><span v-else />
