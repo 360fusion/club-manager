@@ -268,6 +268,11 @@ export async function startNativeApp(firstPage) {
 
     PushNotifications.addListener('registration', ({ value }) => saveToken(value));
 
+    // The server names this channel on every Android push (PushSender::ANDROID_CHANNEL); creating it again only renames it.
+    if (isAndroidApp) {
+        await PushNotifications.createChannel({ id: 'club_notices', name: 'Club notices', description: 'Meetings, events, payments and messages from your clubs', importance: 4 }).catch(() => {});
+    }
+
     let { receive } = await PushNotifications.checkPermissions();
     if (receive === 'prompt' || receive === 'prompt-with-rationale') {
         ({ receive } = await PushNotifications.requestPermissions());

@@ -33,5 +33,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="FCM_CREDENTIALS_PATH" value=""/>
+        <env name="APNS_KEY_PATH" value=""/>
     </php>
 </phpunit>

@@ -22,6 +22,9 @@ class PushSender
     /** The phone no longer has the app (or the token is wrong): forget the device. */
     public const GONE = 'gone';
 
+    /** The Android notification channel the app creates at start-up (nativeApp.js), so phones list "Club notices" instead of a generic one. */
+    public const ANDROID_CHANNEL = 'club_notices';
+
     /**
      * @return self::SENT|self::SKIPPED|self::GONE
      */
@@ -71,10 +74,10 @@ class PushSender
                 'message' => [
                     'token' => $token,
                     'notification' => ['title' => $title, 'body' => $body],
-                    // Both left out when empty: FCM wants an object, and an empty PHP array is sent as [].
+                    // Left out when empty: FCM wants an object, and an empty PHP array is sent as [].
                     ...($url ? ['data' => ['url' => $url]] : []),
-                    // Launchers that show a count on the icon use this one.
-                    ...($badge ? ['android' => ['notification' => ['notification_count' => $badge]]] : []),
+                    // notification_count is what launchers that show a count on the icon use.
+                    'android' => ['notification' => ['channel_id' => self::ANDROID_CHANNEL, ...($badge ? ['notification_count' => $badge] : [])]],
                 ],
             ]);
 

@@ -200,7 +200,7 @@ class NativeAppTest extends TestCase
         $this->assertModelMissing($device);
     }
 
-    public function test_an_android_push_without_a_link_or_unread_count_sends_no_empty_fields(): void
+    public function test_an_android_push_without_a_link_or_unread_count_sends_no_empty_fields_and_names_its_channel(): void
     {
         $this->configureFcm();
         $device = PushDevice::factory()->android()->create();
@@ -211,7 +211,7 @@ class NativeAppTest extends TestCase
         // FCM wants objects for these; an empty PHP array would be sent as [] and refused.
         Http::assertSent(fn (Request $request) => str_contains($request->url(), 'messages:send')
             && ! array_key_exists('data', $request['message'])
-            && ! array_key_exists('android', $request['message']));
+            && $request['message']['android'] === ['notification' => ['channel_id' => PushSender::ANDROID_CHANNEL]]);
     }
 
     public function test_a_member_can_stop_some_kinds_of_notification_reaching_their_phone(): void
