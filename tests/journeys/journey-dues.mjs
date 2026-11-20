@@ -65,13 +65,11 @@ await step(treasurer, 'd5', async () => {
     await tap(treasurer, 'Import 1 line');
     await settle(treasurer, 1200);
 });
-await go(treasurer, '/lodge-of-fraternity/admin/reconciliation-workspace');
+// Importing goes straight on to matching the new lines.
 await step(treasurer, 'd6', async () => {
-    await caption(treasurer, 'WBro Jordan Lee, Treasurer', 'The £180 is matched to Bro Thomas\'s dues by the reference on his invoice.', 2600);
-    await scrollTo(treasurer, 'Reconcile and mark paid');
-    await pause(1200);
-    await tap(treasurer, 'Reconcile and mark paid');
-    await settle(treasurer, 1500);
+    await caption(treasurer, 'WBro Jordan Lee, Treasurer', 'Straight on to matching: the £180 is Bro Thomas\'s dues, by the reference on his invoice.', 2800);
+    await tap(treasurer, 'Confirm');
+    await settle(treasurer, 1200);
 });
 await go(treasurer, '/members/lodge-of-fraternity/accounts/dues');
 await step(treasurer, 'd7', async () => {

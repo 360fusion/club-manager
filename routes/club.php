@@ -602,6 +602,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/accounts/dues', [MemberAccountsController::class, 'dues'])->name('member.accounts.dues');
     Route::post('/members/{slug}/accounts/dues/reminders', [MemberAccountsController::class, 'duesReminders'])->middleware('throttle:20,1')->name('member.accounts.dues.reminders');
     Route::get('/members/{slug}/accounts/import', [MemberAccountsController::class, 'import'])->name('member.accounts.import');
+    Route::get('/members/{slug}/accounts/match', [MemberAccountsController::class, 'match'])->name('member.accounts.match');
+    Route::post('/members/{slug}/accounts/match/all', [MemberAccountsController::class, 'confirmAllMatches'])->middleware('throttle:20,1')->name('member.accounts.match.all');
+    Route::post('/members/{slug}/accounts/match/{id}', [MemberAccountsController::class, 'confirmMatch'])->whereNumber('id')->middleware('throttle:60,1')->name('member.accounts.match.confirm');
     Route::post('/members/{slug}/accounts/import', [MemberAccountsController::class, 'preview'])->middleware('throttle:20,1')->name('member.accounts.import.preview');
     Route::post('/members/{slug}/accounts/import/confirm', [MemberAccountsController::class, 'store'])->middleware('throttle:20,1')->name('member.accounts.import.store');
     Route::get('/members/{slug}/meetings/{id}/collections', [MeetingCollectionController::class, 'show'])->whereNumber('id')->name('member.meetings.collections');

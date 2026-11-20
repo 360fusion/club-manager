@@ -9,6 +9,7 @@ import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
+import { useClipboard } from '@/Composables/useClipboard';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -24,10 +25,19 @@ const props = defineProps({
   takesBank: { type: Boolean, default: false },
   canRecordCollections: { type: Boolean, default: false },
   saidPaidAt: { type: String, default: null },
+  paymentReference: { type: String, default: '' },
   charityGrants: { type: Array, default: () => [] },
 });
 
 const overline = 'text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+
+// Each bank detail copies on its own, so it can be pasted into a banking app.
+const { copied, copy } = useClipboard();
+const bankLines = computed(() => [
+  ['Sort code', props.meeting.bank_sort_code],
+  ['Account number', props.meeting.bank_account_number],
+  ['Your reference', props.paymentReference],
+].filter(([, value]) => value));
 
 const showRsvpModal = ref(false);
 // The modal starts on this answer ("Book dinner" opens it on dining); the saved reply is otherwise kept.
@@ -210,11 +220,16 @@ const grantStatusLabel = (grantStatus) => {
           <Badge v-else-if="userRsvp?.payment_status === 'waived'" variant="info">Waived</Badge>
           <Badge v-else variant="warning">Unpaid</Badge>
         </div>
-        <div class="grid grid-cols-1 gap-2 font-mono text-xs text-slate-700 dark:text-slate-200 sm:grid-cols-3">
-          <div>Sort code: <strong class="text-slate-900 dark:text-white">{{ meeting.bank_sort_code }}</strong></div>
-          <div>Account no: <strong class="text-slate-900 dark:text-white">{{ meeting.bank_account_number }}</strong></div>
-          <div>Reference prefix: <strong class="text-blue-600 dark:text-blue-400">{{ meeting.payment_reference_prefix || 'SUMMONS' }}</strong></div>
-        </div>
+        <dl class="divide-y divide-slate-100 dark:divide-slate-800">
+          <div v-for="[label, value] in bankLines" :key="label" class="flex items-center justify-between gap-3 py-2">
+            <div class="min-w-0">
+              <dt class="text-xs text-slate-500 dark:text-slate-400">{{ label }}</dt>
+              <dd class="break-all font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ value }}</dd>
+            </div>
+            <Button variant="secondary" size="sm" :aria-label="`Copy ${label.toLowerCase()}`" @click="copy(value)">{{ copied === value ? 'Copied' : 'Copy' }}</Button>
+          </div>
+        </dl>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Use your reference exactly, so the Treasurer can match your payment.</p>
       </Card>
 
       <!-- For the Charity Steward, Almoner, Treasurer or Secretary: the counted money on the night -->

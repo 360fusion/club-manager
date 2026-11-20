@@ -44,7 +44,8 @@ const overline = 'text-[11px] font-bold uppercase tracking-wider text-slate-500 
             <section class="space-y-2" aria-labelledby="todo-heading">
                 <h3 id="todo-heading" :class="overline">To do</h3>
                 <Card padding="none" class="divide-y divide-slate-100 text-sm dark:divide-slate-800">
-                    <div class="flex items-center justify-between gap-3 px-4 py-3"><span>Bank lines to reconcile</span><strong class="tabular-nums">{{ overview.todo.unreconciled }}</strong></div>
+                    <Link v-if="canImport" :href="route('member.accounts.match', { slug: club.slug })" class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60"><span class="text-blue-600 dark:text-blue-400">Bank lines to reconcile</span><strong class="tabular-nums">{{ overview.todo.unreconciled }}</strong></Link>
+                    <div v-else class="flex items-center justify-between gap-3 px-4 py-3"><span>Bank lines to reconcile</span><strong class="tabular-nums">{{ overview.todo.unreconciled }}</strong></div>
                     <div class="flex items-center justify-between gap-3 px-4 py-3"><span>Bills waiting for approval</span><strong class="tabular-nums">{{ overview.todo.bills_to_approve.count }} · {{ overview.todo.bills_to_approve.total }}</strong></div>
                     <div class="flex items-center justify-between gap-3 px-4 py-3"><span>Bills to pay</span><strong class="tabular-nums">{{ overview.todo.bills_to_pay.count }} · {{ overview.todo.bills_to_pay.total }}</strong></div>
                     <div v-if="overview.todo.awaiting_banking" class="flex items-center justify-between gap-3 px-4 py-3"><span>Alms and raffle cash to pay in</span><strong class="tabular-nums">{{ overview.todo.awaiting_banking }}</strong></div>

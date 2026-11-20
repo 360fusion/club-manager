@@ -219,7 +219,7 @@ class BankReconciliationWorkspace extends Component
             'unmatchedCount' => $unmatchedCount,
             'reconciledCount' => $reconciledCount,
         ])->layout('components.layouts.app', [
-            'title' => 'Bank Reconciliation Workspace — '.$club->name,
+            'title' => 'Bank reconciliation',
             'club' => $club,
         ]);
     }

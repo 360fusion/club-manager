@@ -24,6 +24,7 @@ use App\Services\Meetings\MeetingReplies;
 use App\Support\Currencies;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BankReconciliationMatcherService
 {
@@ -771,6 +772,30 @@ class BankReconciliationMatcherService
         $sure = array_values(array_filter($this->suggestMatches($transaction), fn (array $match) => $match['confidence_score'] >= 100 && in_array($match['match_type'], self::EXACT_MATCH_TYPES, true)));
 
         return count($sure) === 1 ? $sure[0] : null;
+    }
+
+    /**
+     * Confirms every unreconciled line of the club that has one certain match (exactMatch), oldest first. A line that a
+     * closed period or the booking itself refuses is left for the Treasurer to look at.
+     */
+    public function confirmExactMatches(Club $club): int
+    {
+        $done = 0;
+
+        foreach (BankTransaction::where('club_id', $club->id)->where('status', BankTransactionStatus::Unmatched->value)->orderBy('transaction_date')->get() as $transaction) {
+            // Worked out line by line: a line confirmed above may have paid what the next line would have matched.
+            if (! $match = $this->exactMatch($transaction)) {
+                continue;
+            }
+
+            try {
+                $done += $this->reconcileTransaction($transaction, $match['match_type'], $match['target_id']) ? 1 : 0;
+            } catch (LedgerRuleException|ValidationException) {
+                // Left on the list.
+            }
+        }
+
+        return $done;
     }
 
     /**

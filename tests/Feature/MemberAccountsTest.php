@@ -106,7 +106,7 @@ class MemberAccountsTest extends TestCase
             return $page->where('preview.new_count', 1)->where('preview.duplicate_count', 1)->where('preview.money_out', '£120.00')->where('preview.lines.0.duplicate', true);
         });
 
-        $this->post(route('member.accounts.import.store', ['slug' => $this->club->slug]), ['token' => $token])->assertSessionHas('success', '1 new line imported, ready to reconcile.');
+        $this->post(route('member.accounts.import.store', ['slug' => $this->club->slug]), ['token' => $token])->assertRedirect(route('member.accounts.match', ['slug' => $this->club->slug]))->assertSessionHas('success', '1 new line imported.');
         $this->assertSame(2, BankTransaction::count());
         $this->assertSame($this->bank->id, BankTransaction::latest('id')->first()->bank_account_id);
 

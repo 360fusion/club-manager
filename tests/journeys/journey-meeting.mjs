@@ -107,15 +107,12 @@ await step(treasurer, 'm8', async () => {
     await tap(treasurer, 'Import 2 lines');
     await settle(treasurer, 1200);
 });
-await go(treasurer, '/lodge-of-fraternity/admin/reconciliation-workspace');
-console.log(await treasurer.evaluate(() => { const b = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('Reconcile and mark paid')); return b?.closest('div.rounded-2xl,div.rounded-xl,li,article')?.innerText.replace(/\s+/g, ' ').slice(0, 400); }));
+// Importing goes straight on to matching the new lines.
 await step(treasurer, 'm9', async () => {
-    await caption(treasurer, 'WBro Jordan Lee, Treasurer', 'The app has matched the £32 to Bro Thomas\'s dining by its reference.', 2600);
-    await scrollTo(treasurer, 'Reconcile and mark paid');
-    await pause(1500);
-    await tap(treasurer, 'Reconcile and mark paid');
-    await settle(treasurer, 1500);
-    await caption(treasurer, 'WBro Jordan Lee, Treasurer', 'One tap: reconciled, the books updated, and the dining marked paid.', 2600);
+    await caption(treasurer, 'WBro Jordan Lee, Treasurer', 'Straight on to matching: the £32 is Bro Thomas\'s dining, by its reference and amount.', 2800);
+    await tap(treasurer, 'Confirm');
+    await settle(treasurer, 1200);
+    await caption(treasurer, 'WBro Jordan Lee, Treasurer', 'One tap: in the books, and his dining marked paid. The shop bill he matches by hand.', 2800);
 });
 
 await go(tom, `/members/lodge-of-fraternity/meetings/${meetingId}/summons`);
@@ -125,8 +122,6 @@ await step(tom, 'm10', async () => {
 });
 
 await title('m11', 'Done', 'Summons out, replies in, dining paid and in the books. Nobody chased anybody.');
-console.log('treasurer at', treasurer.url());
-console.log(await treasurer.evaluate(() => [...document.querySelectorAll('button,a,label')].map((e) => e.innerText.trim().replace(/\s+/g, ' ')).filter(Boolean).slice(14).join(' | ')));
 
 if (!DRY) console.log('video', join(files, `${OUT}/meeting-to-bank.mp4`));
 await browser.close();

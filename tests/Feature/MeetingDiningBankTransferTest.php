@@ -116,6 +116,18 @@ class MeetingDiningBankTransferTest extends TestCase
         $this->post($saidPaidUrl.'x')->assertForbidden();
     }
 
+    public function test_the_member_is_shown_their_own_full_reference_to_pay_with(): void
+    {
+        $this->meeting->update(['payment_reference_prefix' => 'XMAS']);
+        $this->reply->update(['payment_reference' => null]);
+        $reference = 'XMAS-'.$this->meeting->id.'-HARTLEY';
+
+        $this->actingAs($this->tom)->get(route('member.meetings.summons', [$this->club->slug, $this->meeting->id]))
+            ->assertInertia(fn ($page) => $page->where('paymentReference', $reference));
+        $this->get(app(MeetingReplies::class)->replyUrl($this->meeting, $this->reply))
+            ->assertInertia(fn ($page) => $page->where('rsvp.payment_reference', $reference));
+    }
+
     public function test_saying_paid_needs_bank_details_on_the_meeting_and_something_owed(): void
     {
         $this->meeting->update(['bank_sort_code' => null, 'bank_account_number' => null]);

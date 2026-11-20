@@ -379,14 +379,15 @@ provide('layoutHasHeading', true);
     <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto flex flex-col min-w-0 focus:outline-none">
       
       <!-- Top Title Bar -->
-      <header class="bg-white border-b border-slate-200 px-6 md:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
-        <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight dark:text-white">{{ title }}</h1>
-          <p class="text-xs text-slate-500 font-medium mt-0.5 dark:text-slate-400">Managing {{ clubName }}</p>
+      <!-- On a phone one compact row (title, bell, account), so the page itself starts near the top of the screen. -->
+      <header class="bg-white border-b border-slate-200 px-4 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+        <div class="min-w-0">
+          <h1 class="truncate text-lg sm:text-2xl font-black text-slate-900 tracking-tight dark:text-white">{{ title }}</h1>
+          <p class="hidden sm:block text-xs text-slate-500 font-medium mt-0.5 dark:text-slate-400">Managing {{ clubName }}</p>
         </div>
 
         <!-- Quick Actions & User Profile Dropdown -->
-        <div class="flex items-center gap-3">
+        <div class="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link :href="route('member.dashboard', clubSlug)" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 dark:border-emerald-800/60 dark:text-emerald-300">
             <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />

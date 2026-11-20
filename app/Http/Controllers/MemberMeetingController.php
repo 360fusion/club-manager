@@ -83,6 +83,8 @@ class MemberMeetingController extends Controller
             'owed' => $userRsvp && ($owed = MeetingReplies::owed($meeting, $userRsvp)['amount']) > 0 ? Currencies::format($owed, $club) : null,
             'payWith' => $userRsvp ? app(MeetingDiningPayment::class)->providers($userRsvp->setRelation('meeting', $meeting)) : [],
             'takesBank' => MeetingDiningPayment::takesBank($meeting),
+            // The member's own reference: the one the Treasurer's bank matching looks for (BankReconciliationMatcherService).
+            'paymentReference' => $userRsvp?->payment_reference ?: MeetingReplies::paymentReference($meeting, $user),
             'canRecordCollections' => MeetingCollections::canRecord($user, $club),
             'saidPaidAt' => $userRsvp?->said_paid_at?->format('j M Y'),
             'charityGrants' => $charityGrants,

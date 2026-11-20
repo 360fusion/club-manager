@@ -200,7 +200,12 @@ class PasswordlessRsvpController extends Controller
             'club' => ['name' => $club->name],
             'user' => ['name' => $user->name],
             'meeting' => $meeting->only(['id', 'title', 'meeting_date', 'starts_at', 'rehearsal_starts_at', 'venue', 'dress_code', 'dining_cost_member', 'bank_sort_code', 'bank_account_number', 'payment_link']),
-            'rsvp' => [...$rsvp->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_reference', 'payment_status']), 'guests' => MeetingReplies::listedGuests($rsvp)],
+            'rsvp' => [
+                ...$rsvp->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_status']),
+                // The reference the Treasurer's bank matching looks for, before the member has replied too.
+                'payment_reference' => $rsvp->payment_reference ?: MeetingReplies::paymentReference($meeting, $user),
+                'guests' => MeetingReplies::listedGuests($rsvp),
+            ],
             'owed' => $owed['amount'] > 0 ? Currencies::format($owed['amount'], $club) : null,
             'payWith' => $payments->providers($rsvp),
             'isCutoffPassed' => $meeting->rsvpClosed(),

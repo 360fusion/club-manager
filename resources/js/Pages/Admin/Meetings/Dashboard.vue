@@ -238,7 +238,50 @@ const isPastMeeting = computed(() => {
             </button>
           </div>
 
-          <div class="overflow-x-auto">
+          <!-- On a phone each reply is a card: the tables below need a wider screen. -->
+          <ul v-if="activeTab === 'visitors'" class="divide-y divide-slate-100 text-sm md:hidden dark:divide-slate-800">
+            <li v-for="v in visitorsList" :key="v.id" class="space-y-1.5 py-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="font-medium text-slate-900 dark:text-white"><span v-if="v.rank" class="mr-1 font-normal text-slate-500 dark:text-slate-400">{{ v.rank }}</span>{{ v.name }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ v.home_club_info || 'Visitor' }}</p>
+                </div>
+                <Button variant="secondary" size="sm" @click="openManualRsvpModal(v.id)">Edit</Button>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <Badge v-if="v.attendance_status === 'attending_dining'" variant="success">Attending (dining)</Badge>
+                <Badge v-else-if="v.attendance_status === 'attending_meeting_only'" variant="info">Attending (meeting only)</Badge>
+                <Badge v-else-if="v.attendance_status === 'apologies'" variant="danger">Apologies received</Badge>
+                <Badge v-else-if="v.summons_sent" variant="info">Summons sent</Badge>
+                <Badge v-else>Registered visitor</Badge>
+                <button v-if="v.attendance_status === 'attending_dining'" type="button" class="cursor-pointer rounded-full" @click="setPaymentStatus(v.id, v.payment_status === 'paid' ? 'unpaid' : 'paid')">
+                  <Badge :variant="paymentBadge(v.payment_status)[0]">{{ paymentBadge(v.payment_status)[1] }}</Badge>
+                </button>
+              </div>
+              <p v-if="v.dietary_notes" class="text-xs text-slate-600 dark:text-slate-300">Dietary: {{ v.dietary_notes }}</p>
+            </li>
+            <li v-if="!visitorsList?.length" class="py-6 text-center text-slate-500 dark:text-slate-400">No visitors have registered for this club yet.</li>
+          </ul>
+          <ul v-else class="divide-y divide-slate-100 text-sm md:hidden dark:divide-slate-800">
+            <li v-for="r in filteredRsvps" :key="r.id" class="space-y-1.5 py-3">
+              <div class="flex items-start justify-between gap-2">
+                <p class="min-w-0 font-medium text-slate-900 dark:text-white">{{ r.user ? r.user.name : 'Member' }}</p>
+                <Button variant="secondary" size="sm" @click="openManualRsvpModal(r.user_id)">Edit</Button>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <Badge :variant="attendanceVariant(r.attendance_status)">{{ ATTENDANCE_LABELS[r.attendance_status] || (r.attendance_status ? r.attendance_status.replace('_', ' ') : 'Awaiting') }}</Badge>
+                <button v-if="r.attendance_status === 'attending_dining' || r.guests?.some(g => g.attending_dining)" type="button" class="cursor-pointer rounded-full" @click="setPaymentStatus(r.user_id, r.payment_status === 'paid' ? 'unpaid' : 'paid')">
+                  <Badge :variant="paymentBadge(r.payment_status)[0]">{{ paymentBadge(r.payment_status)[1] }}</Badge>
+                </button>
+                <span v-if="r.payment_reference" class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ r.payment_reference }}</span>
+              </div>
+              <p v-if="r.dietary_requirements" class="text-xs text-slate-600 dark:text-slate-300">Dietary: {{ r.dietary_requirements }}</p>
+              <p v-if="r.guests?.length" class="text-xs text-slate-600 dark:text-slate-300">Guests: {{ r.guests.map((g) => g.guest_name).join(', ') }}</p>
+            </li>
+            <li v-if="!filteredRsvps?.length" class="py-6 text-center text-slate-500 dark:text-slate-400">No member responses in this filter.</li>
+          </ul>
+
+          <div class="hidden overflow-x-auto md:block">
             <table v-if="activeTab === 'visitors'" class="w-full text-left text-sm text-slate-700 dark:text-slate-200">
               <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                 <tr>
