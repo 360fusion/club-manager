@@ -138,24 +138,7 @@ function unfollow(lodge) {
                 </ul>
             </section>
 
-            <section v-if="suggested.length" class="space-y-2" aria-labelledby="suggested-heading">
-                <div>
-                    <h2 id="suggested-heading" class="text-lg font-semibold text-slate-900 dark:text-white">Lodges you might follow</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">From your hall and your lodges' sister and visiting lists. Following puts their meeting dates in your calendar.</p>
-                </div>
-                <ul class="grid gap-3 md:grid-cols-2">
-                    <li v-for="lodge in suggested" :key="lodge.slug" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-                        <div class="min-w-0">
-                            <Link :href="route('lodges.show', lodge.slug)" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ lodge.name }}</Link>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.reason }}<template v-if="lodge.order"> · {{ lodge.order }}</template></p>
-                            <p v-if="lodge.meets_text" class="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{{ lodge.meets_text }}</p>
-                        </div>
-                        <Button size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
-                    </li>
-                </ul>
-            </section>
-
-            <h2 v-if="own.length || suggested.length" class="text-lg font-semibold text-slate-900 dark:text-white">Following</h2>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Following</h2>
 
             <Card v-if="!lodges.length">
                 <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -188,6 +171,23 @@ function unfollow(lodge) {
                     </div>
                 </li>
             </ul>
+
+            <section v-if="suggested.length" class="space-y-2" aria-labelledby="suggested-heading">
+                <div>
+                    <h2 id="suggested-heading" class="text-lg font-semibold text-slate-900 dark:text-white">Lodges you might follow</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">From your hall and your lodges' sister and visiting lists. Following puts their meeting dates in your calendar.</p>
+                </div>
+                <ul class="grid gap-3 md:grid-cols-2">
+                    <li v-for="lodge in suggested" :key="lodge.slug" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <div class="min-w-0">
+                            <Link :href="route('lodges.show', lodge.slug)" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ lodge.name }}</Link>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.reason }}<template v-if="lodge.order"> · {{ lodge.order }}</template></p>
+                            <p v-if="lodge.meets_text" class="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{{ lodge.meets_text }}</p>
+                        </div>
+                        <Button size="sm" class="min-w-20 shrink-0" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
+                    </li>
+                </ul>
+            </section>
 
             <section class="space-y-3" aria-labelledby="visits-heading">
                 <div>
