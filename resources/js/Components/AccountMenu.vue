@@ -65,9 +65,6 @@ const account = computed(() => [
     { label: 'Password and 2FA', href: route('admin.profile.two-factor'), icon: 'lock' },
     // Already under "Go to" on a phone when the members area lists it.
     { label: 'Email subscriptions', href: route('portal.subscriptions'), icon: 'mail', hide: isPhone.value && listsSubscriptions.value },
-    { label: 'Data and privacy', href: route('account.privacy'), icon: 'shield' },
-    // A developer setting: on a phone it is reached from Data and privacy.
-    { label: 'API tokens', href: route('account.tokens.index'), icon: 'key', hide: isPhone.value },
 ].filter((item) => !item.hide));
 
 const buttonClasses = computed(() => (props.tone === 'onDark'

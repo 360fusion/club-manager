@@ -295,4 +295,22 @@ class LodgeFollowTest extends TestCase
                 ->assertInertia(fn ($page) => $page->where('items', fn ($items) => collect($items)->where('type', 'meeting')->contains(fn ($item) => str_starts_with($item['start'], $month) && $item['installation'] === $expected)));
         }
     }
+
+    public function test_my_lodges_shows_your_own_lodge_and_suggests_the_others_in_its_hall_to_follow(): void
+    {
+        $club = Club::factory()->create(['name' => 'Home Lodge']);
+        $this->user->clubs()->attach($club->id, ['role' => 'member', 'status' => 'active']);
+        $this->lodge->forceFill(['club_id' => $club->id])->save();
+        $followed = Lodge::factory()->create(['name' => 'Followed Lodge', 'masonic_hall_id' => $this->lodge->masonic_hall_id]);
+        $this->follow(lodge: $followed);
+        Lodge::factory()->create(['name' => 'Hall Neighbour Lodge', 'masonic_hall_id' => $this->lodge->masonic_hall_id]);
+        Lodge::factory()->create(['name' => 'Far Away Lodge', 'masonic_hall_id' => MasonicHall::factory()->create()->id]);
+
+        $this->actingAs($this->user)->get(route('members.lodges'))->assertInertia(fn ($page) => $page
+            ->where('own.0.slug', $club->slug)
+            ->where('own.0.hall.name', 'Gateshead Masonic Hall')
+            ->has('suggested', 1)
+            ->where('suggested.0.name', fn ($name) => str_contains($name, 'Hall Neighbour'))
+            ->where('suggested.0.reason', 'Meets at your hall'));
+    }
 }

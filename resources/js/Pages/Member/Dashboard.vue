@@ -261,7 +261,7 @@ const openMeetingRsvpModal = (meeting) => {
             <div v-for="item in newsletters" :key="item.id" @click="selectedNewsletter = item" class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1 cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
               <div class="text-[11px] text-slate-500 dark:text-slate-400">Sent {{ item.sent_at }}</div>
               <div class="text-sm font-medium text-slate-900 dark:text-white">{{ item.subject }}</div>
-              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{{ item.content }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{{ item.preview }}</p>
             </div>
           </div>
 

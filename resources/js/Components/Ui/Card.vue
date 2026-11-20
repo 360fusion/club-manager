@@ -7,9 +7,10 @@ const props = defineProps({
 
 const PADDING = {
     none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-6 sm:p-8',
+    // Tighter on a phone, where every pixel of width counts.
+    sm: 'p-3 sm:p-4',
+    md: 'p-4 sm:p-6',
+    lg: 'p-4 sm:p-8',
 };
 
 const classes = computed(() => [

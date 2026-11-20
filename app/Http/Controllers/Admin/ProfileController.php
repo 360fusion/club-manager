@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\UpdatePasswordRequest;
+use App\Support\AccountClosure;
 use App\Support\EmailChange;
 use App\Support\ImageDownscaler;
 use App\Support\UploadRules;
@@ -30,6 +31,10 @@ class ProfileController extends Controller
                 'two_factor_enabled' => ! empty($user->two_factor_secret),
             ],
             'status' => session('status'),
+            'closureRequestedAt' => $user->closure_requested_at?->toIso8601String(),
+            'purgeDate' => AccountClosure::purgeDate($user)?->format('j F Y'),
+            'waitDays' => AccountClosure::WAIT_DAYS,
+            'blockers' => AccountClosure::blockers($user),
         ]);
     }
 

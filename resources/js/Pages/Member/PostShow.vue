@@ -56,7 +56,7 @@ const getFileIcon = (mimeOrName) => {
 
       <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <!-- Article Card -->
-      <article class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+      <article class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         
         <!-- Header -->
         <div class="space-y-3">

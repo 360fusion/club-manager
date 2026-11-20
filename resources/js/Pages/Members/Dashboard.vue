@@ -204,20 +204,20 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
                             </Card>
                         </template>
 
-                        <Card v-if="filteredFeed.length" padding="none">
-                            <ul>
-                                <li v-for="item in filteredFeed" :key="item.key" class="border-b border-slate-200 last:border-b-0 dark:border-slate-800">
-                                    <Link :href="route(item.link.name, item.link.params)" class="block min-h-11 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                        <span class="flex items-start gap-2">
-                                            <span class="min-w-0 flex-1 text-sm font-semibold text-slate-900 dark:text-white">{{ item.title }}</span>
-                                            <Badge v-if="item.important" variant="danger">Important</Badge>
-                                        </span>
-                                        <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ TYPES[item.type]?.label ?? item.type }} · {{ item.club.name }} · <time :datetime="item.at">{{ ago(item.at) }}</time></span>
-                                        <span v-if="item.excerpt" class="mt-1 line-clamp-2 block text-sm text-slate-600 dark:text-slate-300">{{ item.excerpt }}</span>
-                                    </Link>
-                                </li>
-                            </ul>
-                        </Card>
+                        <!-- Each item is a card of its own, like the club page's broadcasts. -->
+                        <ul v-if="filteredFeed.length" class="space-y-3">
+                            <li v-for="item in filteredFeed" :key="item.key">
+                                <Link :href="route(item.link.name, item.link.params)" class="block min-h-11 space-y-1 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+                                    <span class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                        <span :class="['h-2 w-2 shrink-0 rounded-full', orderColour(item.club.colour).dot]" aria-hidden="true" />
+                                        <span class="min-w-0 flex-1 truncate">{{ TYPES[item.type]?.label ?? item.type }} · {{ item.club.name }} · <time :datetime="item.at">{{ ago(item.at) }}</time></span>
+                                        <Badge v-if="item.important" variant="danger">Important</Badge>
+                                    </span>
+                                    <span class="block text-[15px] font-semibold text-slate-900 dark:text-white">{{ item.title }}</span>
+                                    <span v-if="item.excerpt" class="line-clamp-2 block text-sm text-slate-600 dark:text-slate-300">{{ item.excerpt }}</span>
+                                </Link>
+                            </li>
+                        </ul>
 
                         <Card v-else padding="sm">
                             <p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your clubs will show up here.' }}</p>

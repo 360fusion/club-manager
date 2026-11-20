@@ -121,7 +121,7 @@ provide('layoutHasHeading', !props.ownHeading);
 
         <div class="min-w-0 flex-1">
             <header :class="['cm-nav sticky top-0 z-40 border-b border-slate-800 bg-slate-800 text-slate-200', side ? 'lg:hidden' : '']">
-                <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-6">
                     <div class="flex min-w-0 items-center gap-3">
                         <Link :href="route('members.dashboard')" class="flex shrink-0 items-center gap-2" aria-label="ClubManager home">
                             <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white shadow-md shadow-blue-600/30">CM</span>
@@ -164,7 +164,7 @@ provide('layoutHasHeading', !props.ownHeading);
                 </div>
             </div>
 
-            <main id="main-content" :class="['mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6', isNativeApp ? 'pb-28' : 'pb-28 md:pb-8']">
+            <main id="main-content" :class="['mx-auto max-w-6xl space-y-4 px-3 py-5 sm:px-6 sm:py-8', isNativeApp ? 'pb-28' : 'pb-28 md:pb-8']">
                 <h1 v-if="!ownHeading" class="sr-only">{{ title }}</h1>
                 <FlashMessages />
                 <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>

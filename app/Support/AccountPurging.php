@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
  * contacts, posts, memberships), so a delete would take a club's financial records and history with it. Instead the sign-in
  * and personal-only data go, the club's own records are unlinked from the person, and the row is blanked.
  *
- * Kept on purpose, and said so on the Data and privacy page: a club's member and contact records (the club decides about
+ * Kept on purpose, and said so where the account is closed, on the profile page: a club's member and contact records (the club decides about
  * those), its accounting and audit trail, event bookings, and lodge claims and corrections (moderation records).
  */
 final class AccountPurging

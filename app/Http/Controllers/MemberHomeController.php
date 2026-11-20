@@ -245,6 +245,7 @@ class MemberHomeController extends Controller
 
     private function excerpt(?string $html): string
     {
-        return Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) $html))), 160);
+        // Decoded after the tags go, so "&amp;" reads as "&" (Vue escapes it again on screen).
+        return Str::limit(trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags((string) $html), ENT_QUOTES | ENT_HTML5))), 160);
     }
 }

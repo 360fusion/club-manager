@@ -108,41 +108,13 @@ class AccountClosureTest extends TestCase
         $this->assertSame($owner->name, $owner->fresh()->name);
     }
 
-    public function test_the_data_download_needs_the_password_and_never_contains_secrets(): void
+    public function test_closing_the_account_is_offered_on_the_profile_page_and_the_old_privacy_page_goes_there(): void
     {
-        $club = Club::factory()->create(['name' => 'Export Lodge']);
-        $user = $this->makeClubAdmin($this->user(), $club, 'member');
-        $user->forceFill(['two_factor_secret' => encrypt('SECRETSECRET'), 'calendar_token' => 'calendar-secret'])->save();
-        $user->createToken('laptop');
+        $user = $this->user();
+        $user->forceFill(['closure_requested_at' => now()])->save();
 
-        $this->actingAs($user)->post(route('account.privacy.export'), ['password' => 'wrong'])->assertSessionHasErrorsIn('export', 'password');
-
-        $response = $this->actingAs($user)->post(route('account.privacy.export'), ['password' => 'right-password']);
-        $response->assertOk()->assertDownload();
-        $body = $response->streamedContent();
-        $this->assertStringContainsString('Export Lodge', $body);
-        $this->assertStringContainsString('laptop', $body);
-        $this->assertStringNotContainsString('SECRETSECRET', $body);
-        $this->assertStringNotContainsString('calendar-secret', $body);
-        $this->assertStringNotContainsString($user->password, $body);
-    }
-
-    public function test_another_persons_data_is_not_in_the_download(): void
-    {
-        $club = Club::factory()->create();
-        $me = $this->makeClubAdmin($this->user(), $club, 'member');
-        $them = $this->makeClubAdmin(User::factory()->create(['email' => 'them@example.test']), $club, 'member');
-        DB::table('club_acc_members')->insert(['club_id' => $club->id, 'user_id' => $them->id, 'first_name' => 'Zed', 'last_name' => 'Other', 'created_at' => now(), 'updated_at' => now()]);
-
-        $body = $this->actingAs($me)->post(route('account.privacy.export'), ['password' => 'right-password'])->streamedContent();
-
-        $this->assertStringNotContainsString('them@example.test', $body);
-        $this->assertStringNotContainsString('Zed', $body);
-    }
-
-    public function test_the_page_is_for_signed_in_people_only(): void
-    {
-        $this->get(route('account.privacy'))->assertRedirect();
-        $this->actingAs($this->user())->get(route('account.privacy'))->assertOk();
+        $this->actingAs($user)->get(route('profile.edit'))
+            ->assertInertia(fn ($page) => $page->component('Admin/Profile/Edit')->where('closureRequestedAt', $user->closure_requested_at->toIso8601String())->has('purgeDate'));
+        $this->actingAs($user)->get('/members/privacy')->assertRedirect('/members/profile');
     }
 }

@@ -3,11 +3,22 @@ import { computed, ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
 
 const props = defineProps({
   user: Object,
   status: String,
+  closureRequestedAt: { type: String, default: null },
+  purgeDate: { type: String, default: null },
+  waitDays: { type: Number, default: 30 },
+  blockers: { type: Array, default: () => [] },
 });
+
+const closeForm = useForm({ password: '' });
+const closeAccount = () => closeForm.post(route('account.privacy.close'), { preserveScroll: true, onSuccess: () => closeForm.reset() });
+const cancelClosing = () => router.delete(route('account.privacy.cancel'), { preserveScroll: true });
 
 const avatarPreview = ref(props.user?.avatar_url || null);
 const fileInput = ref(null);
@@ -95,7 +106,7 @@ const updatePassword = () => {
       </div>
 
       <!-- Profile Information & Avatar Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         <div>
           <h3 class="text-base font-bold text-slate-900 dark:text-white">Profile Photo & Personal Info</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload a photo of yourself to personalize your account across the club platform.</p>
@@ -208,7 +219,7 @@ const updatePassword = () => {
       </div>
 
       <!-- Password Change Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         <div>
           <h3 class="text-base font-bold text-slate-900 dark:text-white">Update Password</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ensure your account is using a long, random password to stay secure.</p>
@@ -266,6 +277,37 @@ const updatePassword = () => {
           >
             {{ passwordForm.processing ? 'Updating password...' : 'Update password' }}
           </button>
+        </form>
+      </div>
+
+      <!-- Closing the account: nothing is removed until the wait is over, and signing in can stop it. -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Close your account</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+            You have {{ waitDays }} days to change your mind: your account is only closed after that, and signing in and cancelling stops it.
+            When it closes, you are removed from every club, your sign-in, sessions, notifications and subscriptions are deleted, and your name
+            and email are blanked. Each club keeps its own records (its member list, accounts and bookings), unlinked from you: ask the club if you
+            want one changed or removed.
+          </p>
+        </div>
+
+        <Alert v-if="closureRequestedAt" variant="warning">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <span>Your account is set to be closed on <strong>{{ purgeDate }}</strong>. Until then nothing has been removed.</span>
+            <Button variant="secondary" @click="cancelClosing">Cancel closing my account</Button>
+          </div>
+        </Alert>
+
+        <Alert v-else-if="blockers.length" variant="warning">
+          <ul class="list-disc space-y-1 pl-5">
+            <li v-for="blocker in blockers" :key="blocker">{{ blocker }}</li>
+          </ul>
+        </Alert>
+
+        <form v-else class="flex flex-wrap items-end gap-3" @submit.prevent="closeAccount">
+          <Input v-model="closeForm.password" type="password" label="Your password" autocomplete="current-password" required :error="closeForm.errors.password || closeForm.errors.closure" />
+          <Button variant="danger" type="submit" :disabled="closeForm.processing">Close my account</Button>
         </form>
       </div>
 

@@ -200,6 +200,14 @@ class MemberHomeTest extends TestCase
                     ->where('feed.1.club.slug', 'oxford-lodge')));
     }
 
+    public function test_feed_previews_read_as_plain_text_without_html_entities(): void
+    {
+        $this->newsPost($this->club, Visibility::Club, 'Safety')->update(['content' => '<p>Athletes &amp; coxes, our new 8&#43; is here</p>']);
+
+        $this->actingAs($this->member)->get(route('members.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload->where('feed.0.excerpt', 'Athletes & coxes, our new 8+ is here')));
+    }
+
     public function test_a_user_with_no_clubs_gets_an_empty_home(): void
     {
         $this->newsPost($this->club, Visibility::Public, 'Public news');

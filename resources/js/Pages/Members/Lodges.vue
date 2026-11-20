@@ -4,6 +4,7 @@ import { Link, router, useForm } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
 
 const props = defineProps({
@@ -13,7 +14,15 @@ const props = defineProps({
     lodges: { type: Array, default: () => [] },
     limit: { type: Number, default: 100 },
     province: { type: Object, default: null },
+    own: { type: Array, default: () => [] },
+    suggested: { type: Array, default: () => [] },
 });
+
+const following = reactive({});
+function follow(lodge) {
+    following[lodge.slug] = true;
+    router.post(route('lodges.follow', lodge.slug), {}, { preserveScroll: true, onFinish: () => { following[lodge.slug] = false; } });
+}
 
 const replies = reactive({});
 const STATUS = {
@@ -71,7 +80,7 @@ function unfollow(lodge) {
             <div class="flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">My lodges</h2>
-                    <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Lodges you follow. Only you can see this list, and the lodges are not told.</p>
+                    <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Your own lodges and the ones you follow. Only you can see who you follow, and the lodges are not told.</p>
                 </div>
                 <Link :href="route('lodges.index')" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Find more lodges</Link>
             </div>
@@ -85,6 +94,39 @@ function unfollow(lodge) {
                     </div>
                 </div>
             </Card>
+
+            <section v-if="own.length" class="space-y-2" aria-labelledby="own-heading">
+                <h2 id="own-heading" class="text-lg font-semibold text-slate-900 dark:text-white">Your lodges</h2>
+                <ul class="grid gap-3 md:grid-cols-2">
+                    <li v-for="club in own" :key="club.slug" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-slate-900 dark:text-white">{{ club.name }}</p>
+                            <p class="text-xs capitalize text-slate-500 dark:text-slate-400">{{ club.role }}<template v-if="club.hall"> · <span class="normal-case">{{ club.hall.name }}<template v-if="club.hall.town">, {{ club.hall.town }}</template></span></template></p>
+                        </div>
+                        <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: club.slug })">Open</Button>
+                    </li>
+                </ul>
+            </section>
+
+            <section v-if="suggested.length" class="space-y-2" aria-labelledby="suggested-heading">
+                <div>
+                    <h2 id="suggested-heading" class="text-lg font-semibold text-slate-900 dark:text-white">Lodges you might follow</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">From your hall and your lodges' sister and visiting lists. Following puts their meeting dates in your calendar.</p>
+                </div>
+                <p v-if="$page.props.errors?.follow" class="text-sm text-rose-600 dark:text-rose-400">{{ $page.props.errors.follow }}</p>
+                <ul class="grid gap-3 md:grid-cols-2">
+                    <li v-for="lodge in suggested" :key="lodge.slug" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <div class="min-w-0">
+                            <Link :href="route('lodges.show', lodge.slug)" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ lodge.name }}</Link>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ lodge.reason }}<template v-if="lodge.order"> · {{ lodge.order }}</template></p>
+                            <p v-if="lodge.meets_text" class="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{{ lodge.meets_text }}</p>
+                        </div>
+                        <Button size="sm" :disabled="following[lodge.slug]" @click="follow(lodge)">Follow</Button>
+                    </li>
+                </ul>
+            </section>
+
+            <h2 v-if="own.length || suggested.length" class="text-lg font-semibold text-slate-900 dark:text-white">Following</h2>
 
             <Card v-if="!lodges.length">
                 <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">

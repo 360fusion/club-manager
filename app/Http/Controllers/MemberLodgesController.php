@@ -2,22 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ClubMemberStatus;
+use App\Models\Club;
+use App\Models\ClubLodgeLink;
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use App\Models\LodgeCorrection;
 use App\Models\LodgeSchedule;
 use App\Models\MemberVisit;
+use App\Services\PassedOn\LodgeLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * "My lodges": the lodges a member follows, whether each one is in their calendar, and the lodges they have visited.
+ * "My lodges": the member's own lodges, lodges to follow (from their hall and their lodges' lists), the lodges they follow, whether each one is in their calendar, and the lodges they have visited.
  */
 class MemberLodgesController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, LodgeLinks $links): Response
     {
         $user = $request->user();
         $today = CarbonImmutable::today();
@@ -54,6 +58,40 @@ class MemberLodgesController extends Controller
                     ] : null,
                 ];
             });
+
+        // The member's own lodges, and lodges to follow: those sharing their hall and the ones each lodge lists as
+        // sister or reciprocal visit lodges, less any they already follow or belong to.
+        $ownClubs = $user->clubs()->wherePivot('status', ClubMemberStatus::Active->value)->with('lodge.masonicHall:id,name,slug,town')->orderBy('name')->get();
+        $own = $ownClubs->map(fn (Club $club) => [
+            'name' => $club->lodge?->displayName() ?? $club->name,
+            'slug' => $club->slug,
+            'lodge_slug' => $club->lodge?->slug,
+            'role' => $club->pivot->role,
+            'hall' => $club->lodge?->masonicHall ? ['name' => $club->lodge->masonicHall->name, 'town' => $club->lodge->masonicHall->town] : null,
+        ]);
+
+        $skip = $user->followedLodges()->pluck('lodges.id')->merge($ownClubs->pluck('lodge.id')->filter())->all();
+        $suggested = collect();
+        foreach ($ownClubs as $club) {
+            $hallId = $club->lodge?->masonic_hall_id;
+            foreach ([ClubLodgeLink::SISTER, ClubLodgeLink::RECIPROCAL] as $relation) {
+                foreach ($links->lodges($club, $relation) as $lodge) {
+                    $reason = match (true) {
+                        $hallId !== null && $lodge->masonic_hall_id === $hallId => 'Meets at your hall',
+                        $relation === ClubLodgeLink::SISTER => 'A sister lodge of '.$club->name,
+                        default => $club->name.' visits it',
+                    };
+                    $suggested->put($lodge->id, $suggested->get($lodge->id) ?? ['lodge' => $lodge, 'reason' => $reason]);
+                }
+            }
+        }
+        $suggested = $suggested->except($skip)->take(12)->map(fn (array $entry) => [
+            'slug' => $entry['lodge']->slug,
+            'name' => $entry['lodge']->displayName(),
+            'order' => $entry['lodge']->clubType?->name,
+            'meets_text' => $entry['lodge']->meets_text,
+            'reason' => $entry['reason'],
+        ]);
 
         $claims = LodgeClaim::where('user_id', $user->id)
             ->with(['lodge:id,name,number,slug,club_type_id', 'lodge.clubType:id,code,name', 'club:id,name,slug', 'events'])
@@ -98,6 +136,8 @@ class MemberLodgesController extends Controller
             'claims' => $claims->values(),
             'corrections' => $corrections->values(),
             'lodges' => $lodges->values(),
+            'own' => $own->values(),
+            'suggested' => $suggested->values(),
             'limit' => LodgeFollowController::MAX_FOLLOWS,
             // For a provincial admin: their provinces and how many suggested fixes wait for them.
             'province' => $provinces->isEmpty() ? null : [

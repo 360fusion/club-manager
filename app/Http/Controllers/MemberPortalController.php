@@ -106,6 +106,7 @@ class MemberPortalController extends Controller
                 'id' => $n->id,
                 'subject' => $n->subject,
                 'content' => $n->content,
+                'preview' => trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags((string) $n->content), ENT_QUOTES | ENT_HTML5))),
                 'sent_at' => $n->sent_at?->format('j M Y, H:i'),
             ])
             ->values();

@@ -15,7 +15,6 @@ use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
-use App\Http\Controllers\Account\ApiTokenController;
 use App\Http\Controllers\Account\DataPrivacyController;
 use App\Http\Controllers\Account\DeviceController;
 use App\Http\Controllers\Account\EmailChangeController;
@@ -524,18 +523,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
-    // Data and privacy: download everything held about you, or close your account.
-    Route::get('/members/privacy', [DataPrivacyController::class, 'show'])->name('account.privacy');
-    Route::post('/members/privacy/export', [DataPrivacyController::class, 'export'])->middleware('throttle:5,10')->name('account.privacy.export');
+    // Closing your account (a 30-day wait you can cancel) is on the profile page; the old privacy page went there.
+    Route::redirect('/members/privacy', '/members/profile');
     Route::post('/members/privacy/close', [DataPrivacyController::class, 'close'])->middleware('throttle:5,10')->name('account.privacy.close');
     Route::delete('/members/privacy/close', [DataPrivacyController::class, 'cancel'])->name('account.privacy.cancel');
 
     Route::delete('/members/security/devices/{id}', [DeviceController::class, 'destroy'])->middleware('throttle:10,1')->name('account.devices.destroy');
-
-    // The person's own API tokens.
-    Route::get('/members/api-tokens', [ApiTokenController::class, 'index'])->name('account.tokens.index');
-    Route::post('/members/api-tokens', [ApiTokenController::class, 'store'])->middleware('throttle:10,1')->name('account.tokens.store');
-    Route::delete('/members/api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('account.tokens.destroy');
 
     // 2FA Profile Settings Routes
     Route::get('/members/security', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');
