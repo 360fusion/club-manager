@@ -17,6 +17,9 @@
     <div style="background:#ffffff;border-radius:12px;padding:24px;">
       <div style="font-size:13px;color:#64748b;margin-bottom:6px;">{{ $kindLabel }}</div>
       <h1 style="font-size:21px;margin:0 0 6px;">{{ $item->title }}</h1>
+      @if ($item->cancelled_at)
+        <p style="background:#fef3c7;border-radius:8px;padding:10px;font-size:14px;margin:0 0 12px;">This meeting has been cancelled.</p>
+      @endif
       <p style="font-size:13px;color:#475569;margin:0 0 16px;">{{ $item->passed_on_by }}</p>
 
       @if ($item->meeting_date)
@@ -24,6 +27,11 @@
           <strong>{{ $item->meeting_date->format('l j F Y') }}@if ($item->meeting_time), {{ $item->meeting_time }}@endif</strong>
           @if ($item->venue)<br>{{ $item->venue }}@endif
           @if ($item->dress_code)<br>Dress: {{ $item->dress_code }}@endif
+          @if ($item->dining)
+            @if (! empty($item->dining['theme']))<br>Dining: {{ $item->dining['theme'] }}@endif
+            @if (! empty($item->dining['menu']))<br>{!! nl2br(e($item->dining['menu'])) !!}@endif
+            @if (! empty($item->dining['guest_cost']))<br>Guests: {{ $item->dining['guest_cost'] }}@endif
+          @endif
         </p>
       @endif
 

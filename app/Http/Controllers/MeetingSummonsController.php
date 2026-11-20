@@ -21,6 +21,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Throwable;
 
 /**
  * A meeting's summons: the printed PDF, publishing it to members and generating a season of meetings. Split out of MeetingAdminController; the URLs, route names and permissions are unchanged.
@@ -79,7 +80,7 @@ class MeetingSummonsController extends Controller
                     })
                     ->name($filename)
                     ->toResponse(request());
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // The PDF is only rendered by toResponse(), so it must run inside this try for the fallback to work.
                 // Say so in the log: without it a missing Chrome for Puppeteer quietly changes how every PDF looks.
                 report($e);
@@ -117,7 +118,13 @@ class MeetingSummonsController extends Controller
         }
 
         app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
-        $reached = app(PlatformSummons::class)->publish($club, $meeting);
+        // The summons is out by now: a failure passing it on to other lodges is reported, not shown to the Secretary.
+        try {
+            $reached = app(PlatformSummons::class)->publish($club, $meeting);
+        } catch (Throwable $failure) {
+            report($failure);
+            $reached = [];
+        }
         app(ClubNotifier::class)->toFollowers($club, $meeting, $reached);
 
         return redirect()->back()->with('success', "Summons published and emailed to {$sent} ".Str::plural('person', $sent).', each with their own RSVP link.');

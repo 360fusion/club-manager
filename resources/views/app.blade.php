@@ -40,6 +40,7 @@
             @if ($seo['image'])
                 <meta name="twitter:image" content="{{ $seo['image'] }}">
             @endif
+            @include('partials.web-app-detect')
             @if ($seo['json_ld'] !== '')
                 <script type="application/ld+json">{!! $seo['json_ld'] !!}</script>
             @endif

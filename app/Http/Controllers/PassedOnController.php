@@ -42,6 +42,8 @@ class PassedOnController extends Controller
                     'venue' => $item->venue,
                     'dress_code' => $item->dress_code,
                 ] : null,
+                'dining' => $item->dining,
+                'cancelled' => $item->cancelled_at !== null,
                 'attachment_url' => $item->attachment_path ? route('members.passed_on.attachment', ['delivery' => $copy->id]) : null,
                 'attachment_name' => $item->attachment_name,
                 'lodge' => $item->lodge ? ['name' => $item->lodge->displayName(), 'url' => $item->lodge->status === 'active' ? route('lodges.show', ['slug' => $item->lodge->slug]) : null, 'muted' => $prefs->mutes($item->lodge_id)] : null,

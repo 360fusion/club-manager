@@ -6,9 +6,4 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Club Manager">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script>
-    // Opened from the home screen: draw under the status bar like the app does (.web-app in app.css).
-    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
-        document.documentElement.classList.add('web-app');
-    }
-</script>
+@include('partials.web-app-detect')

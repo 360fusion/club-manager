@@ -84,6 +84,12 @@ class ClubNotification extends Notification
         );
     }
 
+    /** A passed-on meeting that moved or was cancelled, to those who had it in the app. */
+    public static function passedOnChanged(PassedOnDelivery $delivery, string $title, string $body): self
+    {
+        return new self(self::PASSED_ON, $title, $body, $delivery->viaClub, 'members.passed_on.show', ['delivery' => $delivery->id], true);
+    }
+
     public static function visitorRequested(ClubVisitorAccess $access, Club $club): self
     {
         return new self(

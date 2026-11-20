@@ -10,6 +10,7 @@ use App\Models\PassedOnDelivery;
 use App\Models\PassedOnItem;
 use App\Models\User;
 use App\Notifications\ClubNotification;
+use App\Services\PassedOn\PlatformSummons;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -176,6 +177,69 @@ class PassedOnPlatformTest extends TestCase
 
         // Each extra member costs only the insert of their own copy.
         $this->assertLessThanOrEqual($before + 5, $after);
+    }
+
+    public function test_the_copy_carries_the_dining_details(): void
+    {
+        $meeting = Meeting::create(['club_id' => $this->theirs->id, 'title' => 'Regular meeting', 'meeting_date' => now()->addDays(14)->toDateString(), 'starts_at' => '18:30', 'venue' => 'The Masonic Hall', 'dress_code' => 'Dark suit', 'rsvp_cutoff_at' => now()->addDays(10), 'status' => 'draft', 'festive_board_theme' => 'Burns night', 'festive_board_menu' => 'Haggis, neeps and tatties', 'dining_cost_guest' => 32]);
+        $this->actingAs($this->theirSecretary)->post(route('admin.meetings.publish', [$this->theirs->slug, $meeting->id]))->assertSessionHasNoErrors();
+
+        $this->assertSame(['theme' => 'Burns night', 'menu' => 'Haggis, neeps and tatties', 'guest_cost' => '£32.00'], PassedOnItem::sole()->dining);
+        $this->get(route('passed_on.public', PassedOnDelivery::where('user_id', $this->ourMember->id)->value('token')))->assertSee('Dining: Burns night')->assertSee('Guests: £32.00');
+    }
+
+    public function test_a_moved_meeting_updates_the_copy_and_tells_those_who_had_it(): void
+    {
+        $meeting = $this->publishTheirMeeting();
+        $newDate = now()->addDays(21)->toDateString();
+
+        $meeting->update(['meeting_date' => $newDate, 'venue' => 'The Old Hall']);
+
+        $item = PassedOnItem::sole();
+        $this->assertSame($newDate, $item->meeting_date->toDateString());
+        $this->assertSame('The Old Hall', $item->venue);
+        $this->assertSame('summons:'.$this->theirLodge->id.':'.$newDate, $item->dedupe_key);
+        $this->assertSame([$item->dedupe_key], PassedOnDelivery::pluck('dedupe_key')->unique()->values()->all());
+        Notification::assertSentTo($this->ourMember, ClubNotification::class, fn (ClubNotification $notice) => $notice->title === 'Changed: Regular meeting');
+
+        // A change nobody visiting would notice (the minutes, say) tells nobody.
+        $meeting->update(['rsvp_cutoff_at' => now()->addDays(15)]);
+        Notification::assertSentToTimes($this->ourMember, ClubNotification::class, 2);
+    }
+
+    public function test_a_cancelled_or_deleted_meeting_marks_the_copy_cancelled_and_takes_it_out_of_the_calendar(): void
+    {
+        $meeting = $this->publishTheirMeeting();
+
+        $meeting->update(['status' => 'cancelled']);
+
+        $this->assertNotNull(PassedOnItem::sole()->cancelled_at);
+        $copy = PassedOnDelivery::where('user_id', $this->ourMember->id)->sole();
+        $this->get(route('passed_on.public', $copy->token))->assertSee('This meeting has been cancelled.');
+        $this->actingAs($this->ourMember)->get(route('members.passed_on.show', $copy->id))->assertInertia(fn ($page) => $page->where('item.cancelled', true));
+        Notification::assertSentTo($this->ourMember, ClubNotification::class, fn (ClubNotification $notice) => $notice->title === 'Cancelled: Regular meeting');
+        $this->actingAs($this->ourMember)->get(route('members.calendar', ['month' => now()->addDays(14)->format('Y-m')]))
+            ->assertInertia(fn ($page) => $page->where('items', fn ($items) => collect($items)->where('type', 'passed_on')->isEmpty()));
+
+        $other = $this->publishTheirMeeting(28);
+        $other->delete();
+        $this->assertNotNull(PassedOnItem::where('dedupe_key', 'like', '%'.now()->addDays(28)->toDateString())->value('cancelled_at'));
+    }
+
+    public function test_publishing_still_works_when_passing_it_on_fails(): void
+    {
+        $outsider = User::factory()->create();
+        $outsider->followedLodges()->attach($this->theirLodge->id, ['in_calendar' => true, 'notify_summons' => true]);
+        $this->mock(PlatformSummons::class, function ($mock) {
+            $mock->shouldReceive('publish')->andThrow(new \RuntimeException('Database went away'));
+            $mock->shouldReceive('follow');
+        });
+
+        $meeting = Meeting::create(['club_id' => $this->theirs->id, 'title' => 'Regular meeting', 'meeting_date' => now()->addDays(14)->toDateString(), 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Suit', 'rsvp_cutoff_at' => now()->addDays(10), 'status' => 'draft']);
+        $this->actingAs($this->theirSecretary)->post(route('admin.meetings.publish', [$this->theirs->slug, $meeting->id]))
+            ->assertSessionHasNoErrors()->assertSessionHas('success');
+
+        Notification::assertSentTo($outsider, ClubNotification::class, fn (ClubNotification $notice) => $notice->category === ClubNotification::SUMMONS);
     }
 
     public function test_without_a_pdf_the_form_refuses_a_summons_for_a_lodge_that_publishes_its_own(): void

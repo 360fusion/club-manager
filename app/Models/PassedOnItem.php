@@ -29,7 +29,7 @@ class PassedOnItem extends Model
     protected $fillable = [
         'club_id', 'sent_by', 'source', 'passed_on_by', 'kind', 'type', 'lodge_id', 'meeting_id', 'title', 'body',
         'attachment_path', 'attachment_name', 'meeting_date', 'meeting_time', 'venue', 'dress_code', 'dedupe_key',
-        'recipient_count', 'email_count', 'sent_at',
+        'recipient_count', 'email_count', 'sent_at', 'dining', 'cancelled_at',
     ];
 
     protected function casts(): array
@@ -38,6 +38,8 @@ class PassedOnItem extends Model
             'body' => SanitizedHtml::class,
             'meeting_date' => 'date',
             'sent_at' => 'datetime',
+            'dining' => 'array',
+            'cancelled_at' => 'datetime',
         ];
     }
 

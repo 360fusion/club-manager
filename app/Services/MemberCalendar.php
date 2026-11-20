@@ -176,7 +176,7 @@ class MemberCalendar
         }
 
         return PassedOnDelivery::where('user_id', $user->id)
-            ->whereHas('item', fn ($item) => $item->where('type', PassedOnItem::SUMMONS)->whereBetween('meeting_date', [$from->toDateString(), $to->toDateString()]))
+            ->whereHas('item', fn ($item) => $item->where('type', PassedOnItem::SUMMONS)->whereNull('cancelled_at')->whereBetween('meeting_date', [$from->toDateString(), $to->toDateString()]))
             ->with('item.lodge.clubType:id,code,name')
             ->get()
             ->reject(fn (PassedOnDelivery $copy) => $prefs->mutes($copy->item->lodge_id))

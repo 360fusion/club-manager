@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Accounting\MeetingFinancialReturn;
 use App\Observers\MeetingTeamEvents;
+use App\Observers\PassedOnMeetingCopies;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read int $apologies_count Likewise.
  * @property int $visitors_count Only when loaded with withCount() under that alias (the meetings list does).
  */
-#[ObservedBy(MeetingTeamEvents::class)]
+#[ObservedBy([MeetingTeamEvents::class, PassedOnMeetingCopies::class])]
 class Meeting extends Model
 {
     /** @use HasFactory<Factory<self>> */

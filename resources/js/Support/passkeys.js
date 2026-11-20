@@ -64,11 +64,30 @@ async function send(method, url, body) {
 
 export const passkeysSupported = () => typeof window !== 'undefined' && 'PublicKeyCredential' in window && !!navigator.credentials;
 
+// Remembered on this browser once a passkey is added or used here, so the sign-in page can offer it.
+const USED_HERE = 'cm-passkey-used';
+const rememberUse = () => { try { localStorage.setItem(USED_HERE, '1'); } catch { /* private browsing */ } };
+const usedHere = () => { try { return localStorage.getItem(USED_HERE) === '1'; } catch { return false; } };
+
+/**
+ * Whether to offer passkey sign-in: the device can check a face, finger or its own lock (not only a security key or a
+ * phone nearby), and it is a phone, or a passkey has been added or used in this browser before. Elsewhere the button
+ * would mostly lead to the browser's "use a phone" dialog.
+ */
+export async function passkeyLikelyHere() {
+    if (!passkeysSupported()) return false;
+    const check = PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.() ?? Promise.resolve(false);
+    const builtIn = await check.catch(() => false);
+
+    return Boolean(builtIn) && (usedHere() || window.matchMedia('(pointer: coarse)').matches);
+}
+
 /** Signs in with a passkey on this phone or computer and goes to the member area. */
 export async function signInWithPasskey(remember = true) {
     const { options } = await send('GET', '/passkeys/login/options');
     const credential = await navigator.credentials.get({ publicKey: requestOptions(options) });
     const { redirect } = await send('POST', '/passkeys/login', { credential: credentialJson(credential), remember });
+    rememberUse();
 
     // A full page load: signing in changes the routes and shared data the page was built with.
     window.location.assign(redirect || '/members/dashboard');
@@ -80,6 +99,7 @@ export async function addPasskey(name, password) {
     const { options } = await send('GET', '/user/passkeys/options');
     const credential = await navigator.credentials.create({ publicKey: creationOptions(options) });
     await send('POST', '/user/passkeys', { name, credential: credentialJson(credential) });
+    rememberUse();
 }
 
 export async function removePasskey(id, password) {

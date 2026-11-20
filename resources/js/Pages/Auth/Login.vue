@@ -2,7 +2,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import { biometricSignIn, isNativeApp, signInWithBiometrics } from '@/Support/nativeApp';
-import { passkeysSupported, signInWithPasskey } from '@/Support/passkeys';
+import { passkeyLikelyHere, signInWithPasskey } from '@/Support/passkeys';
 import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -40,7 +40,7 @@ const useBiometrics = () => {
 // On the website, a passkey (Face ID, fingerprint or the computer's own lock) signs in without the password. The app has
 // its own Face ID sign-in above.
 const canUsePasskey = ref(false);
-onMounted(() => { canUsePasskey.value = !isNativeApp && passkeysSupported(); });
+onMounted(async () => { canUsePasskey.value = !isNativeApp && await passkeyLikelyHere(); });
 const passkeyBusy = ref(false);
 const passkeyError = ref('');
 const usePasskey = async () => {

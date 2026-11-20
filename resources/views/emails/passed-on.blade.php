@@ -15,6 +15,11 @@
                 <strong>{{ $item->meeting_date->format('l j F Y') }}@if ($item->meeting_time), {{ $item->meeting_time }}@endif</strong>
                 @if ($item->venue)<br>{{ $item->venue }}@endif
                 @if ($item->dress_code)<br>Dress: {{ $item->dress_code }}@endif
+                @if ($item->dining)
+                  @if (! empty($item->dining['theme']))<br>Dining: {{ $item->dining['theme'] }}@endif
+                  @if (! empty($item->dining['menu']))<br>{!! nl2br(e($item->dining['menu'])) !!}@endif
+                  @if (! empty($item->dining['guest_cost']))<br>Guests: {{ $item->dining['guest_cost'] }}@endif
+                @endif
             </p>
         @endif
 
