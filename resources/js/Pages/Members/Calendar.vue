@@ -185,7 +185,7 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center gap-1.5 wh
             </div>
 
             <!-- On /members/{club}/… the club is fixed by the URL, so there is nothing to choose. -->
-            <div v-if="!urlScoped && clubOptions.length > 1" class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="group" aria-label="Filter by lodge">
+            <div v-if="!urlScoped && clubOptions.length > 1" class="flex flex-wrap gap-2" role="group" aria-label="Filter by lodge">
                 <Link :href="route('members.calendar')" :data="{ month }" :class="chip(!scopeClub)" :aria-current="!scopeClub ? 'true' : undefined" preserve-scroll>All</Link>
                 <Link v-for="club in clubOptions" :key="club.slug" :href="route('members.calendar')" :data="{ club: club.slug, month }" :class="chip(scopeClub?.slug === club.slug)" :aria-current="scopeClub?.slug === club.slug ? 'true' : undefined" preserve-scroll>
                     <span :class="['h-2 w-2 rounded-full', orderColour(club.colour).dot]" aria-hidden="true" />{{ club.name }}

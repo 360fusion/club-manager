@@ -187,11 +187,11 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
                 <section aria-labelledby="feed-heading" class="min-w-0 space-y-2 lg:col-start-1 lg:row-span-2 lg:row-start-1">
                     <h3 id="feed-heading" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">From your clubs</h3>
 
-                    <div v-if="clubs.length > 1" class="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+                    <div v-if="clubs.length > 1" class="flex flex-wrap gap-2">
                         <button v-for="option in [{ slug: 'all', name: 'All clubs' }, ...clubs]" :key="option.slug" type="button" :class="chip(clubFilter === option.slug)" :aria-pressed="clubFilter === option.slug" @click="clubFilter = option.slug">{{ option.name }}</button>
                     </div>
 
-                    <div v-if="feedTypes.length > 1" class="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+                    <div v-if="feedTypes.length > 1" class="flex flex-wrap gap-2">
                         <button v-for="type in ['all', ...feedTypes]" :key="type" type="button" :class="chip(typeFilter === type)" :aria-pressed="typeFilter === type" @click="typeFilter = type">{{ type === 'all' ? 'Everything' : TYPES[type]?.label }}</button>
                     </div>
 

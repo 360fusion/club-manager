@@ -51,7 +51,7 @@ const rows = computed(() => props.dues.rows.filter((row) => filter.value === 'al
                     <Card padding="sm"><span class="block text-xs text-slate-500 dark:text-slate-400">Left</span><strong class="tabular-nums">{{ dues.totals.left }}</strong></Card>
                 </div>
 
-                <div class="flex gap-2 overflow-x-auto" role="group" aria-label="Show">
+                <div class="flex flex-wrap gap-2" role="group" aria-label="Show">
                     <button v-for="[key, label] in FILTERS" :key="key" type="button" :aria-pressed="filter === key" :class="['min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium', filter === key ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200']" @click="filter = key">{{ label }}</button>
                 </div>
 

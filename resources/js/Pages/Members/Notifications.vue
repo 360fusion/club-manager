@@ -56,7 +56,7 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
                 <button v-if="unreadCount" type="button" class="inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400" @click="markAllRead">Mark all read</button>
             </div>
 
-            <nav aria-label="Filter the inbox" class="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+            <nav aria-label="Filter the inbox" class="flex flex-wrap gap-2">
                 <Link v-for="category in CATEGORIES" :key="category.value" :href="route('members.notifications')" :data="{ category: category.value || undefined, unread: filters.unread ? 1 : undefined }" :class="chip(filters.category === category.value)" :aria-current="filters.category === category.value ? 'true' : undefined" preserve-scroll>{{ category.label }}</Link>
                 <Link :href="route('members.notifications')" :data="{ category: filters.category || undefined, unread: filters.unread ? undefined : 1 }" :class="chip(filters.unread)" :aria-current="filters.unread ? 'true' : undefined" preserve-scroll>Unread only</Link>
             </nav>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Button from '@/Components/Ui/Button.vue';
@@ -53,6 +53,12 @@ const cancel = () => router.delete(route('account.privacy.cancel'), { preserveSc
           <Input v-model="exportPassword" name="password" type="password" label="Your password" autocomplete="current-password" required :error="$page.props.errors?.export?.password" />
           <Button type="submit">Download my data</Button>
         </form>
+      </Card>
+
+      <Card class="space-y-2">
+        <h2 class="text-base font-semibold text-slate-900 dark:text-white">API tokens</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300">A token lets another app act as you, with the access you give it. Treat it like a password.</p>
+        <Link :href="route('account.tokens.index')" class="inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400">Manage API tokens</Link>
       </Card>
 
       <Card class="space-y-3">
