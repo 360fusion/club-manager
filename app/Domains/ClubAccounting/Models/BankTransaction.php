@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Models\Club;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BankTransaction extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, SoftDeletes;
 
     protected $table = 'club_acc_bank_transactions';
@@ -59,6 +61,9 @@ class BankTransaction extends Model
         ];
     }
 
+    /**
+     * @return Attribute<bool, never>
+     */
     protected function isIncome(): Attribute
     {
         return Attribute::make(
@@ -66,6 +71,9 @@ class BankTransaction extends Model
         );
     }
 
+    /**
+     * @return Attribute<bool, never>
+     */
     protected function isExpense(): Attribute
     {
         return Attribute::make(
@@ -97,21 +105,37 @@ class BankTransaction extends Model
         return $this->belongsTo(BankImport::class, 'bank_import_id');
     }
 
+    /**
+     * @param  Builder<BankTransaction>  $query
+     * @return Builder<BankTransaction>
+     */
     public function scopeUnmatched(Builder $query): Builder
     {
         return $query->where('status', BankTransactionStatus::Unmatched->value);
     }
 
+    /**
+     * @param  Builder<BankTransaction>  $query
+     * @return Builder<BankTransaction>
+     */
     public function scopeMatched(Builder $query): Builder
     {
         return $query->where('status', BankTransactionStatus::Matched->value);
     }
 
+    /**
+     * @param  Builder<BankTransaction>  $query
+     * @return Builder<BankTransaction>
+     */
     public function scopeIgnored(Builder $query): Builder
     {
         return $query->where('status', BankTransactionStatus::Ignored->value);
     }
 
+    /**
+     * @param  Builder<BankTransaction>  $query
+     * @return Builder<BankTransaction>
+     */
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         if (empty(trim($term))) {

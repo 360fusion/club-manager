@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Support\ClubAccess;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\LaravelPdf\PdfBuilder;
 
 class InvoiceController extends Controller
 {
     /**
      * Download or view styled receipt/invoice as PDF.
+     *
+     * @return View|PdfBuilder
      */
     public function download(Request $request, string $slug, int $id)
     {

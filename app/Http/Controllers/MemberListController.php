@@ -294,7 +294,8 @@ class MemberListController extends Controller
     }
 
     /**
-     * @return array{name: string, slug: string, colour: string}
+     * @param  Club  $club
+     * @return array{name: string, slug: string, colour: string, currency_symbol: string}
      */
     private function clubPayload($club): array
     {

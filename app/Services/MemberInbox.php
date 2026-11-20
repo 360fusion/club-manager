@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Enums\EventStatus;
 use App\Enums\SignatureRequestStatus;
+use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
@@ -16,6 +17,7 @@ use App\Models\User;
 use App\Support\ClubAccess;
 use App\Support\Currencies;
 use App\Support\MemberScope;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -187,6 +189,8 @@ class MemberInbox
     }
 
     /**
+     * @param  Club  $club
+     * @param  CarbonInterface|null  $due
      * @param  array{type: string, id: int, slug: string}|null  $reply  set when one tap can answer it
      * @return array<string, mixed>
      */

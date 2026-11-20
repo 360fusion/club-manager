@@ -20,6 +20,8 @@ class MeetingFinancialReturns
 
     /**
      * Post Meeting Financial Return (Dining Calculator + Charity Collections) to Accounting Ledger
+     *
+     * @param  array<string, mixed>  $data
      */
     public function postMeetingFinancialReturn(Club $club, Meeting $meeting, array $data): MeetingFinancialReturn
     {
@@ -139,6 +141,8 @@ class MeetingFinancialReturns
 
     /**
      * Save draft financial return for a meeting without posting to general ledger.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function saveMeetingFinancialReturnDraft(Club $club, Meeting $meeting, array $data): MeetingFinancialReturn
     {

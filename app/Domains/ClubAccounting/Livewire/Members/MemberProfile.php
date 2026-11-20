@@ -13,6 +13,8 @@ use App\Models\Club;
 use App\Models\User;
 use App\Support\ClubAccess;
 use App\Support\MasonicRanks;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -213,6 +215,9 @@ class MemberProfile extends Component
         $this->notify("{$member->formatted_rank_name} marked as Resigned / Archived.");
     }
 
+    /**
+     * @return RedirectResponse|null
+     */
     public function deleteMember()
     {
         $member = $this->getMember();
@@ -283,7 +288,7 @@ class MemberProfile extends Component
             ->firstOrFail();
     }
 
-    public function render()
+    public function render(): View
     {
         $member = $this->getMember();
         $club = $member->club;

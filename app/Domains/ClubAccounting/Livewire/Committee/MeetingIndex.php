@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -214,7 +215,7 @@ class MeetingIndex extends Component
         session()->flash('success', "Committee meeting '{$meeting->title}' updated successfully.");
     }
 
-    public function render()
+    public function render(): View
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
         $now = Carbon::now();

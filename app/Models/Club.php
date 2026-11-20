@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Laravel\Cashier\Billable as StripeBillable;
-use Laravel\Paddle\Billable as PaddleBillable;
 use Launchpad\Models\Workspace;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -37,39 +36,7 @@ class Club extends Model implements HasMedia
     /** @use InteractsWithMedia<Media> */
     use InteractsWithMedia;
 
-    use PaddleBillable, StripeBillable {
-        StripeBillable::subscription insteadof PaddleBillable;
-        StripeBillable::subscriptions insteadof PaddleBillable;
-        StripeBillable::onTrial insteadof PaddleBillable;
-        StripeBillable::trialEndsAt insteadof PaddleBillable;
-        StripeBillable::hasExpiredTrial insteadof PaddleBillable;
-        StripeBillable::onGenericTrial insteadof PaddleBillable;
-        StripeBillable::hasExpiredGenericTrial insteadof PaddleBillable;
-        StripeBillable::subscribed insteadof PaddleBillable;
-        StripeBillable::subscribedToProduct insteadof PaddleBillable;
-        StripeBillable::subscribedToPrice insteadof PaddleBillable;
-        StripeBillable::onProduct insteadof PaddleBillable;
-        StripeBillable::onPrice insteadof PaddleBillable;
-        StripeBillable::checkout insteadof PaddleBillable;
-        StripeBillable::charge insteadof PaddleBillable;
-        StripeBillable::newSubscription insteadof PaddleBillable;
-
-        PaddleBillable::subscription as paddleSubscription;
-        PaddleBillable::subscriptions as paddleSubscriptions;
-        PaddleBillable::onTrial as paddleOnTrial;
-        PaddleBillable::trialEndsAt as paddleTrialEndsAt;
-        PaddleBillable::hasExpiredTrial as paddleHasExpiredTrial;
-        PaddleBillable::onGenericTrial as paddleOnGenericTrial;
-        PaddleBillable::hasExpiredGenericTrial as paddleHasExpiredGenericTrial;
-        PaddleBillable::subscribed as paddleSubscribed;
-        PaddleBillable::subscribedToProduct as paddleSubscribedToProduct;
-        PaddleBillable::subscribedToPrice as paddleSubscribedToPrice;
-        PaddleBillable::onProduct as paddleOnProduct;
-        PaddleBillable::onPrice as paddleOnPrice;
-        PaddleBillable::checkout as paddleCheckout;
-        PaddleBillable::charge as paddleCharge;
-        PaddleBillable::newSubscription as paddleNewSubscription;
-
+    use StripeBillable {
         // Club::invoices() is the lodge's own accounting invoices, so Cashier's list of Stripe invoices needs another name.
         StripeBillable::invoices as stripeInvoices;
     }

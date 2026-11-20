@@ -71,7 +71,7 @@ class AnalyticsController extends Controller
             ->orderBy('meeting_date', 'asc')
             ->limit(5)
             ->get()
-            ->map(function ($m) {
+            ->map(function (Meeting $m): array {
                 return [
                     'id' => $m->id,
                     'title' => $m->title && ! str_contains($m->title, 'Regular Meeting No.') ? $m->title : ('Meeting - '.Carbon::parse($m->meeting_date)->format('jS F Y')),

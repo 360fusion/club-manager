@@ -24,6 +24,7 @@ class RegisterRequest extends ClubRequest
             'payment_method' => 'nullable|integer|max:4294967295',
             'promo_code' => 'nullable|string|max:40',
             'attendees' => 'required|array|min:1|max:50',
+            'attendees.*' => 'array',
             'attendees.*.name' => 'nullable|string|max:150',
             'attendees.*.email' => 'nullable|string|max:255',
             'attendees.*.is_guest' => 'nullable|boolean',

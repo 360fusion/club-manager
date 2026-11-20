@@ -21,6 +21,8 @@ class PayPalSyncService
 
     /**
      * Authenticate with PayPal OAuth 2.0 API.
+     *
+     * @return array<string, mixed>
      */
     public function authenticate(string $clientId, string $clientSecret, string $environment = 'live'): array
     {
@@ -42,6 +44,8 @@ class PayPalSyncService
 
     /**
      * Test connection to PayPal API.
+     *
+     * @return array{success: bool, message: string, expires_in?: mixed}
      */
     public function testConnection(string $clientId, string $clientSecret, string $environment = 'live'): array
     {
@@ -63,6 +67,8 @@ class PayPalSyncService
 
     /**
      * Sync settled PayPal transactions for a BankAccount within optional date ranges.
+     *
+     * @return array{success: true, synced_count: int, skipped_count: int, last_synced_at: string}
      */
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {

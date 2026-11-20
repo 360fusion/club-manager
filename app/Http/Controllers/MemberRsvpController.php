@@ -94,8 +94,10 @@ class MemberRsvpController extends Controller
         // The emailed reply link keeps working: its token is only set when there is no reply row yet.
         $rsvp = MeetingRsvp::firstOrNew(['meeting_id' => $meeting->id, 'user_id' => $user->id]);
         $before = MeetingReplies::before($rsvp->exists ? $rsvp : null);
+        /** @var array<array<string, mixed>> $guestRows */
+        $guestRows = $validated['guests'] ?? [];
         $guests = array_key_exists('guests', $validated)
-            ? collect($validated['guests'] ?? [])->filter(fn ($g) => ! empty($g['guest_name']))->map(fn ($g) => ['attending_dining' => $g['attending_dining'] ?? true])
+            ? collect($guestRows)->filter(fn ($g) => ! empty($g['guest_name']))->map(fn ($g) => ['attending_dining' => $g['attending_dining'] ?? true])
             : ($rsvp->exists ? $rsvp->guests : []);
         MeetingReplies::guardDining($meeting, $before, $validated['attendance_status'], $guests);
         if (! $rsvp->exists) {

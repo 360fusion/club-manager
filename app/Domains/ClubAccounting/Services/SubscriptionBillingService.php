@@ -21,6 +21,8 @@ class SubscriptionBillingService
 {
     /**
      * Execute annual subscription billing run for all active lodge members.
+     *
+     * @return array{created_count: int, skipped_count: int, no_rate_count: int, total_billed: float}
      */
     public function generateAnnualBillingRun(Club|int $club, int $billingYear, ?Carbon $dueDate = null): array
     {
@@ -239,6 +241,8 @@ class SubscriptionBillingService
 
     /**
      * Unpaid subscriptions more than $graceDays past due, without changing anything.
+     *
+     * @return Collection<int, MemberSubscription>
      */
     public function overdueSubscriptions(Club|int $club, int $graceDays = 90): Collection
     {
@@ -251,6 +255,8 @@ class SubscriptionBillingService
 
     /**
      * Audit unpaid subscriptions under UGLE Rule 181 arrears policy, marking each overdue one with an arrears warning.
+     *
+     * @return Collection<int, MemberSubscription>
      */
     public function checkRule181Arrears(Club|int $club, int $graceDays = 90): Collection
     {

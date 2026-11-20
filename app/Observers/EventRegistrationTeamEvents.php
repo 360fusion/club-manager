@@ -24,6 +24,9 @@ class EventRegistrationTeamEvents
         $this->record($registration, 'event.registration.paid', 'recorded the booking by :name for :event as paid', ['amount_paid' => $registration->amount_paid]);
     }
 
+    /**
+     * @param  array<string, mixed>  $extra
+     */
     private function record(EventRegistration $registration, string $name, string $sentence, array $extra): void
     {
         $event = $registration->event;

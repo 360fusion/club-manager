@@ -12,6 +12,7 @@ use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Support\ClubAccess;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -169,6 +170,8 @@ class CandidateDetail extends Component
 
     /**
      * Remove a candidate entered by mistake. Owner and admin only, and never once initiated.
+     *
+     * @return null
      */
     public function deleteCandidate()
     {
@@ -198,7 +201,7 @@ class CandidateDetail extends Component
         return Club::where('slug', $this->clubSlug)->firstOrFail();
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
         $candidate = Candidate::with(['proposer', 'seconder', 'owner', 'convertedMember', 'events.author'])->where('club_id', $club->id)->findOrFail($this->candidateId);

@@ -12,6 +12,8 @@ use App\Models\Meeting;
 use App\Services\AccountingService;
 use App\Services\MeetingFinancialReturns;
 use App\Services\Meetings\MeetingCollections;
+use App\Support\ClubAccess;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -53,6 +55,7 @@ class MeetingBusinessController extends Controller
             'meeting' => $meeting,
             'confirmedDiningCount' => $totalConfirmedDiners,
             'financialReturn' => $meeting->financialReturn,
+            'treasurerReportUrl' => ClubAccess::can(request()->user(), $club, 'manage_billing') ? route('admin.accounting.meeting_report', ['clubSlug' => $club->slug, 'id' => $meeting->id]) : null,
             // Alms and raffle entered on the phone: shown on the return, already in the books.
             'phoneCollections' => ($entries = collect(app(MeetingCollections::class)->forMeeting($meeting))->filter())->isEmpty() ? null : [
                 'raffle' => round((float) ($entries->get(CollectionType::Raffle->value)->total_amount ?? 0), 2),
@@ -118,7 +121,7 @@ class MeetingBusinessController extends Controller
     /**
      * Get or create Annual Officer Roster for a meeting agenda.
      */
-    public function officerElectionData(string $clubSlug, int $id)
+    public function officerElectionData(string $clubSlug, int $id): JsonResponse
     {
         $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
@@ -161,7 +164,7 @@ class MeetingBusinessController extends Controller
     /**
      * Save annual officer election draft from meeting agenda discussion.
      */
-    public function storeOfficerElection(StoreOfficerElectionRequest $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService)
+    public function storeOfficerElection(StoreOfficerElectionRequest $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService): JsonResponse
     {
         $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
@@ -194,7 +197,7 @@ class MeetingBusinessController extends Controller
     /**
      * Confirm annual officer election and apply to active member profiles.
      */
-    public function confirmOfficerElection(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService)
+    public function confirmOfficerElection(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService): JsonResponse
     {
         $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();

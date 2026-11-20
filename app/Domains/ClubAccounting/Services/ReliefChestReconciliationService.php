@@ -20,6 +20,8 @@ class ReliefChestReconciliationService
 {
     /**
      * Get Gift Aid reclaimable summary and MCF Relief Chest position.
+     *
+     * @return array<string, mixed>
      */
     public function getGiftAidSummary(Club|int $club): array
     {
@@ -72,6 +74,8 @@ class ReliefChestReconciliationService
 
     /**
      * Auto-scan and reconcile staged bank transactions matching Gift Aid Recovery or Relief Chest Payouts.
+     *
+     * @return array<string, mixed>
      */
     public function autoReconcileGiftAidAndReliefChest(Club|int $club): array
     {
@@ -197,6 +201,9 @@ class ReliefChestReconciliationService
 
     /**
      * Get filterable list of reconciled & eligible donations with donor & Gift Aid details.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
      */
     public function getReconciledDonations(Club|int $club, array $filters = []): array
     {

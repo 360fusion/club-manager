@@ -11,6 +11,8 @@ class StripeSyncService
 {
     /**
      * Test API connection to Stripe using Secret Key.
+     *
+     * @return array{success: bool, message: string}
      */
     public function testConnection(string $secretKey): array
     {
@@ -32,6 +34,8 @@ class StripeSyncService
 
     /**
      * Sync settled Stripe transactions for a BankAccount.
+     *
+     * @return array{success: true, synced_count: int, skipped_count: int, last_synced_at: string}
      */
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {

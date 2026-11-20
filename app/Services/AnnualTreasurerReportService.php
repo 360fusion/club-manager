@@ -39,6 +39,9 @@ class AnnualTreasurerReportService
         protected SignatureCertificatePdf $signatureCertificatePdf,
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function build(Club $club, int $year): array
     {
         $accounts = Account::where('club_id', $club->id)->whereIn('type', ['revenue', 'expense'])->get();
@@ -194,6 +197,7 @@ class AnnualTreasurerReportService
 
     /**
      * @param  Collection<int, Account>  $accounts
+     * @return array{rows: list<array{code: string, name: string, type: string, amount: float}>, total_income: float, total_expenditure: float, net_surplus: float}
      */
     private function fundReceiptsAndPayments(Club $club, int $year, $accounts): array
     {
@@ -221,6 +225,9 @@ class AnnualTreasurerReportService
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $report
+     */
     public function toCsv(array $report): string
     {
         $csv = Csv::line(['Annual Treasurer\'s Report', $report['club_name'], (string) $report['financial_year'], $report['period_start'].' to '.$report['period_end']]);

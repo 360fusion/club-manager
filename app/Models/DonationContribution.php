@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Observers\DonationContributionTeamEvents;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[ObservedBy(DonationContributionTeamEvents::class)]
 class DonationContribution extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $fillable = [

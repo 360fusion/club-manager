@@ -24,6 +24,8 @@ class CommitteePackCompilerService
 {
     /**
      * Compile structured data bundle for the Committee Pre-Meeting Pack.
+     *
+     * @return array<string, mixed>
      */
     public function compilePackData(ClubCommitteeMeeting $meeting): array
     {
@@ -88,6 +90,8 @@ class CommitteePackCompilerService
 
     /**
      * Alias for compilePackData.
+     *
+     * @return array<string, mixed>
      */
     public function compile(ClubCommitteeMeeting $meeting): array
     {
@@ -168,6 +172,8 @@ class CommitteePackCompilerService
 
     /**
      * Dispatch Agenda Pack emails to selected members with optional PDF attachment.
+     *
+     * @param  array<int, int>  $recipientMemberIds
      */
     public function dispatchPack(
         ClubCommitteeMeeting $meeting,

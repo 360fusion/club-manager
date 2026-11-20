@@ -8,8 +8,10 @@ use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
 use App\Models\Club;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
@@ -25,9 +27,16 @@ class BankImportIndex extends Component
     public ?string $statusFilter = null;
 
     // File Upload & Preview State
+    /**
+     * @var TemporaryUploadedFile|null
+     */
     public $statementFile;
 
-    // Parsed on the server from the uploaded file; locked so the rows imported are the rows the file holds.
+    /**
+     * Parsed on the server from the uploaded file; locked so the rows imported are the rows the file holds.
+     *
+     * @var array<string, mixed>|null
+     */
     #[Locked]
     public ?array $previewBundle = null;
 
@@ -134,7 +143,7 @@ class BankImportIndex extends Component
         return Club::where('slug', $this->clubSlug)->firstOrFail();
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
 

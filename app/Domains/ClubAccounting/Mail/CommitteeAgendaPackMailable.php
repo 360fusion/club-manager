@@ -68,6 +68,8 @@ class CommitteeAgendaPackMailable extends Mailable
     /**
      * The PDF is not carried in the queued job (raw bytes cannot be JSON encoded): it is read from the cache, where the
      * sender put it once for everyone, or built again if that copy has gone.
+     *
+     * @return list<Attachment>
      */
     public function attachments(): array
     {

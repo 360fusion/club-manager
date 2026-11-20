@@ -16,7 +16,7 @@ class CommitteeNotesParserService
     /**
      * Parse raw notes text to extract @mentions, [ ] tasks, and /motion lines.
      *
-     * @return array{mentions: array, tasks: array, motions: array}
+     * @return array{mentions: list<array{id: int, name: string, email: string}>, tasks: list<array<string, mixed>>, motions: list<array<string, mixed>>}
      */
     public function parse(string $rawNotes, int $clubId, ?ClubCommitteeMeeting $meeting = null): array
     {
@@ -136,6 +136,8 @@ class CommitteeNotesParserService
 
     /**
      * Automatically sync extracted tasks and motions from a meeting's notes_raw into database records.
+     *
+     * @return array{tasks_created: int, motions_created: int, tasks_count: int, motions_count: int, total_parsed_tasks: int, total_parsed_motions: int}
      */
     public function syncExtractedEntities(ClubCommitteeMeeting $meeting, ?string $rawNotes = null): array
     {
@@ -224,6 +226,8 @@ class CommitteeNotesParserService
 
     /**
      * Alias for syncExtractedEntities.
+     *
+     * @return array{tasks_created: int, motions_created: int, tasks_count: int, motions_count: int, total_parsed_tasks: int, total_parsed_motions: int}
      */
     public function extractEntities(ClubCommitteeMeeting $meeting, ?string $rawNotes = null): array
     {

@@ -20,6 +20,8 @@ class ClubSettingsController extends Controller
 {
     /**
      * Default Granular Permissions Matrix for Club Roles.
+     *
+     * @return array<string, array{label: string, description: string, roles: list<string>}>
      */
     public static function defaultPermissionMatrix(): array
     {

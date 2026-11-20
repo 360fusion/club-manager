@@ -199,6 +199,12 @@ parameters:
 			path: app/Http/Controllers/AnalyticsController.php
 
 		-
+			message: '#^Return type of call to method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Meeting\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: method.unresolvableReturnType
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
 			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -695,18 +701,6 @@ parameters:
 			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Services/MemberInbox.php
-
-		-
-			message: '#^Call to an undefined method Laravel\\Cashier\\Subscription\:\:paymentMethodUpdateUrl\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Payment/PaddlePaymentGateway.php
-
-		-
-			message: '#^Call to an undefined method Laravel\\Paddle\\Checkout\:\:url\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Payment/PaddlePaymentGateway.php
 
 		-
 			message: '#^Access to an undefined property Stripe\\StripeObject\:\:\$stripe_user_id\.$#'

@@ -11,6 +11,7 @@ use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\Invoice;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -154,7 +155,7 @@ class BankReconciliationWorkspace extends Component
         return Club::where('slug', $this->clubSlug)->firstOrFail();
     }
 
-    public function render(BankReconciliationMatcherService $matcher)
+    public function render(BankReconciliationMatcherService $matcher): View
     {
         $club = $this->getClub();
 

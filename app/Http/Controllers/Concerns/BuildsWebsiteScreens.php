@@ -47,6 +47,8 @@ trait BuildsWebsiteScreens
 
     /**
      * Helper to load dynamic site preview data for website builder.
+     *
+     * @return array<string, mixed>
      */
     protected function getPreviewData(Club $club): array
     {
@@ -97,6 +99,8 @@ trait BuildsWebsiteScreens
 
     /**
      * Helper to retrieve website and SEO settings.
+     *
+     * @return array<string, mixed>
      */
     protected function getWebsiteSettings(Club $club): array
     {

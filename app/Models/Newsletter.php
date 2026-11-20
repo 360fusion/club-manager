@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\SanitizedHtml;
 use App\Observers\NewsletterTeamEvents;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 #[ObservedBy(NewsletterTeamEvents::class)]
 class Newsletter extends Model implements HasMedia
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     /** @use InteractsWithMedia<Media> */

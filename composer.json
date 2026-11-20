@@ -15,7 +15,6 @@
         "gocardless/gocardless-pro": "^8.3",
         "inertiajs/inertia-laravel": "^3.3",
         "laravel/cashier": "^16.8",
-        "laravel/cashier-paddle": "^2.8",
         "laravel/fortify": "^1.39",
         "laravel/framework": "^13.17",
         "laravel/pennant": "^1.26",

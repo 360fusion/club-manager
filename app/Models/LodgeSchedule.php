@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\MeetingScheduleService;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Database\Factories\LodgeScheduleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ use InvalidArgumentException;
  */
 class LodgeSchedule extends Model
 {
+    /** @use HasFactory<LodgeScheduleFactory> */
     use HasFactory;
 
     public const OCCURRENCES = ['1st', '2nd', '3rd', '4th', 'last'];

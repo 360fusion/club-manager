@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Concerns;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\Invoice;
+use App\Models\Media;
 
 /**
  * How the file manager shows one file, shared by the controllers that list or change files.
@@ -13,6 +14,8 @@ trait TransformsMedia
 {
     /**
      * Check if a media item is linked to an Accounting Bill or Invoice, or is accounting-protected.
+     *
+     * @param  Media  $media
      */
     private function isAccountingProtected($media): bool
     {
@@ -40,6 +43,9 @@ trait TransformsMedia
             ->map(fn ($id) => (int) $id)->unique()->values()->all();
     }
 
+    /**
+     * @param  Media  $media
+     */
     private function privateUrl($media): string
     {
         $slug = Club::whereKey($media->model_id)->value('slug');
@@ -47,6 +53,10 @@ trait TransformsMedia
         return $slug ? route('admin.accounting.attachments.show', ['clubSlug' => $slug, 'mediaId' => $media->id]) : '';
     }
 
+    /**
+     * @param  Media  $media
+     * @return array<string, mixed>
+     */
     private function transformMedia($media): array
     {
         $isAccountingProtected = $this->isAccountingProtected($media);

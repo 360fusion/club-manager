@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PageAdmin\SaveColourSchemeRequest;
 use App\Http\Requests\PageAdmin\UpdateThemeRequest;
 use App\Support\SiteThemes;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -15,7 +16,7 @@ class PageThemeController extends Controller
     /**
      * Update active website theme layout.
      */
-    public function updateTheme(UpdateThemeRequest $request, string $clubSlug)
+    public function updateTheme(UpdateThemeRequest $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -39,7 +40,7 @@ class PageThemeController extends Controller
      * Create or update one of the lodge's own named colour schemes. The browser proposes the id of a new scheme;
      * it is only accepted in the expected shape, and a scheme that already has that id is updated in place.
      */
-    public function saveColourScheme(SaveColourSchemeRequest $request, string $clubSlug)
+    public function saveColourScheme(SaveColourSchemeRequest $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -77,7 +78,7 @@ class PageThemeController extends Controller
     /**
      * Remove one of the lodge's colour schemes, unless the live site is using it.
      */
-    public function deleteColourScheme(string $clubSlug, string $schemeId)
+    public function deleteColourScheme(string $clubSlug, string $schemeId): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 

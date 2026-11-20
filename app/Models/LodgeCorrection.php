@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\LodgeCorrectionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class LodgeCorrection extends Model
 {
+    /** @use HasFactory<LodgeCorrectionFactory> */
     use HasFactory;
 
     public const PENDING = 'pending';

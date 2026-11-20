@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\MemberAccountStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberImport;
 use App\Domains\ClubAccounting\Models\MemberImportRow;
+use App\Models\Club;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -51,6 +52,7 @@ class MemberImportUndo
     }
 
     /**
+     * @param  Club  $club
      * @param  array{removed: int, restored: int, blocked: array<int, string>}  $summary
      */
     private function removeCreated(MemberImportRow $row, MemberImport $import, $club, array &$summary): void

@@ -3,6 +3,7 @@
 namespace App\Models\Accounting;
 
 use App\Models\Club;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FixedAsset extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $table = 'accounting_fixed_assets';

@@ -111,6 +111,9 @@ class MediaVersionController extends Controller
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function transformVersion(Media $media, MediaVersion $version): array
     {
         return [

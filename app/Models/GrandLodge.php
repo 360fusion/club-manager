@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class GrandLodge extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $fillable = [
@@ -42,6 +44,8 @@ class GrandLodge extends Model
 
     /**
      * Get all clubs/lodges associated with this Grand Lodge through its provinces.
+     *
+     * @return HasManyThrough<Club, Province, $this>
      */
     public function clubs(): HasManyThrough
     {

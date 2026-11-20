@@ -139,6 +139,8 @@ class BankReconciliationMatcherService
 
     /**
      * Analyze a staged bank transaction line and return ranked candidate matches with confidence scores.
+     *
+     * @return list<array<string, mixed>>
      */
     public function suggestMatches(BankTransaction $transaction): array
     {
@@ -389,6 +391,8 @@ class BankReconciliationMatcherService
 
     /**
      * Execute reconciliation confirmation for a staged transaction.
+     *
+     * @param  array{nominal_code?: string|null}  $options
      */
     public function reconcileTransaction(BankTransaction $transaction, string $matchType, int|string $targetId, array $options = []): bool
     {

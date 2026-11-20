@@ -42,7 +42,9 @@ class PayPalGateway
             ]]],
         ]), 'Online payment is not available right now. Please choose another way to pay or try again shortly.', 'payment');
 
-        $url = collect($response['links'] ?? [])->first(fn ($link) => in_array($link['rel'] ?? '', ['payer-action', 'approve'], true))['href'] ?? null;
+        /** @var list<array{rel?: string, href?: string}> $links */
+        $links = $response['links'] ?? [];
+        $url = collect($links)->first(fn ($link) => in_array($link['rel'] ?? '', ['payer-action', 'approve'], true))['href'] ?? null;
 
         if (empty($response['id']) || ! $url) {
             throw ValidationException::withMessages(['payment' => 'Online payment is not available right now. Please choose another way to pay or try again shortly.']);

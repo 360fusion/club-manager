@@ -21,6 +21,8 @@ class LedgerScreenData
 {
     /**
      * The latest journal entries with their lines, newest first.
+     *
+     * @return Collection<int, covariant array<string, mixed>>
      */
     public function journalEntries(Club $club): Collection
     {
@@ -55,6 +57,8 @@ class LedgerScreenData
 
     /**
      * The latest member invoices. `can_approve` is false for the person who raised one.
+     *
+     * @return Collection<int, covariant array<string, mixed>>
      */
     public function invoices(Club $club, User $viewer): Collection
     {
@@ -91,6 +95,8 @@ class LedgerScreenData
 
     /**
      * The latest vendor bills. `can_approve` is false for the person who raised one.
+     *
+     * @return Collection<int, covariant array<string, mixed>>
      */
     public function bills(Club $club, User $viewer): Collection
     {
@@ -128,6 +134,8 @@ class LedgerScreenData
 
     /**
      * The club's saved contacts.
+     *
+     * @return Collection<int, covariant array<string, mixed>>
      */
     public function contacts(Club $club): Collection
     {

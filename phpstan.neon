@@ -13,9 +13,9 @@ parameters:
     paths:
         - app/
 
-    # Level 5, with the problems that already existed recorded in phpstan-baseline.neon so only new code is held to it.
+    # Level 6, with the problems that already existed recorded in phpstan-baseline.neon so only new code is held to it.
     # Pay the baseline down by fixing an entry and regenerating: vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon
-    level: 5
+    level: 6
 
     excludePaths:
         - storage/

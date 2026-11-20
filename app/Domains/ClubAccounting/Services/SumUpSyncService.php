@@ -11,6 +11,8 @@ class SumUpSyncService
 {
     /**
      * Test connection to SumUp API.
+     *
+     * @return array{success: bool, message: string, merchant_code?: mixed}
      */
     public function testConnection(string $apiKey): array
     {
@@ -39,6 +41,8 @@ class SumUpSyncService
 
     /**
      * Sync settled SumUp transactions for a BankAccount.
+     *
+     * @return array{success: true, synced_count: int, skipped_count: int, last_synced_at: string}
      */
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {

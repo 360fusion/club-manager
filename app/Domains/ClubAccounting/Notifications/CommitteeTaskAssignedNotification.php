@@ -13,6 +13,9 @@ class CommitteeTaskAssignedNotification extends Notification
 
     public function __construct(public ClubCommitteeTask $task) {}
 
+    /**
+     * @return list<string>
+     */
     public function via(object $notifiable): array
     {
         return ['mail', 'database'];
@@ -33,6 +36,9 @@ class CommitteeTaskAssignedNotification extends Notification
             ->line('Thank you for your service to the Lodge.');
     }
 
+    /**
+     * @return array{task_id: int, title: string, due_date: string|null, committee_meeting_id: int}
+     */
     public function toArray(object $notifiable): array
     {
         return [

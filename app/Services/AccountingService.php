@@ -18,6 +18,7 @@ use App\Support\Currencies;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -162,6 +163,8 @@ class AccountingService
 
     /**
      * Post a balanced double-entry journal entry.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function postJournalEntry(Club $club, array $data): JournalEntry
     {
@@ -217,6 +220,8 @@ class AccountingService
 
     /**
      * Update an existing Journal Entry & recalculate balance
+     *
+     * @param  array<string, mixed>  $data
      */
     public function updateJournalEntry(Club $club, int $entryId, array $data): JournalEntry
     {
@@ -265,6 +270,9 @@ class AccountingService
      * Write an entry to the append-only ledger audit trail (App\Models\Accounting\LedgerAuditLog).
      * The single writer for every mutation this service (and its sibling services)
      * makes to a financial record.
+     *
+     * @param  array<string, mixed>|null  $before
+     * @param  array<string, mixed>|null  $after
      */
     public function log(Club $club, string $entityType, int $entityId, string $action, string $summary, ?array $before = null, ?array $after = null, ?int $userId = null): void
     {
@@ -398,6 +406,9 @@ class AccountingService
 
     /**
      * Create Vendor Bill (Accounts Payable) & Post to Ledger
+     *
+     * @param  array<string, mixed>  $data
+     * @param  UploadedFile|null  $attachmentFile
      */
     public function createVendorBill(Club $club, array $data, $attachmentFile = null): Bill
     {

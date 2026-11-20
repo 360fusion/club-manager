@@ -52,12 +52,15 @@ class EventQuoteController extends Controller
         $validated = $request->validate([
             'promo_code' => 'nullable|string|max:40',
             'attendees' => 'required|array|min:1|max:50',
+            'attendees.*' => 'array',
             'attendees.*.is_guest' => 'nullable|boolean',
             'attendees.*.ticket_tier_id' => 'nullable|integer|max:4294967295',
             'attendees.*.attending_dining' => 'nullable|boolean',
         ]);
 
-        $people = collect($validated['attendees'])->values()->map(fn (array $person, int $index) => [
+        /** @var array<array<string, mixed>> $attendees */
+        $attendees = $validated['attendees'];
+        $people = collect($attendees)->values()->map(fn (array $person, int $index) => [
             'is_guest' => (bool) ($person['is_guest'] ?? $index > 0),
             'ticket_tier_id' => $person['ticket_tier_id'] ?? null,
             'attending_dining' => (bool) ($person['attending_dining'] ?? false),

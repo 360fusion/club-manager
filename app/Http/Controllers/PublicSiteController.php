@@ -198,6 +198,8 @@ class PublicSiteController extends Controller
 
     /**
      * Everything the public site needs to draw one page.
+     *
+     * @param  array<string, mixed>  $extra
      */
     private function renderPage(Club $club, Page $page, ?User $viewer, int $status = 200, bool $preview = false, array $extra = []): SymfonyResponse|Response
     {

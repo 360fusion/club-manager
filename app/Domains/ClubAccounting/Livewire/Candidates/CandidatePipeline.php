@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
 use App\Models\Club;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -140,7 +141,7 @@ class CandidatePipeline extends Component
         $this->resetErrorBag();
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
 

@@ -20,6 +20,7 @@ class UpdateRsvp2Request extends ClubRequest
             'payment_method' => 'nullable|integer|max:4294967295',
             'promo_code' => 'nullable|string|max:40',
             'attendees' => 'nullable|array|max:50',
+            'attendees.*' => 'array',
             'attendees.*.name' => 'nullable|string|max:150',
             'attendees.*.email' => 'nullable|string|max:255',
             'attendees.*.is_guest' => 'nullable|boolean',

@@ -13,6 +13,11 @@ import Textarea from '@/Components/Ui/Textarea.vue';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
 import { formatMoney } from '@/Utils/currency';
 const props = defineProps({
+  // The meeting's Treasurer's report, for those who may see the lodge's money; null for everyone else.
+  treasurerReportUrl: {
+    type: String,
+    default: null,
+  },
   // Alms and raffle entered on the phone (already in the books): { raffle, alms, url }, or null.
   phoneCollections: {
     type: Object,
@@ -127,6 +132,7 @@ const submit = () => {
           <Badge v-if="financialReturn?.is_draft" variant="warning">Draft saved</Badge>
         </template>
         <template #actions>
+          <a v-if="treasurerReportUrl" :href="treasurerReportUrl" target="_blank" rel="noopener" class="inline-flex min-h-8 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Treasurer's report</a>
           <Button variant="secondary" size="sm" :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })">Back to meeting dashboard</Button>
         </template>
       </PageHeader>

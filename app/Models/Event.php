@@ -9,6 +9,7 @@ use App\Observers\EventTeamEvents;
 use App\Observers\RebuildsStaticSite;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
 #[ObservedBy([EventTeamEvents::class, RebuildsStaticSite::class])]
 class Event extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, HasVisibility;
 
     protected $attributes = [

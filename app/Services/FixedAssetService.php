@@ -22,6 +22,8 @@ class FixedAssetService
      * linked to a vendor Bill, that cost is reclassified out of the expense account
      * it originally posted against (5000) into Fixed Assets (1500); otherwise it's
      * recorded as an opening asset value against Retained Earnings (3000).
+     *
+     * @param  array<string, mixed>  $data
      */
     public function registerAsset(Club $club, array $data): FixedAsset
     {

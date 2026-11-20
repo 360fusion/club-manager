@@ -21,6 +21,7 @@ use App\Support\ClubAccess;
 use App\Support\LodgeReferenceLinks;
 use App\Support\VisitorSummons;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -376,6 +377,7 @@ class LodgeDirectoryController extends Controller
     /**
      * Ids of the lodges in the query that are expected to meet in the next $days days.
      *
+     * @param  Builder<Lodge>  $query
      * @return list<int>
      */
     private function meetingWithin(int $days, $query): array

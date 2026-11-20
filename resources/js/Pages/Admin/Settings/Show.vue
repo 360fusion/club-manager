@@ -77,15 +77,7 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  activeProvider: {
-    type: String,
-    default: 'stripe',
-  },
   stripeConfigured: {
-    type: Boolean,
-    default: false,
-  },
-  paddleConfigured: {
     type: Boolean,
     default: false,
   },
@@ -104,18 +96,6 @@ const isSuperAdmin = computed(() => !!usePage().props.auth?.user?.is_super_admin
 // Owner holds every permission implicitly and isn't a club-level choice, so only platform
 // admins see that column in the matrix.
 const visibleRoles = computed(() => props.availableRoles.filter(r => r.code !== 'owner' || isSuperAdmin.value));
-
-const selectedProvider = ref(props.activeProvider || 'stripe');
-const processingProvider = ref(false);
-
-const switchProvider = (provider) => {
-  selectedProvider.value = provider;
-  processingProvider.value = true;
-  router.post(route('billing.provider.update', { clubSlug: props.club.slug }), { provider }, {
-    preserveScroll: true,
-    onFinish: () => { processingProvider.value = false; }
-  });
-};
 
 const validTabs = [
   'general', 'positions', 'ranks', 'officers', 'branding', 'roles', 'modules',
@@ -254,7 +234,7 @@ const updateMemberRole = (userId, newRole) => {
       <SubscriptionsSettingsTab v-if="activeTab === 'subscriptions'" :form="form" />
 
       <!-- TAB: PAYMENT GATEWAYS & PROVIDERS -->
-      <PaymentsSettingsTab v-if="activeTab === 'payments'" :club="club" :selected-provider="selectedProvider" :processing-provider="processingProvider" :switch-provider="switchProvider" :stripe-configured="stripeConfigured" :paddle-configured="paddleConfigured" :payment-options-url="paymentOptionsUrl" />
+      <PaymentsSettingsTab v-if="activeTab === 'payments'" :club="club" :stripe-configured="stripeConfigured" :payment-options-url="paymentOptionsUrl" />
 
       <!-- TAB 5: EVENTS & CHECK-INS -->
       <EventsSettingsTab v-if="activeTab === 'events'" :form="form" :payment-options-url="paymentOptionsUrl" />

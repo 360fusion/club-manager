@@ -21,6 +21,8 @@ class GoCardlessSyncService
 
     /**
      * Test API connection to GoCardless using Access Token.
+     *
+     * @return array{success: bool, message: string}
      */
     public function testConnection(string $accessToken, string $environment = 'sandbox'): array
     {
@@ -51,6 +53,8 @@ class GoCardlessSyncService
 
     /**
      * Sync settled GoCardless transactions & payouts for a BankAccount.
+     *
+     * @return array{success: true, synced_count: int, skipped_count: int, last_synced_at: string}
      */
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {

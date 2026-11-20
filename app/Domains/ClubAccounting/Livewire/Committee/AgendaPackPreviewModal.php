@@ -5,6 +5,8 @@ namespace App\Domains\ClubAccounting\Livewire\Committee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -28,6 +30,9 @@ class AgendaPackPreviewModal extends Component
 
     public string $emailBody = '';
 
+    /**
+     * @var list<int>
+     */
     public array $selectedRecipientIds = [];
 
     public bool $includePdfAttachment = true;
@@ -155,6 +160,9 @@ class AgendaPackPreviewModal extends Component
         $this->dispatch('pack-dispatched');
     }
 
+    /**
+     * @return RedirectResponse
+     */
     public function downloadPdf()
     {
         return redirect()->route('admin.committee.pack.pdf', [
@@ -182,7 +190,7 @@ class AgendaPackPreviewModal extends Component
             ->firstOrFail();
     }
 
-    public function render()
+    public function render(): View
     {
         $meeting = $this->getMeeting();
 

@@ -15,6 +15,7 @@ use App\Support\MemberScope;
 use App\Support\UploadRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -65,7 +66,7 @@ class MemberSignatureController extends Controller
         return Inertia::render('Members/SignedDocuments', ['documents' => $requests]);
     }
 
-    public function downloadPdf(Request $httpRequest, string $slug, int $id, SignatureRequestService $signatures, SignatureCertificatePdf $pdf)
+    public function downloadPdf(Request $httpRequest, string $slug, int $id, SignatureRequestService $signatures, SignatureCertificatePdf $pdf): HttpResponse
     {
         $request = $this->authorized($httpRequest, $slug, $id, $signatures);
 

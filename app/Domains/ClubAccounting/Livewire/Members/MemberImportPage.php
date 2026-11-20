@@ -17,11 +17,13 @@ use App\Support\ClubAccess;
 use App\Support\Csv;
 use App\Support\CsvReader;
 use App\Support\UploadRules;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use RuntimeException;
@@ -47,6 +49,9 @@ class MemberImportPage extends Component
     #[Locked]
     public string $step = 'upload';
 
+    /**
+     * @var TemporaryUploadedFile|null
+     */
     public $file = null;
 
     /** @var array<int, string> Column index => member field ('' leaves the column out). */
@@ -540,7 +545,7 @@ class MemberImportPage extends Component
         return ['skip', 'create'];
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
         $import = $this->importId ? MemberImport::where('club_id', $club->id)->find($this->importId) : null;

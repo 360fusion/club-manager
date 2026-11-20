@@ -31,7 +31,7 @@ class BudgetService
      * variance and variance %. Accounts with neither a budget nor any activity that
      * year are left out.
      *
-     * @return array{financial_year: int, rows: array, total_budgeted: float, total_actual: float}
+     * @return array{financial_year: int, rows: list<array{account_id: int, code: string, name: string, type: string, budgeted: float, actual: float, variance: float, variance_pct: ?float}>, total_budgeted: float, total_actual: float}
      */
     public function getBudgetVsActual(Club $club, int $year): array
     {

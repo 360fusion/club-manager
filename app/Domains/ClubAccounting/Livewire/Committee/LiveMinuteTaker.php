@@ -17,6 +17,7 @@ use App\Domains\ClubAccounting\Services\Integration\MemberMentionSearchService;
 use App\Models\Club;
 use App\Support\Currencies;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -41,12 +42,19 @@ class LiveMinuteTaker extends Component
     // Active Tab in Right Sidebar ('live', 'tasks', 'motions')
     public string $activeRightTab = 'live';
 
-    // Extracted live preview
+    /**
+     * Extracted live preview
+     *
+     * @var array<string, mixed>
+     */
     public array $parsedPreview = ['mentions' => [], 'tasks' => [], 'motions' => []];
 
     // Member search for autocomplete
     public string $memberQuery = '';
 
+    /**
+     * @var array<int, array<string, mixed>>
+     */
     public array $mentionSuggestions = [];
 
     public function mount(string $clubSlug, int $meetingId): void
@@ -344,7 +352,7 @@ class LiveMinuteTaker extends Component
             ->firstOrFail();
     }
 
-    public function render()
+    public function render(): View
     {
         $meeting = $this->getMeeting();
 

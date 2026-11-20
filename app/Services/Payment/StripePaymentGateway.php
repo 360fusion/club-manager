@@ -15,6 +15,7 @@ class StripePaymentGateway implements PaymentGatewayInterface
 
     /**
      * @param  Club  $customer  The billable model is always a club.
+     * @param  array<string, mixed>  $options
      */
     public function createCheckoutSession(Model $customer, string $priceId, array $options = []): string
     {

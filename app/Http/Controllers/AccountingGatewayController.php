@@ -17,6 +17,7 @@ use App\Http\Requests\AccountingGateway\SyncPayPalTransactionsRequest;
 use App\Http\Requests\AccountingGateway\SyncStripeTransactionsRequest;
 use App\Http\Requests\AccountingGateway\SyncSumUpTransactionsRequest;
 use App\Models\Accounting\Account;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -130,7 +131,7 @@ class AccountingGatewayController extends Controller
         return redirect()->back()->with('success', "PayPal Account '{$validated['account_name']}' connected & linked to Nominal Code {$ledgerAcc->code}!");
     }
 
-    public function testPayPalConnection(Request $request, string $clubSlug, int $id)
+    public function testPayPalConnection(Request $request, string $clubSlug, int $id): JsonResponse
     {
         $club = $this->findClub($clubSlug);
         $bankAccount = BankAccount::where('club_id', $club->id)->findOrFail($id);
@@ -164,7 +165,7 @@ class AccountingGatewayController extends Controller
                 $validated['end_date'] ?? null
             );
 
-            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+            $skippedMsg = $result['skipped_count'] > 0
                 ? " ({$result['skipped_count']} duplicates safely ignored)"
                 : '';
 
@@ -238,7 +239,7 @@ class AccountingGatewayController extends Controller
                 $validated['end_date'] ?? null
             );
 
-            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+            $skippedMsg = $result['skipped_count'] > 0
                 ? " ({$result['skipped_count']} duplicates safely ignored)"
                 : '';
 
@@ -313,7 +314,7 @@ class AccountingGatewayController extends Controller
                 $validated['end_date'] ?? null
             );
 
-            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+            $skippedMsg = $result['skipped_count'] > 0
                 ? " ({$result['skipped_count']} duplicates safely ignored)"
                 : '';
 
@@ -389,7 +390,7 @@ class AccountingGatewayController extends Controller
                 $validated['end_date'] ?? null
             );
 
-            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+            $skippedMsg = $result['skipped_count'] > 0
                 ? " ({$result['skipped_count']} duplicates safely ignored)"
                 : '';
 

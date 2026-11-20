@@ -12,9 +12,11 @@ use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Models\Club;
 use App\Support\ClubAccess;
 use App\Support\Csv;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MemberIndex extends Component
 {
@@ -146,6 +148,8 @@ class MemberIndex extends Component
 
     /**
      * Secretarial Returns & Directory CSV Export
+     *
+     * @return StreamedResponse
      */
     public function exportCsv()
     {
@@ -221,7 +225,7 @@ class MemberIndex extends Component
         $this->notify(implode(' ', $parts), $result['invited'] > 0 ? 'success' : 'error');
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
 

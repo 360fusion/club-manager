@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Observers\InvoiceTeamEvents;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[ObservedBy(InvoiceTeamEvents::class)]
 class Invoice extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $fillable = [

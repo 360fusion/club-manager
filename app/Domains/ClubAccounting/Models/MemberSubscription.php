@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Models\Club;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MemberSubscription extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, SoftDeletes;
 
     protected $table = 'club_acc_member_subscriptions';
@@ -85,6 +87,10 @@ class MemberSubscription extends Model
         return $this->belongsTo(SubscriptionTier::class, 'tier_id');
     }
 
+    /**
+     * @param  Builder<MemberSubscription>  $query
+     * @return Builder<MemberSubscription>
+     */
     public function scopeUnpaid(Builder $query): Builder
     {
         return $query->whereIn('status', [
@@ -94,16 +100,28 @@ class MemberSubscription extends Model
         ]);
     }
 
+    /**
+     * @param  Builder<MemberSubscription>  $query
+     * @return Builder<MemberSubscription>
+     */
     public function scopeArrears(Builder $query): Builder
     {
         return $query->where('status', SubscriptionStatus::ArrearsWarning->value);
     }
 
+    /**
+     * @param  Builder<MemberSubscription>  $query
+     * @return Builder<MemberSubscription>
+     */
     public function scopePaid(Builder $query): Builder
     {
         return $query->where('status', SubscriptionStatus::Paid->value);
     }
 
+    /**
+     * @param  Builder<MemberSubscription>  $query
+     * @return Builder<MemberSubscription>
+     */
     public function scopeYear(Builder $query, int $year): Builder
     {
         return $query->where('billing_year', $year);

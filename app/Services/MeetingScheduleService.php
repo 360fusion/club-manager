@@ -61,6 +61,9 @@ class MeetingScheduleService
 
     /**
      * Batch generate season meeting dates given a list of active months.
+     *
+     * @param  array<int, int|string>  $activeMonths
+     * @return list<Carbon>
      */
     public function generateSeasonDates(int $year, array $activeMonths, string $occurrence, string $dayOfWeek): array
     {

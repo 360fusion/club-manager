@@ -78,7 +78,7 @@ class PushSender
                 ],
             ]);
 
-        $code = collect($response->json('error.details', []))->pluck('errorCode')->first();
+        $code = $response->collect('error.details')->pluck('errorCode')->first();
         if ($response->status() === 404 || $code === 'UNREGISTERED') {
             return self::GONE;
         }

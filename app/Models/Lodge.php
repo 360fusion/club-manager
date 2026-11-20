@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\MeetingScheduleParser;
 use App\Support\Months;
 use Carbon\CarbonInterface;
+use Database\Factories\LodgeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
  */
 class Lodge extends Model
 {
+    /** @use HasFactory<LodgeFactory> */
     use HasFactory;
 
     public const STATUSES = ['active', 'dormant', 'suspended', 'erased'];

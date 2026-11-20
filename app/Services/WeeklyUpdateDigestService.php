@@ -82,6 +82,9 @@ class WeeklyUpdateDigestService
 
     /**
      * Compile rich multi-section HTML content for the weekly digest email.
+     *
+     * @param  Collection<int, ClubUpdate>  $updates
+     * @param  array{include_updates?: bool, include_upcoming_meetings?: bool, include_upcoming_events?: bool, include_news_posts?: bool}  $options
      */
     public function compileDigestHtml(Club $club, Collection $updates, array $options = []): string
     {
@@ -126,7 +129,7 @@ class WeeklyUpdateDigestService
                 }
 
                 // Downloadable attachments
-                if (! empty($update->attachments) && is_array($update->attachments)) {
+                if (! empty($update->attachments)) {
                     $html .= '<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">';
                     foreach ($update->attachments as $att) {
                         $attName = e($att['name'] ?? 'Download File');
@@ -254,6 +257,9 @@ class WeeklyUpdateDigestService
 
     /**
      * Dispatch the weekly digest email broadcast.
+     *
+     * @param  array<int, int|string>|null  $selectedUpdateIds
+     * @param  list<string>|null  $recipientRoles
      */
     public function dispatchWeeklyDigest(Club $club, ?array $selectedUpdateIds = null, ?array $recipientRoles = null): Newsletter
     {

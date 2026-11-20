@@ -7,6 +7,8 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -132,6 +134,9 @@ class CreateCommitteeMeetingModal extends Component
         }
     }
 
+    /**
+     * @return RedirectResponse
+     */
     public function save()
     {
         // Guarantee title is set if cleared or empty
@@ -200,7 +205,7 @@ class CreateCommitteeMeetingModal extends Component
         return Club::firstOrFail();
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
 

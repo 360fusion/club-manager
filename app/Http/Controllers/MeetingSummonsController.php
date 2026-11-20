@@ -15,7 +15,9 @@ use App\Services\MeetingScheduleService;
 use App\Services\PassedOn\PlatformSummons;
 use App\Services\SummonsSender;
 use App\Support\NodeBinaries;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -27,6 +29,8 @@ class MeetingSummonsController extends Controller
 {
     /**
      * Render 2-page printable HTML/PDF summons view.
+     *
+     * @return Response|View
      */
     public function pdf(string $clubSlug, int $id)
     {

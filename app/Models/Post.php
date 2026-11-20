@@ -10,6 +10,7 @@ use App\Observers\RebuildsStaticSite;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 #[ObservedBy([PostTeamEvents::class, RebuildsStaticSite::class])]
 class Post extends Model implements HasMedia
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, HasVisibility;
 
     /** @use InteractsWithMedia<Media> */
@@ -54,6 +56,9 @@ class Post extends Model implements HasMedia
 
     /**
      * Scope a query to only include published and active (non-expired) posts.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
      */
     public function scopePublished(Builder $query): Builder
     {
@@ -72,7 +77,9 @@ class Post extends Model implements HasMedia
      * Narrow a query by the members-area news filters: `q` (title, summary, body), `tags`
      * (slugs, any of), `from` and `to` (dates, inclusive, on the published date).
      *
+     * @param  Builder<Post>  $query
      * @param  array{q?: ?string, tags?: list<string>, from?: ?string, to?: ?string}  $filters
+     * @return Builder<Post>
      */
     public function scopeFilter(Builder $query, array $filters): Builder
     {

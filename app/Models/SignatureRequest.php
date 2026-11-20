@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Contracts\Signable;
 use App\Enums\SignatureRequestStatus;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class SignatureRequest extends Model implements HasMedia
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     /** @use InteractsWithMedia<Media> */

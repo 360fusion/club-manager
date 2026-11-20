@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ClubUpdate extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $fillable = [
@@ -62,21 +64,37 @@ class ClubUpdate extends Model
         return $this->belongsTo(Newsletter::class);
     }
 
+    /**
+     * @param  Builder<ClubUpdate>  $query
+     * @return Builder<ClubUpdate>
+     */
     public function scopeDraft(Builder $query): Builder
     {
         return $query->where('status', 'draft');
     }
 
+    /**
+     * @param  Builder<ClubUpdate>  $query
+     * @return Builder<ClubUpdate>
+     */
     public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', 'approved');
     }
 
+    /**
+     * @param  Builder<ClubUpdate>  $query
+     * @return Builder<ClubUpdate>
+     */
     public function scopeSent(Builder $query): Builder
     {
         return $query->where('status', 'sent');
     }
 
+    /**
+     * @param  Builder<ClubUpdate>  $query
+     * @return Builder<ClubUpdate>
+     */
     public function scopeByCategory(Builder $query, string $category): Builder
     {
         return $query->where('category', $category);

@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Accounting\Bill;
 use App\Support\ClubAccess;
 use App\Support\Currencies;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -25,6 +26,9 @@ class BillAuditModal extends Component
 
     public bool $isApprovedForPayment = true;
 
+    /**
+     * @var array<string, string>
+     */
     protected $listeners = ['openBillAudit' => 'loadBill'];
 
     public function loadBill(int $billId, int $meetingId): void
@@ -67,7 +71,7 @@ class BillAuditModal extends Component
         session()->flash('success', "Vendor bill {$bill->bill_number} audit sign-off recorded on the committee agenda.");
     }
 
-    public function render()
+    public function render(): View
     {
         $bill = null;
         $meeting = isset($this->meetingId) ? ClubCommitteeMeeting::find($this->meetingId) : null;

@@ -9,6 +9,8 @@ class MemberMentionSearchService
 {
     /**
      * Search club members by name or email for quick @mention autocomplete.
+     *
+     * @return Collection<int, covariant array{id: int, name: string, email: string, role: mixed, mention_tag: string}>
      */
     public function search(int $clubId, string $query = '', int $limit = 10): Collection
     {

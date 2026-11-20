@@ -4,6 +4,7 @@ namespace App\Domains\ClubAccounting\Models;
 
 use App\Models\Club;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SubscriptionTier extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, SoftDeletes;
 
     protected $table = 'club_acc_subscription_tiers';
@@ -56,6 +58,10 @@ class SubscriptionTier extends Model
         return $this->hasMany(MemberSubscription::class, 'tier_id');
     }
 
+    /**
+     * @param  Builder<SubscriptionTier>  $query
+     * @return Builder<SubscriptionTier>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

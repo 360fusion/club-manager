@@ -11,10 +11,19 @@ use App\Models\Club;
 use App\Models\Invoice;
 use App\Support\Csv;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 
 /**
  * Financial summaries, the standard reports, the VAT return and the comparative income and expenditure figures, as data, CSV or the data a PDF view needs. Split out of AccountingService.
+ *
+ * @phpstan-type FinancialSummary array{total_assets: float, total_liabilities: float, total_equity: float, total_revenue: float, total_expenses: float, net_income: float, unpaid_bills_total: float, unpaid_invoices_total: float}
+ * @phpstan-type AgedBalances array{current: float, '1_30': float, '31_60': float, '61_90': float, '90_plus': float, total: float, items: list<array<string, mixed>>}
+ * @phpstan-type BalanceRow array{code: string, name: string, balance: float}
+ * @phpstan-type AmountRow array{code: string, name: string, amount: float}
+ * @phpstan-type VatReturn array{enabled: bool, quarter_label: string, quarter_start: string, quarter_end: string, output_vat: float, input_vat: float, net_vat_due: float, net_sales: float, net_purchases: float, rows: list<array{type: string, reference: string, description: string, date: string, net_amount: float, vat_amount: float, gross_amount: float}>}
+ * @phpstan-type ComparativeStatement array{prior_year_label: string, current_year_label: string, rows: list<array{category: string, prior_income: float, prior_expenditure: float, current_income: float, current_expenditure: float}>, prior_totals: array{income: float, expenditure: float}, prior_balance_carried_forward: float, prior_reconciled: float, current_totals: array{income: float, expenditure: float}, current_balance_carried_forward: float, current_reconciled: float}
+ * @phpstan-type ProvincialDue array{province_name: ?string, has_province: bool, member_count: int, per_capita_rate: ?float, per_capita_amount: ?float, festival_rate: ?float, festival_amount: ?float, total_due: ?float, counted_on: string}
  */
 class AccountingReports
 {
@@ -22,6 +31,8 @@ class AccountingReports
 
     /**
      * Get Overall Financial Summary KPIs
+     *
+     * @return FinancialSummary
      */
     public function getFinancialSummary(Club $club): array
     {
@@ -77,6 +88,8 @@ class AccountingReports
 
     /**
      * Get detailed financial report breakdown for the 7 standard ERP reports
+     *
+     * @return array{account_summary: Collection<int, array{code: string, name: string, type: string, total_debit: float, total_credit: float, net_balance: float}>, aged_payables: AgedBalances, aged_receivables: AgedBalances, balance_sheet: array{assets: Collection<int, BalanceRow>, liabilities: Collection<int, BalanceRow>, equity: Collection<int, BalanceRow>, total_assets: float, total_liabilities: float, total_equity: float}, cash_summary: array{total_cash_on_hand: float, accounts: Collection<int, BalanceRow>}, executive_summary: array{net_profit_margin_pct: float|int, operating_expense_ratio_pct: float|int, total_cash_reserves: float, outstanding_ar: float, outstanding_ap: float}, profit_and_loss: array{revenues: Collection<int, AmountRow>, expenses: Collection<int, AmountRow>, total_revenue: float, total_expenses: float, net_income: float}, comparative_income_expenditure: ComparativeStatement, vat_return: VatReturn, provincial_due: ProvincialDue}
      */
     public function getReportsData(Club $club): array
     {
@@ -256,7 +269,7 @@ class AccountingReports
      * Member counts are always "current": members carry no leave date, so a true
      * as-of-date snapshot is not possible.
      *
-     * @return array{province_name: ?string, has_province: bool, member_count: int, per_capita_rate: ?float, per_capita_amount: ?float, festival_rate: ?float, festival_amount: ?float, total_due: ?float, counted_on: string}
+     * @return ProvincialDue
      */
     public function getProvincialDueWorksheet(Club $club): array
     {
@@ -288,7 +301,7 @@ class AccountingReports
      * HMRC. This is calculated and exportable, not submitted — filing via HMRC's
      * Making Tax Digital service is a separate, later step for the treasurer.
      *
-     * @return array{enabled: bool, quarter_label: string, quarter_start: string, quarter_end: string, output_vat: float, input_vat: float, net_vat_due: float, net_sales: float, net_purchases: float, rows: array}
+     * @return VatReturn
      */
     public function getVatReturnData(Club $club, ?string $quarterStartDate = null): array
     {
@@ -398,6 +411,8 @@ class AccountingReports
      * bill/invoice and meeting-return data for the current and prior calendar year. No
      * category ever falls back to a placeholder figure — a category with no activity
      * in a year is reported as 0.
+     *
+     * @return ComparativeStatement
      */
     public function getComparativeIncomeExpenditureData(Club $club): array
     {
@@ -573,7 +588,7 @@ class AccountingReports
      * 8 reports that only had CSV export before (Comparative I&E and the VAT Return
      * already have their own bespoke PDF templates).
      *
-     * @return array{0: string, 1: array}
+     * @return array{0: string, 1: array<string, mixed>}
      */
     public function getReportPdfView(Club $club, string $reportKey, ?int $budgetYear = null): array
     {

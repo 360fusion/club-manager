@@ -218,6 +218,7 @@ class EventOrganiserBookingController extends Controller
             'mark_paid.received_on' => 'nullable|date',
             'mark_paid.comment' => 'nullable|string|max:500',
             'attendees' => 'required|array|min:1|max:50',
+            'attendees.*' => 'array',
             'attendees.*.name' => 'required|string|max:150',
             'attendees.*.email' => 'nullable|string|max:255',
             'attendees.*.organisation' => 'nullable|string|max:150',

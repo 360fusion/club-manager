@@ -9,8 +9,10 @@ use App\Services\AccountingService;
 use App\Services\AnnualTreasurerReportService;
 use App\Support\ClubAccess;
 use App\Support\NodeBinaries;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -51,7 +53,7 @@ class AccountingExportController extends Controller
         return redirect()->back()->with('info', 'No unmatched HMRC Gift Aid or Relief Chest deposits found to reconcile.');
     }
 
-    public function exportGiftAidSchedule(Request $request, string $clubSlug)
+    public function exportGiftAidSchedule(Request $request, string $clubSlug): Response
     {
         $club = $this->findClub($clubSlug);
         $service = app(ReliefChestReconciliationService::class);
@@ -65,7 +67,7 @@ class AccountingExportController extends Controller
         ]);
     }
 
-    public function exportVatReturn(Request $request, string $clubSlug)
+    public function exportVatReturn(Request $request, string $clubSlug): Response
     {
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
@@ -81,7 +83,7 @@ class AccountingExportController extends Controller
         ]);
     }
 
-    public function exportAnnualTreasurerReportPdf(Request $request, string $clubSlug)
+    public function exportAnnualTreasurerReportPdf(Request $request, string $clubSlug): Response
     {
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
@@ -99,8 +101,10 @@ class AccountingExportController extends Controller
      * Render an accounting PDF, preferring Browsershot (Node) when available and
      * falling back to DomPDF when it isn't, or if it throws. The render must happen
      * inside the try, since Pdf::view()->name() only actually renders in toResponse().
+     *
+     * @param  array<string, mixed>  $data
      */
-    private function renderAccountingPdf(Request $request, string $view, array $data, string $filename)
+    private function renderAccountingPdf(Request $request, string $view, array $data, string $filename): Response
     {
         ['node' => $nodeBinary, 'npm' => $npmBinary] = NodeBinaries::find();
 
@@ -132,7 +136,7 @@ class AccountingExportController extends Controller
         }
     }
 
-    public function exportAnnualTreasurerReportCsv(Request $request, string $clubSlug)
+    public function exportAnnualTreasurerReportCsv(Request $request, string $clubSlug): Response
     {
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
@@ -147,7 +151,7 @@ class AccountingExportController extends Controller
         ]);
     }
 
-    public function exportReport(Request $request, string $clubSlug, string $report)
+    public function exportReport(Request $request, string $clubSlug, string $report): Response
     {
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
@@ -168,7 +172,7 @@ class AccountingExportController extends Controller
         ]);
     }
 
-    public function exportReportPdf(Request $request, string $clubSlug, string $report)
+    public function exportReportPdf(Request $request, string $clubSlug, string $report): Response
     {
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
@@ -186,7 +190,7 @@ class AccountingExportController extends Controller
         return $this->renderAccountingPdf($request, $view, $data, $filename);
     }
 
-    public function filterReconciledDonations(Request $request, string $clubSlug)
+    public function filterReconciledDonations(Request $request, string $clubSlug): JsonResponse
     {
         $club = $this->findClub($clubSlug);
         $service = app(ReliefChestReconciliationService::class);
@@ -196,7 +200,7 @@ class AccountingExportController extends Controller
         return response()->json($data);
     }
 
-    public function exportIndependentExaminerReportPdf(Request $request, string $clubSlug)
+    public function exportIndependentExaminerReportPdf(Request $request, string $clubSlug): Response
     {
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');

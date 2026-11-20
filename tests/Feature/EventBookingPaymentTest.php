@@ -192,4 +192,10 @@ class EventBookingPaymentTest extends TestCase
 
         $this->postJson(route('public.event.quote', ['clubSlug' => 'club-a', 'eventSlug' => 'dinner']), ['attendees' => [['is_guest' => false]]])->assertNotFound();
     }
+
+    public function test_an_attendee_that_is_not_a_set_of_fields_is_a_validation_error_not_a_crash(): void
+    {
+        $this->actingAs($this->member)->postJson(route('member.events.quote', ['slug' => 'club-a', 'id' => $this->event->id]), ['attendees' => ['x']])
+            ->assertStatus(422)->assertJsonValidationErrors('attendees.0');
+    }
 }

@@ -6,6 +6,7 @@ use App\Enums\SignatureRequestStatus;
 use App\Models\Club;
 use App\Models\SignatureRequest;
 use App\Services\Signatures\SignatureCertificatePdf;
+use Illuminate\Http\Response;
 
 /**
  * Downloads the signed certificate for a request made at a club, whatever it was for. Mounted twice, once under
@@ -14,7 +15,7 @@ use App\Services\Signatures\SignatureCertificatePdf;
  */
 class SignatureAdminController extends Controller
 {
-    public function downloadPdf(string $clubSlug, int $id, SignatureCertificatePdf $pdf)
+    public function downloadPdf(string $clubSlug, int $id, SignatureCertificatePdf $pdf): Response
     {
         $club = $this->findClub($clubSlug);
         $request = SignatureRequest::where('club_id', $club->id)->findOrFail($id);

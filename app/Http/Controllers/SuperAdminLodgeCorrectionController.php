@@ -77,8 +77,10 @@ class SuperAdminLodgeCorrectionController extends Controller
     {
         $validated = $request->validated();
 
+        /** @var array<string> $fields */
+        $fields = $validated['fields'];
         // A ticked field the form sent no value for is being emptied.
-        $values = collect($validated['fields'])->mapWithKeys(fn (string $field) => [$field => $validated['values'][$field] ?? null])->all();
+        $values = collect($fields)->mapWithKeys(fn (string $field) => [$field => $validated['values'][$field] ?? null])->all();
 
         $this->corrections->apply($this->scope($request)->findOrFail($id), $request->user(), $values, $validated['note'] ?? null);
 

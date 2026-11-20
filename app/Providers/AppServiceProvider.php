@@ -14,8 +14,6 @@ use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
-use App\Models\PaddleSubscription;
-use App\Models\PaddleSubscriptionItem;
 use App\Support\Currencies;
 use App\Support\ReservedClubSlugs;
 use App\Support\SafeFileAdder;
@@ -33,7 +31,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
-use Laravel\Paddle\Cashier;
+use Laravel\Cashier\Cashier;
 use Laravel\Pennant\Feature;
 use Launchpad\Launchpad;
 use Livewire\Livewire;
@@ -49,10 +47,7 @@ class AppServiceProvider extends ServiceProvider
         // club-manager has its own users columns and tables; it takes only the Launchpad migrations it needs (database/migrations)
         Launchpad::ignoreMigrations();
 
-        // Both Cashier packages register a `stripe/webhook` route, and the Paddle one answers it with a controller
-        // meant for a different provider. Lodges take card payments on their own Stripe account through
-        // /webhooks/stripe/{club}, so neither package's routes are used.
-        \Laravel\Cashier\Cashier::ignoreRoutes();
+        // Lodges take card payments on their own Stripe account through /webhooks/stripe/{club}, so Cashier's routes are not used.
         Cashier::ignoreRoutes();
 
         // Uploaded files keep an extension that matches their content (see SafeFileAdder).
@@ -179,12 +174,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Stripe's customer is the club: it is the club that pays the platform.
-        \Laravel\Cashier\Cashier::useCustomerModel(Club::class);
-
-        if (class_exists(Cashier::class)) {
-            Cashier::useSubscriptionModel(PaddleSubscription::class);
-            Cashier::useSubscriptionItemModel(PaddleSubscriptionItem::class);
-        }
+        Cashier::useCustomerModel(Club::class);
 
         if (class_exists(Feature::class)) {
             Feature::define('3-course-dining', function ($scope) {

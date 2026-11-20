@@ -13,6 +13,7 @@ use App\Models\Club;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 #[ObservedBy(MemberObserver::class)]
 class Member extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     /**
@@ -166,6 +168,10 @@ class Member extends Model
     }
 
     // Scopes
+    /**
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereIn('membership_status', [
@@ -177,6 +183,9 @@ class Member extends Model
 
     /**
      * Members who are billed dues (Honorary members get a waived line), unlike active(), which also lists Historical members.
+     *
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
      */
     public function scopeSubscribing(Builder $query): Builder
     {
@@ -186,16 +195,28 @@ class Member extends Model
         ));
     }
 
+    /**
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
+     */
     public function scopeOfficers(Builder $query): Builder
     {
         return $query->where('current_office', '!=', LodgeOffice::Member->value);
     }
 
+    /**
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
+     */
     public function scopePastMasters(Builder $query): Builder
     {
         return $query->whereIn('masonic_rank', ['WBro', 'VWBro', 'RWBro', 'MWBro']);
     }
 
+    /**
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
+     */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
         if (empty(trim($search))) {
@@ -217,6 +238,9 @@ class Member extends Model
     /**
      * Adds the member's portal-account columns (from club_user and users) as subselects, so a list can show each
      * member's account status without a query per row.
+     *
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
      */
     public function scopeWithAccountState(Builder $query, int $clubId): Builder
     {
@@ -241,6 +265,9 @@ class Member extends Model
     /**
      * Restricts to members in one account state: 'not_invited', 'invited' (any outstanding invite or join request)
      * or 'has_account'.
+     *
+     * @param  Builder<Member>  $query
+     * @return Builder<Member>
      */
     public function scopeWhereAccountState(Builder $query, string $state, int $clubId): Builder
     {

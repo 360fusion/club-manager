@@ -13,6 +13,8 @@ use App\Services\Meetings\MeetingDiningPayment;
 use App\Services\Meetings\MeetingReplies;
 use App\Support\ClubAccess;
 use App\Support\Currencies;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -89,6 +91,8 @@ class MemberMeetingController extends Controller
 
     /**
      * Download or view PDF version of the meeting summons.
+     *
+     * @return HttpResponse|View
      */
     public function downloadMeetingPdf(string $slug, int $id)
     {

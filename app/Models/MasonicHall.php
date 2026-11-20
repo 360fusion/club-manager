@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\MasonicHallFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MasonicHall extends Model
 {
+    /** @use HasFactory<MasonicHallFactory> */
     use HasFactory;
 
     /**

@@ -19,6 +19,8 @@ class AnnualOfficerRosterService
      * Validate officer assignment rules:
      * - A member can have at most ONE progressive office.
      * - A member can have MULTIPLE administrative offices.
+     *
+     * @param  array<int, array<string, mixed>>  $assignments
      */
     public function validateAssignments(array $assignments): void
     {
@@ -61,6 +63,8 @@ class AnnualOfficerRosterService
 
     /**
      * Save or update an annual officer roster draft/proposal.
+     *
+     * @param  array<int, array<string, mixed>>  $assignments
      */
     public function saveRoster(Club $club, string $masonicYear, array $assignments, ?int $meetingId = null, string $status = 'draft', ?string $notes = null): AnnualOfficerRoster
     {

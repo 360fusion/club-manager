@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClubCommitteeMeeting extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $table = 'club_acc_committee_meetings';
@@ -33,6 +35,9 @@ class ClubCommitteeMeeting extends Model
         'finalized_at',
     ];
 
+    /**
+     * @param  string|null  $value
+     */
     public function setDraftNotesAttribute($value): void
     {
         $this->attributes['notes_raw'] = $value;

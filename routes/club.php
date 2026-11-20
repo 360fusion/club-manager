@@ -67,6 +67,7 @@ use App\Http\Controllers\MeetingCollectionController;
 use App\Http\Controllers\MeetingDiningController;
 use App\Http\Controllers\MeetingSigningInController;
 use App\Http\Controllers\MeetingSummonsController;
+use App\Http\Controllers\MeetingTreasurerReportController;
 use App\Http\Controllers\MemberAccountsController;
 use App\Http\Controllers\MemberCalendarController;
 use App\Http\Controllers\MemberHomeController;
@@ -377,9 +378,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::get('/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
     Route::post('/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
-    Route::post('/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
 
     // Admin Accounting & ERP Routes
+    Route::get('/{clubSlug}/admin/accounting/meetings/{id}/treasurer-report', MeetingTreasurerReportController::class)->name('admin.accounting.meeting_report');
     Route::post('/{clubSlug}/admin/accounting/accounts', [AccountingSettingsController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/store', [AccountingGatewayController::class, 'storeBankAccount'])->name('admin.accounting.bank_accounts.store');
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/paypal/connect', [AccountingGatewayController::class, 'connectPayPal'])->name('admin.accounting.bank_accounts.paypal.connect');

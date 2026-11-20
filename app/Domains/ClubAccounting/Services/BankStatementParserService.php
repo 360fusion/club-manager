@@ -15,6 +15,8 @@ class BankStatementParserService
 {
     /**
      * Parse a bank statement file (CSV or OFX) and return structured line items with duplicate detection.
+     *
+     * @return array<string, mixed>
      */
     public function parseFile(string $filePath, ?string $originalFilename = null, int $clubId = 0): array
     {
@@ -35,6 +37,8 @@ class BankStatementParserService
 
     /**
      * Parse UK CSV Bank Statement content.
+     *
+     * @return array<string, mixed>
      */
     public function parseCsv(string $content, string $filename = 'statement.csv', int $clubId = 0): array
     {
@@ -164,6 +168,8 @@ class BankStatementParserService
 
     /**
      * Parse Standard OFX / QFX File.
+     *
+     * @return array<string, mixed>
      */
     public function parseOfx(string $content, string $filename = 'statement.ofx', int $clubId = 0): array
     {
@@ -261,6 +267,8 @@ class BankStatementParserService
 
     /**
      * Persist parsed bundle into database tables (`club_acc_bank_imports` & `club_acc_bank_transactions`).
+     *
+     * @param  array<string, mixed>  $parsedBundle
      */
     public function importParsedBundle(Club|int $club, array $parsedBundle, ?int $importedByMemberId = null, ?int $bankAccountId = null): BankImport
     {
@@ -311,6 +319,9 @@ class BankStatementParserService
         return $ids->count() === 1 ? $ids->first() : null;
     }
 
+    /**
+     * @return list<string>
+     */
     private function getExistingHashes(int $clubId): array
     {
         if ($clubId <= 0) {
@@ -322,6 +333,10 @@ class BankStatementParserService
             ->toArray();
     }
 
+    /**
+     * @param  array<int, string>  $headers
+     * @param  list<string>  $candidates
+     */
     private function findColumnIndex(array $headers, array $candidates): ?int
     {
         foreach ($candidates as $cand) {

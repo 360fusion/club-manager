@@ -207,7 +207,7 @@ class ClubController extends Controller
     /**
      * Update custom domain configuration for a club.
      */
-    public function updateDomain(UpdateDomainRequest $request, string $slug)
+    public function updateDomain(UpdateDomainRequest $request, string $slug): RedirectResponse
     {
         $club = $this->findClub($slug);
 
@@ -222,7 +222,7 @@ class ClubController extends Controller
     /**
      * Approve a pending member invitation request.
      */
-    public function approveMember(string $slug, int $userId)
+    public function approveMember(string $slug, int $userId): RedirectResponse
     {
         $club = $this->findClub($slug);
         // Only a request still waiting is approved here: a past member is restored, and roles are changed, on the members screens.
@@ -244,7 +244,7 @@ class ClubController extends Controller
     /**
      * Reject/remove a member invitation request.
      */
-    public function rejectMember(string $slug, int $userId)
+    public function rejectMember(string $slug, int $userId): RedirectResponse
     {
         $club = $this->findClub($slug);
         // Only a request still waiting can be turned down here, so an admin cannot remove an owner or an active member this way.

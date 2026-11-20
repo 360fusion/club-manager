@@ -59,6 +59,8 @@ class PublicEventController extends Controller
             return $this->thanks($club, $event);
         }
 
+        /** @var array<array<string, mixed>> $attendees */
+        $attendees = $validated['attendees'];
         $registration = $registrations->register($event, null, [
             'status' => $validated['attendance_status'] ?? 'attending',
             'contact_name' => $validated['contact_name'],
@@ -66,7 +68,7 @@ class PublicEventController extends Controller
             'contact_phone' => $validated['contact_phone'] ?? null,
             'payment_method' => $validated['payment_method'] ?? null,
             'promo_code' => $validated['promo_code'] ?? null,
-            'attendees' => collect($validated['attendees'])->values()->map(fn (array $person, int $index) => [...$person, 'is_guest' => $index > 0])->all(),
+            'attendees' => collect($attendees)->values()->map(fn (array $person, int $index) => [...$person, 'is_guest' => $index > 0])->all(),
         ]);
 
         $manageUrl = $this->manageUrl($club, (string) $registration->plainToken);

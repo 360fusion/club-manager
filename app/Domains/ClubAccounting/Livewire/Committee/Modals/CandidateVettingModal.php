@@ -9,6 +9,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
 use App\Models\User;
 use App\Support\ClubAccess;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -26,6 +27,9 @@ class CandidateVettingModal extends Component
 
     public bool $isRecommended = true;
 
+    /**
+     * @var array<string, string>
+     */
     protected $listeners = ['openCandidateVetting' => 'loadCandidate'];
 
     public function loadCandidate(int $candidateId, int $meetingId): void
@@ -84,7 +88,7 @@ class CandidateVettingModal extends Component
         session()->flash('success', "Candidate {$name} sign-off recorded on the committee agenda.");
     }
 
-    public function render()
+    public function render(): View
     {
         $candidate = null;
         if ($this->candidateId) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Login\StoreLoginRequest;
 use App\Models\User;
 use App\Support\EmailVerification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -29,7 +30,7 @@ class LoginController extends Controller
     /**
      * Handle an authentication request.
      */
-    public function store(StoreLoginRequest $request)
+    public function store(StoreLoginRequest $request): RedirectResponse
     {
         $credentials = $request->validated();
 
@@ -71,7 +72,7 @@ class LoginController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
         Auth::logout();
 

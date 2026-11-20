@@ -246,6 +246,9 @@ class StaticSiteBuilder
             || SiteDeployTarget::where('club_id', $club->id)->get()->contains(fn (SiteDeployTarget $target) => ! empty($target->config['auto_send']));
     }
 
+    /**
+     * @return array{platform: string, server_paths: list<string>, server_pages: list<string>}
+     */
     public static function flags(Club $club): array
     {
         return [
@@ -529,7 +532,11 @@ class StaticSiteBuilder
         file_put_contents($path, $contents);
     }
 
-    /** The files of a release, relative to its folder, with their SHA-1 (as written when it was built). */
+    /**
+     * The files of a release, relative to its folder, with their SHA-1 (as written when it was built).
+     *
+     * @return array<string, string>
+     */
     public static function manifest(SiteRelease $release, ?string $folder = null): array
     {
         $path = ($folder ?? $release->path()).'/'.self::MANIFEST;

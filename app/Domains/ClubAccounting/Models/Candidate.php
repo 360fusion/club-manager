@@ -8,6 +8,7 @@ use App\Models\Club;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Candidate extends Model implements Signable
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, SoftDeletes;
 
     protected $table = 'club_acc_candidates';
@@ -202,6 +204,10 @@ class Candidate extends Model implements Signable
      * SCOPES
      * ========================================================================= */
 
+    /**
+     * @param  Builder<Candidate>  $query
+     * @return Builder<Candidate>
+     */
     public function scopeStage(Builder $query, CandidateStage|string $stage): Builder
     {
         $stageVal = $stage instanceof CandidateStage ? $stage->value : $stage;
@@ -209,16 +215,28 @@ class Candidate extends Model implements Signable
         return $query->where('stage', $stageVal);
     }
 
+    /**
+     * @param  Builder<Candidate>  $query
+     * @return Builder<Candidate>
+     */
     public function scopePendingCommittee(Builder $query): Builder
     {
         return $query->where('stage', CandidateStage::LodgeCommittee->value);
     }
 
+    /**
+     * @param  Builder<Candidate>  $query
+     * @return Builder<Candidate>
+     */
     public function scopeInitiated(Builder $query): Builder
     {
         return $query->where('stage', CandidateStage::Initiated->value);
     }
 
+    /**
+     * @param  Builder<Candidate>  $query
+     * @return Builder<Candidate>
+     */
     public function scopeSearch(Builder $query, string $term): Builder
     {
         $term = '%'.trim($term).'%';

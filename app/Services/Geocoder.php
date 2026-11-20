@@ -111,7 +111,7 @@ class Geocoder
             return null;
         }
 
-        $results = collect($response->json() ?? [])
+        $results = $response->collect()
             ->filter(fn ($row) => is_array($row) && isset($row['lat'], $row['lon']))
             ->map(fn (array $row) => ['lat' => round((float) $row['lat'], 6), 'lng' => round((float) $row['lon'], 6), 'name' => (string) ($row['display_name'] ?? '')])
             ->values()

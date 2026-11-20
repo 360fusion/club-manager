@@ -5,6 +5,7 @@ namespace App\Domains\ClubAccounting\Models;
 use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Models\Club;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CharityCollection extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory, SoftDeletes;
 
     protected $table = 'club_acc_charity_collections';

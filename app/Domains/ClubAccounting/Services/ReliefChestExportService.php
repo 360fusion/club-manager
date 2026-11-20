@@ -16,6 +16,8 @@ class ReliefChestExportService
 {
     /**
      * Generate MCF Relief Chest CSV deposit schedule.
+     *
+     * @param  Collection<int, CharityCollection>|null  $collections
      */
     public function generateReliefChestCsv(Club|int $club, ?Collection $collections = null): string
     {
@@ -34,7 +36,7 @@ class ReliefChestExportService
 
         foreach ($collections as $col) {
             $date = $col->created_at ? $col->created_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
-            $type = $col->collection_type?->label() ?? 'Meeting Collection';
+            $type = $col->collection_type->label();
             $cash = number_format((float) $col->cash_amount, 2, '.', '');
             $cheque = number_format((float) $col->cheque_amount, 2, '.', '');
             $total = number_format((float) $col->total_amount, 2, '.', '');
@@ -49,6 +51,8 @@ class ReliefChestExportService
 
     /**
      * Generate BACS export schedule for charity grant disbursements.
+     *
+     * @param  Collection<int, CharityGrant>|null  $grants
      */
     public function generateBacsSchedule(Club|int $club, ?Collection $grants = null): string
     {
@@ -70,7 +74,7 @@ class ReliefChestExportService
             $chestNo = $g->relief_chest_number ?: 'N/A';
             $purpose = $g->purpose;
             $amount = number_format((float) $g->amount, 2, '.', '');
-            $status = $g->approval_status?->label() ?? 'Proposed';
+            $status = $g->approval_status->label();
             $date = $g->updated_at ? $g->updated_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
 
             $csv .= Csv::line([$bacsRef, $recipient, $chestNo, $purpose, $amount, $status, $date]);

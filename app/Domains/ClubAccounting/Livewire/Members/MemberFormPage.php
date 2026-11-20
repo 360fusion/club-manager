@@ -11,6 +11,8 @@ use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
 use App\Support\ClubAccess;
 use App\Support\MasonicRanks;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -117,6 +119,9 @@ class MemberFormPage extends Component
         $this->customer_account_id = $member->customer_account_id;
     }
 
+    /**
+     * @return RedirectResponse
+     */
     public function save()
     {
         $club = $this->authorizedClub();
@@ -272,7 +277,7 @@ class MemberFormPage extends Component
         return $club;
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
 

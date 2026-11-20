@@ -16,6 +16,7 @@ use App\Support\Months;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -244,7 +245,7 @@ class SuperAdminLodgeController extends Controller
 
         return [
             ...$data,
-            'lodge' => collect($data)->only(['club_type_id', 'province_id', 'masonic_hall_id', 'name', 'number', 'status', 'meets_text', 'installation_month', 'website_url', 'description'])->all(),
+            'lodge' => Arr::only($data, ['club_type_id', 'province_id', 'masonic_hall_id', 'name', 'number', 'status', 'meets_text', 'installation_month', 'website_url', 'description']),
         ];
     }
 

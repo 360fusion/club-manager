@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Billing\CheckoutRequest;
 use App\Http\Requests\Billing\UpdateBusinessAccountRequest;
-use App\Http\Requests\Billing\UpdateProviderRequest;
 use App\Models\Club;
 use App\Services\Payment\PaymentManager;
 use App\Support\PlanCatalog;
@@ -29,8 +28,6 @@ class BillingController extends Controller
     {
         $club = $this->findClub($clubSlug);
         $settings = $club->settings ?? [];
-
-        $currentProvider = $settings['payment_provider'] ?? 'stripe';
 
         $businessDetails = [
             'business_name' => $settings['business_name'] ?? $club->name,
@@ -63,7 +60,6 @@ class BillingController extends Controller
         return Inertia::render('Admin/Billing/Index', [
             'club' => tap($club, fn (Club $c) => $c->settings = Arr::except($settings, self::SECRET_KEYS)),
             'businessDetails' => $businessDetails,
-            'currentProvider' => $currentProvider,
             'currentPlan' => $currentPlan,
             'billingHistory' => $billingHistory,
             'autoOpenPortal' => (bool) $request->query('portal', false),
@@ -88,18 +84,6 @@ class BillingController extends Controller
         $club->save();
 
         return redirect()->back()->with('success', 'Main Business Account details and Merchant Gateway credentials updated successfully.');
-    }
-
-    public function updateProvider(UpdateProviderRequest $request, string $clubSlug): RedirectResponse
-    {
-
-        $club = $this->findClub($clubSlug);
-        $settings = $club->settings ?? [];
-        $settings['payment_provider'] = $request->provider;
-        $club->settings = $settings;
-        $club->save();
-
-        return redirect()->back()->with('success', 'Active payment provider updated to '.strtoupper($request->provider));
     }
 
     public function checkout(CheckoutRequest $request, string $clubSlug, PaymentManager $paymentManager): RedirectResponse

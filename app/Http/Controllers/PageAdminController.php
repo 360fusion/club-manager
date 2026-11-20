@@ -68,7 +68,7 @@ class PageAdminController extends Controller
      * Store or update a page with block layout. Renaming a page's slug keeps the old address working as a
      * redirect, so a bookmark or a link from elsewhere never suddenly 404s.
      */
-    public function store(StorePageRequest $request, string $clubSlug)
+    public function store(StorePageRequest $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -204,7 +204,7 @@ class PageAdminController extends Controller
     /**
      * Reorder pages for a club. Home page is always kept at top (#1).
      */
-    public function reorder(ReorderRequest $request, string $clubSlug)
+    public function reorder(ReorderRequest $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -237,7 +237,7 @@ class PageAdminController extends Controller
     /**
      * Toggle publish status of a page.
      */
-    public function togglePublish(string $clubSlug, int $id)
+    public function togglePublish(string $clubSlug, int $id): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
         $page = Page::where('club_id', $club->id)->findOrFail($id);
@@ -254,7 +254,7 @@ class PageAdminController extends Controller
     /**
      * Delete a page (only custom pages can be deleted; original default pages cannot).
      */
-    public function destroy(string $clubSlug, int $id)
+    public function destroy(string $clubSlug, int $id): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
         $page = Page::where('club_id', $club->id)->findOrFail($id);

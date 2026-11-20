@@ -54,11 +54,6 @@ return [
         'credentials_path' => env('FCM_CREDENTIALS_PATH'),
     ],
 
-    'paddle' => [
-        'price_basic' => env('PADDLE_PRICE_BASIC', 'pri_paddle_basic_demo'),
-        'price_pro' => env('PADDLE_PRICE_PRO', 'pri_paddle_pro_demo'),
-    ],
-
     // OpenStreetMap's Nominatim refuses generic or default User-Agents, so identify the platform (optionally
     // with a contact address) for the Map block's address search.
     'nominatim' => [

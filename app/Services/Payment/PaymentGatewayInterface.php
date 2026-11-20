@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 interface PaymentGatewayInterface
 {
     /**
-     * Get the provider key (e.g. 'stripe' or 'paddle').
+     * Get the provider key.
      */
     public function getProviderName(): string;
 
     /**
      * Create a checkout session URL for subscription or one-time payment.
+     *
+     * @param  array<string, mixed>  $options
      */
     public function createCheckoutSession(Model $customer, string $priceId, array $options = []): string;
 

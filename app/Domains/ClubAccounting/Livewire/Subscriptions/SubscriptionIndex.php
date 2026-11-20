@@ -12,6 +12,7 @@ use App\Models\Club;
 use App\Services\AccountingService;
 use App\Support\Currencies;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -267,7 +268,7 @@ class SubscriptionIndex extends Component
         $this->tier_active = true;
     }
 
-    public function render(SubscriptionBillingService $billingService)
+    public function render(SubscriptionBillingService $billingService): View
     {
         $club = $this->getClub();
 

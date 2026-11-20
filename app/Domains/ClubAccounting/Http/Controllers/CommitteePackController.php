@@ -7,11 +7,16 @@ use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Http\Controllers\Controller;
 use App\Support\ClubAccess;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 class CommitteePackController extends Controller
 {
-    public function pdf(Request $request, $param1 = null, $param2 = null)
+    /**
+     * @param  string|null  $param1
+     * @param  string|null  $param2
+     */
+    public function pdf(Request $request, $param1 = null, $param2 = null): Response
     {
         $id = null;
         if (is_numeric($param2)) {

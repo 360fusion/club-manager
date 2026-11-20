@@ -17,6 +17,8 @@ use App\Models\Club;
 use App\Models\User;
 use App\Support\ClubAccess;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -54,8 +56,14 @@ class MeetingWorkspace extends Component
 
     public string $attendeeRole = 'Committee Member';
 
+    /**
+     * @var list<int|string>
+     */
     public array $selectedMemberIds = [];
 
+    /**
+     * @var array<int|string, string>
+     */
     public array $customRoles = [];
 
     public string $attendeeSearch = '';
@@ -287,6 +295,9 @@ class MeetingWorkspace extends Component
         $this->showAttendeeModal = true;
     }
 
+    /**
+     * @return Collection<int, object>
+     */
     public function getAvailableAttendees(ClubCommitteeMeeting $meeting)
     {
         $club = $meeting->club;
@@ -510,7 +521,7 @@ class MeetingWorkspace extends Component
             ->firstOrFail();
     }
 
-    public function render(CommitteePackCompilerService $compiler)
+    public function render(CommitteePackCompilerService $compiler): View
     {
         $meeting = $this->getMeeting();
         $packData = $compiler->compilePackData($meeting);

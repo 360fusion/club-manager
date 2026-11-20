@@ -12,7 +12,6 @@ import Alert from '@/Components/Ui/Alert.vue';
 const props = defineProps({
   club: Object,
   businessDetails: Object,
-  currentProvider: String,
   currentPlan: Object,
   billingHistory: Array,
 });
@@ -28,10 +27,6 @@ const planBadge = computed(() => ({
 const successToast = ref('');
 const showSecretKeys = ref(false);
 
-const providerForm = useForm({
-  provider: props.currentProvider || 'stripe',
-});
-
 const businessForm = useForm({
   business_name: props.businessDetails?.business_name || props.club.name || '',
   company_number: props.businessDetails?.company_number || '',
@@ -43,17 +38,6 @@ const businessForm = useForm({
   stripe_secret_key: props.businessDetails?.stripe_secret_key || '',
   stripe_webhook_secret: props.businessDetails?.stripe_webhook_secret || '',
 });
-
-const updateProvider = (providerName) => {
-  providerForm.provider = providerName;
-  providerForm.post(route('billing.provider.update', { clubSlug: props.club.slug }), {
-    preserveScroll: true,
-    onSuccess: () => {
-      successToast.value = `Active payment gateway set to ${providerName.charAt(0).toUpperCase()}${providerName.slice(1)}.`;
-      setTimeout(() => { successToast.value = ''; }, 3000);
-    }
-  });
-};
 
 const saveBusinessAccount = () => {
   businessForm.post(route('billing.business.update', { clubSlug: props.club.slug }), {
@@ -194,11 +178,11 @@ const saveBusinessAccount = () => {
         </form>
       </Card>
 
-      <!-- Active Plan Overview & Gateway Selector Card -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Active Plan Overview -->
+      <div class="grid grid-cols-1 gap-6">
 
         <!-- Left: Current Plan Summary -->
-        <Card class="md:col-span-2 space-y-5">
+        <Card class="space-y-5">
           <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <Badge :variant="planBadge.variant">{{ planBadge.text }}</Badge>
@@ -226,66 +210,6 @@ const saveBusinessAccount = () => {
           </div>
         </Card>
 
-        <!-- Right: Active Payment Gateway Selector Card -->
-        <Card class="space-y-4 flex flex-col justify-between">
-          <div>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white">
-              Active payment gateway
-            </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Select your preferred payment processor for member dues and SaaS checkouts.</p>
-
-            <div class="space-y-2 mt-4">
-              <!-- Stripe Option -->
-              <button
-                type="button"
-                @click="updateProvider('stripe')"
-                :aria-pressed="providerForm.provider === 'stripe'"
-                :class="[
-                  'w-full p-3 rounded-xl border text-left text-xs font-medium transition-colors flex items-center justify-between cursor-pointer',
-                  providerForm.provider === 'stripe'
-                    ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
-                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                ]"
-              >
-                <div class="flex items-center gap-2.5">
-                  <UiIcon name="cash" :size="18" />
-                  <div>
-                    <span class="block">Stripe gateway</span>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Cards, Apple Pay, Google Pay</span>
-                  </div>
-                </div>
-                <span v-if="providerForm.provider === 'stripe'" class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400"><UiIcon name="check" :size="14" /> Active</span>
-              </button>
-
-              <!-- Paddle Option -->
-              <button
-                type="button"
-                @click="updateProvider('paddle')"
-                :aria-pressed="providerForm.provider === 'paddle'"
-                :class="[
-                  'w-full p-3 rounded-xl border text-left text-xs font-medium transition-colors flex items-center justify-between cursor-pointer',
-                  providerForm.provider === 'paddle'
-                    ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
-                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                ]"
-              >
-                <div class="flex items-center gap-2.5">
-                  <UiIcon name="globe" :size="18" />
-                  <div>
-                    <span class="block">Paddle Billing</span>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Merchant of record and international tax</span>
-                  </div>
-                </div>
-                <span v-if="providerForm.provider === 'paddle'" class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400"><UiIcon name="check" :size="14" /> Active</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2">
-            <UiIcon name="lock" :size="14" class="shrink-0 mt-px" />
-            <span>Gateways use 256-bit SSL encryption. Payment data is securely stored.</span>
-          </div>
-        </Card>
 
       </div>
 

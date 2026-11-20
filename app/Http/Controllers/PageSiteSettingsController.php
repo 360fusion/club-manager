@@ -47,7 +47,7 @@ class PageSiteSettingsController extends Controller
     /**
      * Update global website & SEO settings.
      */
-    public function updateSettings(UpdateSiteSettingsRequest $request, string $clubSlug)
+    public function updateSettings(UpdateSiteSettingsRequest $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -118,7 +118,7 @@ class PageSiteSettingsController extends Controller
     /**
      * Update header & footer layout, visibility and content settings.
      */
-    public function updateHeaderFooter(Request $request, string $clubSlug)
+    public function updateHeaderFooter(Request $request, string $clubSlug): RedirectResponse
     {
         $club = $this->findClub($clubSlug);
 
@@ -186,7 +186,9 @@ class PageSiteSettingsController extends Controller
 
         // Drop any column/link the admin left half-filled in (no title, or no label+url pair) rather than
         // failing the whole save over an empty row left over from clicking "Add".
-        $validated['footer_link_columns'] = collect($validated['footer_link_columns'] ?? [])
+        /** @var array<array{title?: string|null, links?: array<array{label?: string|null, url?: string|null}>|null}> $linkColumns */
+        $linkColumns = $validated['footer_link_columns'] ?? [];
+        $validated['footer_link_columns'] = collect($linkColumns)
             ->map(fn (array $column) => [
                 'title' => $column['title'] ?? '',
                 'links' => collect($column['links'] ?? [])

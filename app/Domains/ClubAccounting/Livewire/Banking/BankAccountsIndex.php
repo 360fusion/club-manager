@@ -5,6 +5,7 @@ namespace App\Domains\ClubAccounting\Livewire\Banking;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Models\Accounting\Account;
 use App\Models\Club;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -111,7 +112,7 @@ class BankAccountsIndex extends Component
         session()->flash('success', 'Bank account status updated.');
     }
 
-    public function render()
+    public function render(): View
     {
         $club = $this->getClub();
         $bankAccounts = BankAccount::where('club_id', $club->id)

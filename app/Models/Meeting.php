@@ -6,6 +6,7 @@ use App\Models\Accounting\MeetingFinancialReturn;
 use App\Observers\MeetingTeamEvents;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,8 +14,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[ObservedBy(MeetingTeamEvents::class)]
+/**
+ * @property-read int $dining_count Only when loaded with withCount() under that alias (the analytics page does).
+ * @property-read int $apologies_count Likewise.
+ */
 class Meeting extends Model
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $fillable = [

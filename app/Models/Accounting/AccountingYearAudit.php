@@ -5,6 +5,7 @@ namespace App\Models\Accounting;
 use App\Contracts\Signable;
 use App\Models\Club;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AccountingYearAudit extends Model implements Signable
 {
+    /** @use HasFactory<Factory<self>> */
     use HasFactory;
 
     protected $table = 'accounting_year_audits';

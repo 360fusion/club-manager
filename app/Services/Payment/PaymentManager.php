@@ -7,12 +7,12 @@ use InvalidArgumentException;
 
 class PaymentManager
 {
+    /** @var array<string, PaymentGatewayInterface> */
     protected array $gateways = [];
 
     public function __construct()
     {
         $this->gateways['stripe'] = new StripePaymentGateway;
-        $this->gateways['paddle'] = new PaddlePaymentGateway;
     }
 
     /**
@@ -32,8 +32,6 @@ class PaymentManager
      */
     public function forClub(Club $club): PaymentGatewayInterface
     {
-        $preferredDriver = $club->settings['payment_provider'] ?? 'stripe';
-
-        return $this->driver($preferredDriver);
+        return $this->driver('stripe');
     }
 }
