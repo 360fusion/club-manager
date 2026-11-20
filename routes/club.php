@@ -76,6 +76,7 @@ use App\Http\Controllers\MemberLodgesController;
 use App\Http\Controllers\MemberMeetingController;
 use App\Http\Controllers\MemberPortalController;
 use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\MemberRecordController;
 use App\Http\Controllers\MemberRsvpController;
 use App\Http\Controllers\MemberSignatureController;
 use App\Http\Controllers\MemberStatusAdminController;
@@ -578,7 +579,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/{slug}/profile', [MemberProfileController::class, 'updateProfile'])->name('member.profile.update');
     Route::post('/members/{slug}/events/{id}/rsvp', [MemberRsvpController::class, 'updateRsvp'])->name('member.rsvp');
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberMeetingController::class, 'summons'])->name('member.meetings.summons');
+    Route::get('/members/{slug}/record', [MemberRecordController::class, 'show'])->name('member.record');
     Route::get('/members/{slug}/accounts', [MemberAccountsController::class, 'show'])->name('member.accounts');
+    Route::get('/members/{slug}/accounts/dues', [MemberAccountsController::class, 'dues'])->name('member.accounts.dues');
     Route::get('/members/{slug}/accounts/import', [MemberAccountsController::class, 'import'])->name('member.accounts.import');
     Route::post('/members/{slug}/accounts/import', [MemberAccountsController::class, 'preview'])->middleware('throttle:20,1')->name('member.accounts.import.preview');
     Route::post('/members/{slug}/accounts/import/confirm', [MemberAccountsController::class, 'store'])->middleware('throttle:20,1')->name('member.accounts.import.store');

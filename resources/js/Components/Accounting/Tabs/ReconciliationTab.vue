@@ -92,7 +92,7 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
         <li v-for="rule in reconciliation.match_rules" :key="rule.id" class="py-2 flex items-center justify-between gap-3">
           <span class="min-w-0">
             <span class="font-mono font-medium text-slate-900 dark:text-white block truncate">{{ rule.pattern }}</span>
-            <span class="text-slate-500 dark:text-slate-400">{{ rule.match_type === 'charity_relief' ? 'Charity relief' : `Ledger ${rule.nominal_code}` }} · used {{ rule.hit_count }}×</span>
+            <span class="text-slate-500 dark:text-slate-400">{{ rule.match_type === 'member_subscription' ? `Dues: ${rule.member ?? 'a member'}` : (rule.match_type === 'charity_relief' ? 'Charity relief' : `Ledger ${rule.nominal_code}`) }} · used {{ rule.hit_count }}×</span>
           </span>
           <Button variant="secondary" size="sm" @click="forgetMatchRule(rule.id)">Forget</Button>
         </li>

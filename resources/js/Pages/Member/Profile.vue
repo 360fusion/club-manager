@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import { Link, useForm, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -209,6 +209,7 @@ const submitProfile = () => {
             <UiIcon name="lock" :size="12" /> Read-only record
           </Badge>
         </div>
+        <Link :href="route('member.record', { slug: club.slug })" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">See your full Masonic record: offices, attendance and visits</Link>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl space-y-1">

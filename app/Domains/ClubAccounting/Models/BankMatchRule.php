@@ -21,6 +21,7 @@ class BankMatchRule extends Model
         'nominal_code',
         'hit_count',
         'created_from_transaction_id',
+        'member_id',
     ];
 
     /**

@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
@@ -163,6 +164,9 @@ class ReconciliationScreenData
         $giftAidSummary = $giftAidService->getGiftAidSummary($club);
         $reconciledDonationsData = $giftAidService->getReconciledDonations($club);
 
+        $rules = BankMatchRule::where('club_id', $club->id)->orderByDesc('hit_count')->orderBy('description_pattern')->take(100)->get();
+        $ruleMembers = Member::where('club_id', $club->id)->whereIn('id', $rules->pluck('member_id')->filter())->get()->keyBy('id');
+
         $reconciliation = [
             'unmatched_transactions' => $unmatchedTransactions,
             'reconciled_transactions' => $reconciledTransactions,
@@ -172,11 +176,13 @@ class ReconciliationScreenData
             'unpaid_subscriptions' => $unpaidSubscriptions,
             'gift_aid_summary' => $giftAidSummary,
             'reconciled_donations' => $reconciledDonationsData,
-            'match_rules' => BankMatchRule::where('club_id', $club->id)->orderByDesc('hit_count')->orderBy('description_pattern')->take(100)->get()->map(fn ($r) => [
+            'match_rules' => $rules->map(fn ($r) => [
                 'id' => $r->id,
                 'pattern' => $r->description_pattern,
                 'match_type' => $r->match_type,
                 'nominal_code' => $r->nominal_code,
+                // A dues payer's rule names the member it is for.
+                'member' => $r->member_id ? $ruleMembers->get($r->member_id)?->full_name : null,
                 'hit_count' => $r->hit_count,
             ])->all(),
         ];

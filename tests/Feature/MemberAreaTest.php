@@ -245,7 +245,7 @@ class MemberAreaTest extends TestCase
         }
 
         $this->actingAs($this->member)->get('/members/dues')
-            ->assertInertia(fn (Assert $page) => $page->has('subscriptions', 1)->where('subscriptions.0.balance', '100.00')->where('subscriptions.0.outstanding', true));
+            ->assertInertia(fn (Assert $page) => $page->has('subscriptions', 1)->where('subscriptions.0.left', '£100.00')->where('subscriptions.0.outstanding', true));
     }
 
     // ---- action inbox ---------------------------------------------------------

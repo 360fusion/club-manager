@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Services;
 
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
+use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
@@ -80,6 +81,25 @@ class BankReconciliationMatcherService
     }
 
     /**
+     * A member who pays their dues by standing order shows the same payee on the statement every month: remember it,
+     * so next month's line is suggested for their subscription straight away.
+     */
+    private function rememberPayer(BankTransaction $transaction, int $memberId): void
+    {
+        $pattern = $this->normalizeDescription((string) $transaction->raw_description);
+
+        if (strlen($pattern) < 4 || $memberId <= 0) {
+            return;
+        }
+
+        $rule = BankMatchRule::firstOrNew(['club_id' => $transaction->club_id, 'description_pattern' => $pattern, 'match_type' => 'member_subscription']);
+        $rule->hit_count = $rule->exists && (int) $rule->member_id === $memberId ? $rule->hit_count + 1 : 1;
+        $rule->member_id = $memberId;
+        $rule->created_from_transaction_id ??= $transaction->id;
+        $rule->save();
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     private function rememberedSuggestion(BankTransaction $transaction): ?array
@@ -94,6 +114,10 @@ class BankReconciliationMatcherService
 
         if (! $rule) {
             return null;
+        }
+
+        if ($rule->match_type === 'member_subscription') {
+            return $this->rememberedPayer($transaction, (int) $rule->member_id);
         }
 
         $account = $rule->nominal_code ? Account::where('club_id', $transaction->club_id)->where('code', $rule->nominal_code)->first() : null;
@@ -398,7 +422,9 @@ class BankReconciliationMatcherService
                         $transaction->raw_description,
                         $bankAcc->id,
                         $lineDate,
+                        $transaction->id,
                     );
+                    $this->rememberPayer($transaction, (int) $sub->member_id);
                     $ledgerAlreadyPosted = true;
                     $note .= " [Member Subscription Invoice: {$sub->invoice_reference}]";
                 }
@@ -630,6 +656,36 @@ class BankReconciliationMatcherService
         }
 
         return $matches;
+    }
+
+    /**
+     * The member's oldest subscription still owing, when this payment fits within what is owed.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function rememberedPayer(BankTransaction $transaction, int $memberId): ?array
+    {
+        $amount = (float) $transaction->amount;
+        $subscription = MemberSubscription::where('club_id', $transaction->club_id)->where('member_id', $memberId)
+            ->whereIn('status', [SubscriptionStatus::Unpaid->value, SubscriptionStatus::PartiallyPaid->value, SubscriptionStatus::ArrearsWarning->value])
+            ->with('member')->orderBy('billing_year')->orderBy('id')->get()
+            ->first(fn (MemberSubscription $sub) => $amount > 0 && $amount <= (float) $sub->balance_due + 0.001);
+
+        if (! $subscription?->member) {
+            return null;
+        }
+
+        return [
+            'match_type' => 'member_subscription',
+            'target_id' => $subscription->id,
+            'target_title' => "{$subscription->member->formatted_rank_name} — Invoice {$subscription->invoice_reference}",
+            'target_amount' => (float) $subscription->balance_due,
+            'confidence_score' => 95,
+            'confidence_level' => 'high',
+            'match_reason' => 'This is how '.$subscription->member->full_name.' has paid before',
+            'remembered' => true,
+            'record' => $subscription,
+        ];
     }
 
     /**

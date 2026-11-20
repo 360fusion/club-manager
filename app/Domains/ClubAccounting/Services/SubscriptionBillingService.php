@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Domains\ClubAccounting\Models\SubscriptionPayment;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\JournalEntry;
@@ -162,7 +163,7 @@ class SubscriptionBillingService
      * The money received goes to $cashLedgerAccountId (the ledger account of the bank account it landed in, else the main
      * bank account) and clears what the member owes. More than is owed is refused.
      */
-    public function recordPayment(MemberSubscription $subscription, float $amount, ?string $reference = null, ?string $notes = null, ?int $cashLedgerAccountId = null, ?Carbon $paidOn = null): MemberSubscription
+    public function recordPayment(MemberSubscription $subscription, float $amount, ?string $reference = null, ?string $notes = null, ?int $cashLedgerAccountId = null, ?Carbon $paidOn = null, ?int $bankTransactionId = null): MemberSubscription
     {
         $club = Club::findOrFail($subscription->club_id);
         $owed = $subscription->status === SubscriptionStatus::Waived ? 0.0 : max(0.0, (float) $subscription->amount_due - (float) $subscription->amount_paid);
@@ -173,10 +174,10 @@ class SubscriptionBillingService
                 : 'Nothing is owed on this subscription, so no payment can be recorded against it.');
         }
 
-        return DB::transaction(function () use ($subscription, $amount, $reference, $notes, $club, $cashLedgerAccountId, $paidOn) {
+        return DB::transaction(function () use ($subscription, $amount, $reference, $notes, $club, $cashLedgerAccountId, $paidOn, $bankTransactionId) {
             $this->postBillingToLedger($subscription);
             $ledger = app(AccountingService::class);
-            $ledger->postJournalEntry($club, [
+            $entry = $ledger->postJournalEntry($club, [
                 'description' => "Subscription payment: {$subscription->member->full_name} ({$subscription->invoice_reference})",
                 'entry_date' => ($paidOn ?? Carbon::now())->toDateString(),
                 'source_type' => 'MemberSubscriptionPayment',
@@ -185,6 +186,17 @@ class SubscriptionBillingService
                     ['account_id' => $cashLedgerAccountId ?? $ledger->defaultBankAccount($club)->id, 'debit' => $amount, 'credit' => 0, 'memo' => $reference],
                     ['account_id' => $ledger->getAccount($club, '1200')->id, 'debit' => 0, 'credit' => $amount, 'memo' => 'Subscription '.$subscription->invoice_reference],
                 ],
+            ]);
+
+            // Each payment kept on its own, so the member sees what was paid and when.
+            SubscriptionPayment::create([
+                'club_id' => $subscription->club_id,
+                'subscription_id' => $subscription->id,
+                'amount' => round($amount, 2),
+                'paid_on' => ($paidOn ?? Carbon::now())->toDateString(),
+                'reference' => $reference,
+                'bank_transaction_id' => $bankTransactionId,
+                'journal_entry_id' => $entry->id,
             ]);
 
             $newPaid = (float) $subscription->amount_paid + $amount;

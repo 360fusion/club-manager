@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MemberSubscription extends Model
@@ -64,6 +65,12 @@ class MemberSubscription extends Model
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class);
+    }
+
+    /** @return HasMany<SubscriptionPayment, $this> */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SubscriptionPayment::class, 'subscription_id')->orderBy('paid_on')->orderBy('id');
     }
 
     /**

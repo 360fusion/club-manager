@@ -112,7 +112,10 @@ const openMeetingRsvpModal = (meeting) => {
           <Badge v-if="subscription" :variant="subscriptionBadge.variant">{{ subscriptionBadge.label }}</Badge>
         </div>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ subscriptionHint }}</p>
-        <Link :href="route('members.dues', { club: club.slug })" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">See your dues</Link>
+        <div class="flex flex-wrap gap-x-5">
+          <Link :href="route('members.dues', { club: club.slug })" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">See your dues</Link>
+          <Link :href="route('member.record', { slug: club.slug })" class="inline-flex min-h-11 items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">My Masonic record</Link>
+        </div>
       </Card>
 
       <Card v-if="officers.length" padding="sm" class="space-y-2.5">

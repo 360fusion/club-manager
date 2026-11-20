@@ -12,6 +12,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\NewsTag;
 use App\Models\Post;
+use App\Services\DuesTracker;
 use App\Services\Events\EventPayload;
 use App\Services\MemberCalendar;
 use App\Support\MemberScope;
@@ -233,22 +234,24 @@ class MemberListController extends Controller
         $scope = MemberScope::fromRequest($request);
         $userId = $scope->user->id;
 
+        $tracker = app(DuesTracker::class);
+        $bank = [];
         $subscriptions = MemberSubscription::whereIn('club_id', $scope->clubIds())
             ->whereHas('member', fn ($member) => $member->where('user_id', $userId))
+            ->with('payments')
             ->orderByDesc('due_date')
             ->get()
-            ->map(fn (MemberSubscription $subscription) => [
-                'id' => $subscription->id,
-                'club' => $this->clubPayload($scope->clubFor($subscription->club_id)),
-                'year' => $subscription->billing_year,
-                'due_date' => $subscription->due_date->toDateString(),
-                'amount_due' => number_format((float) $subscription->amount_due, 2),
-                'amount_paid' => number_format((float) $subscription->amount_paid, 2),
-                'balance' => number_format($subscription->balance_due, 2),
-                'status' => $subscription->status->value,
-                'status_label' => $subscription->status->label(),
-                'outstanding' => $subscription->status->isOutstanding(),
-            ]);
+            ->map(function (MemberSubscription $subscription) use ($scope, $tracker, &$bank) {
+                $club = $scope->clubFor($subscription->club_id);
+
+                return [
+                    ...$tracker->describe($subscription, $club),
+                    'club' => $this->clubPayload($club),
+                    'outstanding' => $subscription->status->isOutstanding(),
+                    // Where to send it, once per lodge.
+                    'bank' => $bank[$club->id] ??= $tracker->bankDetails($club),
+                ];
+            });
 
         $invoices = Invoice::whereIn('club_id', $scope->clubIds())
             ->where('user_id', $userId)

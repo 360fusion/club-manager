@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
 use App\Models\Club;
+use App\Services\DuesTracker;
 use App\Services\LodgeAccountsOverview;
 use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,20 @@ class MemberAccountsController extends Controller
             'club' => ['slug' => $club->slug, 'name' => $club->name],
             'overview' => $overview->build($club),
             'canImport' => LodgeAccountsOverview::canImport($request->user(), $club),
+        ]);
+    }
+
+    /**
+     * Everyone's dues for the year: paid, left, and who is behind or overdue (DuesTracker::forLodge).
+     */
+    public function dues(Request $request, string $slug, DuesTracker $tracker): Response
+    {
+        $club = $this->findClub($slug);
+        abort_unless(LodgeAccountsOverview::canView($request->user(), $club), 403);
+
+        return Inertia::render('Member/Accounts/Dues', [
+            'club' => ['slug' => $club->slug, 'name' => $club->name],
+            'dues' => $tracker->forLodge($club),
         ]);
     }
 
