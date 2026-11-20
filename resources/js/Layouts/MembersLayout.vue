@@ -9,6 +9,8 @@ import NotificationBell from '@/Components/NotificationBell.vue';
 import { navMode } from '@/Utils/navMode';
 import AppTabBar from '@/Components/AppTabBar.vue';
 import BiometricSignInOffer from '@/Components/BiometricSignInOffer.vue';
+import OfflineBanner from '@/Components/OfflineBanner.vue';
+import PullToRefresh from '@/Components/PullToRefresh.vue';
 import { isNativeApp } from '@/Support/nativeApp';
 
 const props = defineProps({
@@ -174,4 +176,6 @@ provide('layoutHasHeading', !props.ownHeading);
 
     <AppTabBar :club="club" :active-tab="activeTab" :class="isNativeApp ? '' : 'md:hidden'" />
     <BiometricSignInOffer v-if="isNativeApp" />
+    <OfflineBanner />
+    <PullToRefresh />
 </template>

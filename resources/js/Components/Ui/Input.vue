@@ -30,7 +30,25 @@ const attrs = useAttrs();
 const id = useId();
 const fieldAttrs = computed(() => {
     const { class: _class, style: _style, ...rest } = attrs;
-    return rest;
+    return { ...phoneKeyboard.value, ...rest };
+});
+
+// The right keyboard on a phone, worked out from the field when a page doesn't say: a telephone keypad for phone
+// numbers, a number pad for sort codes, account numbers and amounts. A page's own type or inputmode always wins.
+const phoneKeyboard = computed(() => {
+    const label = props.label.toLowerCase();
+    // A number that can't be negative (a minimum of 0 or more, or a price, fee or count): whole numbers get the number
+    // pad, amounts with pence the one with a decimal point. Fields that may go negative keep the full keyboard.
+    const neverNegative = (attrs.min !== undefined && attrs.min !== null && Number(attrs.min) >= 0) || /(price|cost|fee|places|guests)/.test(label);
+    if (props.type === 'number' && neverNegative) {
+        const wholeNumbers = attrs.step === undefined ? !/(price|cost|fee|amount)/.test(label) : /^\d+$/.test(String(attrs.step));
+        return { inputmode: wholeNumbers ? 'numeric' : 'decimal' };
+    }
+    if (props.type !== 'text') return {};
+    if (/(phone|telephone|mobile)/.test(label) && !/name/.test(label)) return { inputmode: 'tel' };
+    if (/(sort code|account number|bank code)/.test(label)) return { inputmode: 'numeric' };
+    if (/(postcode|post code|zip)/.test(label)) return { autocapitalize: 'characters' };
+    return {};
 });
 
 const fieldClasses = computed(() => [

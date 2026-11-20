@@ -54,7 +54,7 @@ const submit = () => {
         <form @submit.prevent="submit" class="space-y-5">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input v-model="form.rank" label="Rank or title" placeholder="e.g. WBro / Bro" />
-            <Input v-model="form.name" label="Full name" required placeholder="e.g. John David Smith" :error="form.errors.name" class="sm:col-span-2" />
+            <Input v-model="form.name" label="Full name" autocomplete="name" required placeholder="e.g. John David Smith" :error="form.errors.name" class="sm:col-span-2" />
           </div>
 
           <Input
@@ -72,7 +72,7 @@ const submit = () => {
             <Input v-model="form.home_club_number" label="Lodge no." placeholder="e.g. 357" />
           </div>
 
-          <Input v-model="form.phone" type="tel" label="Phone number (optional)" placeholder="07700 900123" />
+          <Input v-model="form.phone" type="tel" label="Phone number (optional)" autocomplete="tel" placeholder="07700 900123" />
 
           <Textarea v-model="form.dietary_notes" :rows="2" label="Default dietary requirements (optional)" placeholder="e.g. Vegetarian, Gluten-free" />
 

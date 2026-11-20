@@ -2,6 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Models\Member;
+use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Models\Club;
 use App\Models\LodgeClaim;
 use App\Models\LodgeCorrection;
@@ -9,6 +13,7 @@ use App\Support\Currencies;
 use App\Support\NativeApp;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Middleware;
 
@@ -42,8 +47,18 @@ class HandleInertiaRequests extends Middleware
         return match (true) {
             $user === null => 'guest',
             (bool) ($user->is_super_admin ?? false) => null,
-            default => 'member',
+            default => once(fn () => self::isStaffAnywhere($user) ? 'staff' : 'member'),
         };
+    }
+
+    /** A staff role in any active club, or an office in one: their member pages link into the club admin. */
+    private static function isStaffAnywhere(Authenticatable $user): bool
+    {
+        $id = $user->getAuthIdentifier();
+
+        return DB::table('club_user')->where('user_id', $id)->where('status', ClubMemberStatus::Active->value)
+            ->whereNotIn('role', [ClubRole::Member->value, ClubRole::Visitor->value])->exists()
+            || Member::where('user_id', $id)->active()->where('current_office', '!=', LodgeOffice::Member->value)->exists();
     }
 
     /**

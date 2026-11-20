@@ -50,6 +50,7 @@ const submit = () => {
           v-model="form.name"
           label="Full name"
           type="text"
+          autocomplete="name"
           required
           autofocus
           placeholder="John Doe"
@@ -59,6 +60,7 @@ const submit = () => {
           v-model="form.email"
           label="Email address"
           type="email"
+          autocomplete="email"
           required
           placeholder="member@example.com"
         />

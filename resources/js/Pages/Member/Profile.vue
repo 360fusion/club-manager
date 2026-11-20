@@ -22,6 +22,8 @@ const fileInput = ref(null);
 
 // The postal address is kept on the lodge's roster (for summonses and returns), so it only shows once the Secretary has a record for you.
 const ADDRESS_FIELDS = [['address_line_1', 'Address line 1'], ['address_line_2', 'Address line 2'], ['city', 'Town or city'], ['county', 'County'], ['postcode', 'Postcode']];
+// The phone fills these from the member's own contact card.
+const AUTOFILL = { address_line_1: 'address-line1', address_line_2: 'address-line2', city: 'address-level2', county: 'address-level1', postcode: 'postal-code' };
 
 const profileForm = useForm({
   name: props.user?.name || '',
@@ -145,8 +147,8 @@ const submitProfile = () => {
 
           <!-- Basic Info Inputs -->
           <div class="space-y-4">
-            <Input v-model="profileForm.name" label="Full name" required />
-            <Input v-model="profileForm.email" type="email" label="Email address" :error="profileForm.errors.email" required />
+            <Input v-model="profileForm.name" label="Full name" autocomplete="name" required />
+            <Input v-model="profileForm.email" type="email" label="Email address" autocomplete="email" :error="profileForm.errors.email" required />
             <p v-if="user?.pending_email" class="text-xs text-amber-700 dark:text-amber-400">
               Waiting for you to confirm <strong>{{ user.pending_email }}</strong>. Your sign-in email stays the same until you open the link we sent.
               <button type="button" class="underline" @click="cancelEmailChange">Cancel the change</button>
@@ -169,7 +171,7 @@ const submitProfile = () => {
               {{ club.name }} roster and event details
             </h3>
 
-            <Input v-model="profileForm.phone" label="Contact phone number" placeholder="+44 7700 900123" />
+            <Input v-model="profileForm.phone" type="tel" label="Contact phone number" autocomplete="tel" placeholder="+44 7700 900123" />
             <Input v-model="profileForm.emergency_contact" label="Emergency contact (name and phone)" placeholder="Sarah Kenyon (+44 7700 900999)" />
             <Textarea
               v-model="profileForm.dietary_notes"
@@ -181,7 +183,7 @@ const submitProfile = () => {
             <fieldset v-if="memberProfile?.address" class="space-y-3">
               <legend class="text-sm font-medium text-slate-900 dark:text-white">Postal address</legend>
               <div class="grid gap-3 sm:grid-cols-2">
-                <Input v-for="[key, label] in ADDRESS_FIELDS" :key="key" v-model="profileForm[key]" :label="label" :error="profileForm.errors[key]" maxlength="255" />
+                <Input v-for="[key, label] in ADDRESS_FIELDS" :key="key" v-model="profileForm[key]" :label="label" :autocomplete="AUTOFILL[key]" :error="profileForm.errors[key]" maxlength="255" />
               </div>
             </fieldset>
             <p class="text-xs text-slate-500 dark:text-slate-400">The Secretary is told when you change your phone, emergency contact or address.</p>

@@ -4,6 +4,8 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
+import OfflineBanner from '@/Components/OfflineBanner.vue';
+import PullToRefresh from '@/Components/PullToRefresh.vue';
 
 const props = defineProps({
   title: {
@@ -536,5 +538,7 @@ provide('layoutHasHeading', true);
 
     </main>
 
+    <OfflineBanner />
+    <PullToRefresh />
   </div>
 </template>
