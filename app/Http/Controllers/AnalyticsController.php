@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Enums\DocumentStatus;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\EventRegistration;
 use App\Models\Invoice;
 use App\Models\Meeting;
@@ -98,6 +99,12 @@ class AnalyticsController extends Controller
                 'attendance_rate' => $attendanceRate,
                 'events_count' => $club->events_count,
                 'posts_count' => $club->posts_count,
+            ],
+            // First steps for a lodge that has just been set up; the page hides the list once all three are done.
+            'gettingStarted' => [
+                'members' => Member::where('club_id', $club->id)->count() > 1,
+                'payments' => ClubPaymentMethod::where('club_id', $club->id)->where('is_active', true)->exists(),
+                'meetings' => Meeting::where('club_id', $club->id)->exists(),
             ],
         ]);
     }

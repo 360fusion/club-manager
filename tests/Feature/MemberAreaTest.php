@@ -265,7 +265,7 @@ class MemberAreaTest extends TestCase
 
     public function test_the_inbox_lists_unpaid_dining_and_soon_closing_event_replies(): void
     {
-        $meeting = $this->meeting($this->oxford, ['dining_cost_member' => 30]);
+        $meeting = $this->meeting($this->oxford, ['dining_cost_member' => 30, 'bank_sort_code' => '12-34-56', 'bank_account_number' => '12345678']);
         MeetingRsvp::create(['meeting_id' => $meeting->id, 'user_id' => $this->member->id, 'token_hash' => 'x', 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'attending_dining', 'payment_status' => 'unpaid', 'responded_at' => now()]);
         $this->event($this->oxford, ['title' => 'Summer supper', 'rsvp_deadline' => now()->addDays(3)]);
 
@@ -273,6 +273,26 @@ class MemberAreaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('inbox', 2)
                 ->where('inbox', fn ($inbox) => collect($inbox)->pluck('kind')->sort()->values()->all() === ['dining_payment', 'event_rsvp']));
+    }
+
+    public function test_dining_paid_on_the_night_is_not_asked_for_ahead(): void
+    {
+        // No bank details and no card or PayPal: the money is taken on the night.
+        $meeting = $this->meeting($this->oxford, ['dining_cost_member' => 30]);
+        MeetingRsvp::create(['meeting_id' => $meeting->id, 'user_id' => $this->member->id, 'token_hash' => 'x', 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'attending_dining', 'payment_status' => 'unpaid', 'responded_at' => now()]);
+
+        $this->actingAs($this->member)->get('/members/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('inbox', fn ($inbox) => ! collect($inbox)->contains('kind', 'dining_payment'))
+                ->where('upNext.0.owes', '£30.00')
+                ->where('upNext.0.pay_ahead', false));
+
+        $meeting->update(['bank_account_number' => '12345678']);
+
+        $this->actingAs($this->member)->get('/members/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('inbox', fn ($inbox) => collect($inbox)->contains('kind', 'dining_payment'))
+                ->where('upNext.0.pay_ahead', true));
     }
 
     public function test_only_club_staff_are_told_about_members_waiting_for_approval(): void

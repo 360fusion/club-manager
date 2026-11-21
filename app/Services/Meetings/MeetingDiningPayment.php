@@ -54,6 +54,23 @@ class MeetingDiningPayment
     }
 
     /**
+     * Whether dining at this meeting can be paid before the night at all (bank details, or a working card or PayPal
+     * option). Without one the money is taken on the night, so members are not asked to pay ahead.
+     */
+    public function payableAhead(Meeting $meeting): bool
+    {
+        return self::takesBank($meeting) || $this->takesOnline($meeting->club);
+    }
+
+    /**
+     * Whether the lodge takes dining money by card or PayPal (lists remember it per lodge instead of asking per meeting).
+     */
+    public function takesOnline(Club $club): bool
+    {
+        return $this->method($club, self::CARD) !== null || $this->method($club, self::PAYPAL) !== null;
+    }
+
+    /**
      * The member says they have sent their dining money by bank transfer. Nothing is marked paid: the dining list shows
      * "says paid" until the Treasurer matches the bank line or the Secretary records it.
      */

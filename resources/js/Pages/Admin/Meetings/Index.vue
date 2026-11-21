@@ -146,6 +146,20 @@ const deleteMeeting = () => {
 const duplicateMeeting = (id) => {
   router.post(route('admin.meetings.duplicate', { clubSlug: props.club.slug, id }));
 };
+
+// A draft can be sent from the list as well as from its dashboard: the same confirmation, then everyone is emailed.
+const meetingToPublish = ref(null);
+const publishing = ref(false);
+const publishMeeting = () => {
+  publishing.value = true;
+  router.post(route('admin.meetings.publish', { clubSlug: props.club.slug, id: meetingToPublish.value.id }), {}, {
+    preserveScroll: true,
+    onFinish: () => {
+      publishing.value = false;
+      meetingToPublish.value = null;
+    },
+  });
+};
 </script>
 
 <template>
@@ -157,7 +171,7 @@ const duplicateMeeting = (id) => {
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings and summonses</h2>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Generate season schedules using nth-weekday rules, publish summonses, and track passwordless RSVPs.</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Set up the year's meetings in one go or add them one at a time, send the summons, and see who is coming.</p>
           </div>
           <div class="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" @click="showSeasonModal = true">Generate season / Masonic year</Button>
@@ -206,6 +220,7 @@ const duplicateMeeting = (id) => {
               <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
                 {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date, { month: 'long' }) }} at {{ formatTime(meeting.starts_at) }}
               </h3>
+              <p class="text-sm text-slate-600 dark:text-slate-300">{{ formatDate(meeting.meeting_date, { month: 'long' }) }}<template v-if="meeting.venue"> · {{ meeting.venue }}</template></p>
               <div class="flex flex-wrap items-center gap-2">
                 <Badge :variant="meeting.status === 'published' ? 'success' : 'warning'" class="capitalize">{{ meeting.status }}</Badge>
                 <Badge>{{ meeting.dining_count }} dining</Badge>
@@ -224,6 +239,7 @@ const duplicateMeeting = (id) => {
               >
                 Financial return
               </Button>
+              <Button v-if="meeting.status !== 'published'" size="sm" @click="meetingToPublish = meeting">Publish and send summons</Button>
               <Button variant="secondary" size="sm" :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })">Edit summons</Button>
               <Button variant="secondary" size="sm" :href="route('admin.meetings.dining', { clubSlug: club.slug, id: meeting.id })" title="Dining list and payments">Dining</Button>
               <Button variant="secondary" size="sm" :href="route('admin.meetings.signing_in', { clubSlug: club.slug, id: meeting.id })">Signing in</Button>
@@ -279,6 +295,10 @@ const duplicateMeeting = (id) => {
         <Button type="submit" form="season-form" :loading="seasonForm.processing">Calculate and create dates</Button>
       </template>
     </Modal>
+
+    <ConfirmDialog :open="Boolean(meetingToPublish)" title="Publish the summons?" confirm-label="Publish summons" variant="primary" :processing="publishing" @confirm="publishMeeting" @close="meetingToPublish = null">
+      This publishes the summons and emails every active member their own reply link.
+    </ConfirmDialog>
 
     <ConfirmDialog :open="Boolean(meetingToDelete)" title="Delete this meeting?" confirm-label="Delete meeting" :processing="deleting" @confirm="deleteMeeting" @close="meetingToDelete = null">
       This meeting record will be removed.

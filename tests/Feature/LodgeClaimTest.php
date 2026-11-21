@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Lodge;
@@ -202,6 +204,17 @@ class LodgeClaimTest extends TestCase
         $club = app(LodgeClaimService::class)->approveWithNewClub($this->submit(), $this->superAdmin);
 
         $this->assertSame('lodge-of-industry-48', $club->slug);
+    }
+
+    public function test_the_claimant_joins_the_new_lodges_roster_in_the_office_they_claimed(): void
+    {
+        Notification::fake();
+
+        $club = app(LodgeClaimService::class)->approveWithNewClub($this->submit(overrides: ['claimant_role' => 'master']), $this->superAdmin);
+
+        $member = Member::where('club_id', $club->id)->where('user_id', $this->secretary->id)->sole();
+        $this->assertSame(LodgeOffice::WorshipfulMaster, $member->current_office);
+        $this->assertSame('WBro', $member->masonic_rank);
     }
 
     public function test_approving_can_link_an_existing_club_without_handing_out_access(): void

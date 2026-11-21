@@ -2,6 +2,8 @@
 
 namespace App\Services\Lodges;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Enums\ClubMemberStatus;
 use App\Enums\ClubRole;
 use App\Models\Club;
@@ -123,6 +125,7 @@ class LodgeClaimService
             ]);
 
             $club->users()->attach($claim->user_id, ['role' => ClubRole::Owner->value, 'status' => ClubMemberStatus::Active->value]);
+            $this->addClaimantToRoster($claim, $club);
             $this->copyMeetingPattern($lodge, $club);
             $this->finishApproval($claim, $lodge, $club, $admin, 'approved', $note);
 
@@ -232,6 +235,25 @@ class LodgeClaimService
             $this->log($other, $admin, 'superseded', 'Another claim for this lodge was approved.');
             $other->load(['lodge', 'user'])->user->notify(LodgeClaimNotification::rejected($other));
         }
+    }
+
+    /**
+     * The claimant goes on the new lodge's roster in the office they said they hold, so the lodge page, officers list
+     * and summonses name them from the start.
+     */
+    private function addClaimantToRoster(LodgeClaim $claim, Club $club): void
+    {
+        $office = match ($claim->claimant_role) {
+            'master' => LodgeOffice::WorshipfulMaster,
+            'secretary' => LodgeOffice::Secretary,
+            'treasurer' => LodgeOffice::Treasurer,
+            default => LodgeOffice::Member,
+        };
+
+        app(MemberInvitationService::class)->memberForUser($club, $claim->user)->forceFill([
+            'current_office' => $office,
+            'masonic_rank' => $office === LodgeOffice::WorshipfulMaster ? 'WBro' : 'Bro',
+        ])->save();
     }
 
     private function copyMeetingPattern(Lodge $lodge, Club $club): void

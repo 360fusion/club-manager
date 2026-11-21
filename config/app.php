@@ -109,6 +109,11 @@ return [
     |
     */
 
+    /*
+    | The password of the demo accounts made by DemoLodgesSeeder (staging only; set it in the server's .env).
+    */
+    'demo_password' => env('DEMO_PASSWORD'),
+
     'cipher' => 'AES-256-CBC',
 
     'key' => env('APP_KEY'),

@@ -12,12 +12,15 @@ import Input from '@/Components/Ui/Input.vue';
 import Select from '@/Components/Ui/Select.vue';
 import Modal from '@/Components/Ui/Modal.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import Tabs from '@/Components/Ui/Tabs.vue';
+import { memberAreaTabs } from '@/Support/memberAreaTabs';
 
 const props = defineProps({
   club: {
     type: Object,
     required: true,
   },
+  canGrantOwner: { type: Boolean, default: false },
   // One page of the roster (a Laravel paginator): the server applies the search, tab and filters.
   members: {
     type: Object,
@@ -210,19 +213,20 @@ const submitAddMember = () => {
 </script>
 
 <template>
-  <AdminLayout title="Members" :club="club" active-tab="members">
+  <AdminLayout title="Sign-ins and access" :club="club" active-tab="members">
 
     <div class="space-y-6">
+      <Tabs :items="memberAreaTabs(club.slug)" active="access" label="Members" />
 
       <!-- Header and actions -->
       <Card>
         <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div>
             <div class="flex flex-wrap items-center gap-3">
-              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Member roster</h2>
-              <Badge variant="info">{{ counts.all }} members</Badge>
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Sign-ins and access</h2>
+              <Badge variant="info">{{ counts.all }} {{ counts.all === 1 ? 'account' : 'accounts' }}</Badge>
             </div>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage the member directory, member numbers, roles, pending approvals and roster exports.</p>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Everyone who can sign in, what each can do, and people asking to join. Offices, ranks and Masonic dates are on the Members roster.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -438,6 +442,7 @@ const submitAddMember = () => {
                     <option value="treasurer">Treasurer</option>
                     <option value="examiner">Examiner / auditor</option>
                     <option value="admin">Admin</option>
+                    <option v-if="m.role === 'owner' || canGrantOwner" value="owner">Owner</option>
                   </select>
                 </td>
 

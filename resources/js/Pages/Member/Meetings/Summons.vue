@@ -214,9 +214,10 @@ const grantStatusLabel = (grantStatus) => {
         </ol>
         <p v-else class="text-sm text-slate-500 dark:text-slate-400">Standard business will be transacted.</p>
 
-        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-slate-200 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          <span>By command of the Worshipful Master: <strong class="font-semibold text-slate-700 dark:text-slate-200">{{ worshipfulMaster?.name || 'Worshipful Master' }}</strong></span>
-          <span>Secretary: <strong class="font-semibold text-slate-700 dark:text-slate-200">{{ secretaryUser?.name || 'Secretary' }}</strong></span>
+        <!-- Names only: a lodge that has not recorded its Master or Secretary yet leaves the line out. -->
+        <div v-if="worshipfulMaster?.name || secretaryUser?.name" class="flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-slate-200 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <span v-if="worshipfulMaster?.name">By command of the Worshipful Master: <strong class="font-semibold text-slate-700 dark:text-slate-200">{{ worshipfulMaster.name }}</strong></span>
+          <span v-if="secretaryUser?.name">Secretary: <strong class="font-semibold text-slate-700 dark:text-slate-200">{{ secretaryUser.name }}</strong></span>
         </div>
       </Card>
 
@@ -248,7 +249,8 @@ const grantStatusLabel = (grantStatus) => {
       <Alert v-if="$page.props.errors?.payment" variant="danger" role="alert">{{ $page.props.errors.payment }}</Alert>
 
       <div v-if="owed" class="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
-        <p class="text-amber-900 dark:text-amber-200">Dining still to pay: <strong>{{ owed }}</strong></p>
+        <p v-if="payWith.length || takesBank" class="text-amber-900 dark:text-amber-200">Dining still to pay: <strong>{{ owed }}</strong></p>
+        <p v-else class="text-amber-900 dark:text-amber-200">Dining: <strong>{{ owed }}</strong>, paid on the night.</p>
         <div class="flex flex-wrap gap-2">
           <Button v-if="payWith.includes('card')" size="sm" :loading="paying === 'card'" @click="pay('card')">Pay by card</Button>
           <Button v-if="payWith.includes('paypal')" size="sm" variant="secondary" :loading="paying === 'paypal'" @click="pay('paypal')">Pay with PayPal</Button>
@@ -348,9 +350,9 @@ const grantStatusLabel = (grantStatus) => {
       <Alert v-if="meeting.sick_distressed_notes || meeting.almoner_notice" variant="warning" title="Almoner, sick and distressed notice" class="whitespace-pre-line">{{ meeting.sick_distressed_notes || meeting.almoner_notice }}</Alert>
 
       <!-- Secretary contact -->
-      <Card padding="sm" class="space-y-1 text-sm">
+      <Card v-if="secretaryUser?.name || club.email || club.settings?.phone" padding="sm" class="space-y-1 text-sm">
         <h2 :class="overline">Lodge Secretary</h2>
-        <p class="font-semibold text-slate-900 dark:text-white">{{ secretaryUser?.name || 'Secretary' }}</p>
+        <p v-if="secretaryUser?.name" class="font-semibold text-slate-900 dark:text-white">{{ secretaryUser.name }}</p>
         <p v-if="secretaryUser?.email || club.email" class="break-all text-slate-600 dark:text-slate-300">{{ secretaryUser?.email || club.email }}</p>
         <p v-if="club.settings?.phone" class="text-slate-600 dark:text-slate-300">{{ club.settings.phone }}</p>
       </Card>

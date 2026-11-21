@@ -121,6 +121,42 @@ class MemberFormPageTest extends TestCase
         Mail::assertQueued(MemberInvitationMail::class, fn ($mail) => $mail->hasTo('bertie@example.com'));
     }
 
+    public function test_the_treasurer_office_suggests_treasurer_access_and_the_invite_gives_it(): void
+    {
+        Mail::fake();
+
+        $this->page()
+            ->set('first_name', 'Chris')
+            ->set('last_name', 'Dalton')
+            ->set('email', 'chris@example.com')
+            ->set('current_office', 'treasurer')
+            ->assertSet('inviteRole', 'treasurer')
+            ->set('sendInvitation', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('treasurer', User::where('email', 'chris@example.com')->first()->clubs()->first()->pivot->role);
+    }
+
+    public function test_a_secretary_cannot_invite_someone_as_treasurer(): void
+    {
+        Mail::fake();
+        $secretary = User::factory()->create();
+        $secretary->clubs()->attach($this->club, ['role' => 'coach', 'status' => 'active']);
+
+        $this->page(user: $secretary)
+            ->set('first_name', 'Chris')
+            ->set('last_name', 'Dalton')
+            ->set('email', 'chris@example.com')
+            ->set('sendInvitation', true)
+            ->set('inviteRole', 'treasurer')
+            ->call('save')
+            ->assertHasErrors('inviteRole');
+
+        $this->assertSame(0, Member::count());
+        Mail::assertNothingQueued();
+    }
+
     public function test_editing_fills_the_form_saves_changes_and_returns_to_the_profile(): void
     {
         $member = $this->member(['phone' => '111', 'date_of_joining' => '2015-06-01']);

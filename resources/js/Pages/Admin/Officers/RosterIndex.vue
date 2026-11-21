@@ -5,6 +5,7 @@ import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Tabs from '@/Components/Ui/Tabs.vue';
+import { memberAreaTabs } from '@/Support/memberAreaTabs';
 import Alert from '@/Components/Ui/Alert.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
@@ -24,13 +25,7 @@ const props = defineProps({
   provincialRanks: { type: Array, default: () => [] },
 });
 
-// The other three pages are Livewire, so they need a full page load. The same list is in livewire/members/_tabs.
-const memberAreaTabs = [
-  { key: 'members', label: 'Members roster', href: route('admin.club_acc.members.index', { clubSlug: props.club.slug }), reload: true },
-  { key: 'officers', label: 'Annual officer rosters & history', href: route('admin.officers.index', { clubSlug: props.club.slug }) },
-  { key: 'candidates', label: 'Candidates (Form P vetting)', href: route('admin.club_acc.candidates.index', { clubSlug: props.club.slug }), reload: true },
-  { key: 'subscriptions', label: 'Subscriptions & dues', href: route('admin.club_acc.subscriptions.index', { clubSlug: props.club.slug }), reload: true },
-];
+const tabs = memberAreaTabs(props.club.slug);
 
 const localMembers = ref([...(props.members || [])]);
 
@@ -575,7 +570,7 @@ const installCurrentRoster = () => {
   <AdminLayout title="Annual officer rosters and history" :club="club" active-tab="members">
     <div class="space-y-6">
 
-      <Tabs :items="memberAreaTabs" active="officers" label="Members" />
+      <Tabs :items="tabs" active="officers" label="Members" />
 
       <Card class="space-y-4">
         <div class="border-b border-slate-200 dark:border-slate-800 pb-6">

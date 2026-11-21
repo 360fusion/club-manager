@@ -290,6 +290,8 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
                         <span class="text-[13px] text-slate-500 dark:text-slate-400">{{ who }}</span>
                         <span class="font-display text-[22px] font-semibold text-slate-900 dark:text-white">{{ $money(total) }}</span>
                     </div>
+                    <!-- A charged event before its first price arrives: say so, rather than leave a gap that reads as free. -->
+                    <p v-else-if="going && event.requires_payment && !quoteError" class="text-[13px] text-slate-500 dark:text-slate-400" aria-live="polite">Working out the price…</p>
                     <div class="flex gap-3">
                         <Button type="submit" size="lg" class="flex-1" :disabled="blocked" :loading="form.processing">
                             {{ !going ? 'Save reply' : (willWait ? 'Join the waiting list' : (event.user_rsvp ? 'Update booking' : 'Confirm booking')) }}

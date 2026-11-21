@@ -14,6 +14,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\SignatureRequest;
 use App\Models\User;
+use App\Services\Meetings\MeetingDiningPayment;
 use App\Support\ClubAccess;
 use App\Support\Currencies;
 use App\Support\MemberScope;
@@ -89,8 +90,15 @@ class MemberInbox
                 ->where('status', 'published')
                 ->where('dining_cost_member', '>', 0)
                 ->whereDate('meeting_date', '>=', today()))
-            ->with('meeting')
+            ->with('meeting.club')
             ->get();
+
+        // Only dining that can be paid ahead: without bank details, card or PayPal it is paid on the night.
+        $payments = app(MeetingDiningPayment::class);
+        $takesOnline = [];
+        $rsvps = $rsvps->filter(function (MeetingRsvp $rsvp) use ($payments, &$takesOnline) {
+            return MeetingDiningPayment::takesBank($rsvp->meeting) || ($takesOnline[$rsvp->meeting->club_id] ??= $payments->takesOnline($rsvp->meeting->club));
+        });
 
         return $rsvps->map(function (MeetingRsvp $rsvp) use ($scope) {
             $meeting = $rsvp->meeting;

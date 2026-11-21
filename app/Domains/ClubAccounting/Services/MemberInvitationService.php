@@ -36,14 +36,14 @@ class MemberInvitationService
      *
      * @throws MemberInvitationException
      */
-    public function invite(Member $member, Club $club, ?User $actor = null): array
+    public function invite(Member $member, Club $club, ?User $actor = null, string $role = 'member'): array
     {
         $this->assertInvitable($member, $club);
 
         $email = strtolower(trim((string) $member->email));
         $token = Str::random(40);
 
-        $user = DB::transaction(function () use ($member, $club, $actor, $email, $token) {
+        $user = DB::transaction(function () use ($member, $club, $actor, $email, $token, $role) {
             $user = User::firstOrCreate(
                 ['email' => $email],
                 ['name' => $member->full_name, 'password' => Hash::make(Str::random(32))],
@@ -67,7 +67,7 @@ class MemberInvitationService
 
             if (! $pivot) {
                 $club->users()->attach($user->id, $fields + [
-                    'role' => 'member',
+                    'role' => $role,
                     'status' => 'pending',
                     'member_number' => $member->grand_lodge_number ?: 'MEM-'.random_int(1000, 9999),
                 ]);

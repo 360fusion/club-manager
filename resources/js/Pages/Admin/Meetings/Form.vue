@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
@@ -248,6 +249,25 @@ const submit = () => {
   form.post(route('admin.meetings.store', { clubSlug: props.club.slug }));
 };
 
+// Saves first, so what is on screen is what goes out, then publishes and emails every member their reply link.
+const confirmingPublish = ref(false);
+const publishing = ref(false);
+const saveAndPublish = () => {
+  publishing.value = true;
+  form.post(route('admin.meetings.store', { clubSlug: props.club.slug }), {
+    onSuccess: (page) => router.post(route('admin.meetings.publish', { clubSlug: props.club.slug, id: page.props.meeting.id }), {}, {
+      onFinish: () => {
+        publishing.value = false;
+        confirmingPublish.value = false;
+      },
+    }),
+    onError: () => {
+      publishing.value = false;
+      confirmingPublish.value = false;
+    },
+  });
+};
+
 const SECTIONS = [
   { value: 'general', label: 'General and intro letter', short: 'General and intro' },
   { value: 'agenda', label: 'Order of business (agenda)', short: 'Order of business' },
@@ -273,6 +293,7 @@ const cell = 'rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text
           <div class="flex flex-wrap gap-2">
             <Button v-if="meeting.id" variant="secondary" size="sm" :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank">Preview PDF</Button>
             <Button size="sm" :loading="form.processing" @click="submit">Save changes</Button>
+            <Button v-if="meeting.status !== 'published'" size="sm" variant="secondary" @click="confirmingPublish = true">Save and publish</Button>
           </div>
         </div>
       </Card>
@@ -546,5 +567,8 @@ const cell = 'rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text
         </div>
       </div>
     </div>
+    <ConfirmDialog :open="confirmingPublish" title="Save and publish the summons?" confirm-label="Publish summons" variant="primary" :processing="publishing" @confirm="saveAndPublish" @close="confirmingPublish = false">
+      This saves your changes, publishes the summons and emails every active member their own reply link.
+    </ConfirmDialog>
   </AdminLayout>
 </template>

@@ -332,7 +332,7 @@
                                 @if($user?->avatar_url)
                                     <img src="{{ $user->avatar_url }}" class="w-full h-full object-cover" />
                                 @else
-                                    <span>{{ strtoupper(substr($user?->name ?? 'ME', 0, 2)) }}</span>
+                                    <span>{{ strtoupper(collect(explode(' ', $user?->name ?: 'ME'))->map(fn ($part) => mb_substr($part, 0, 1))->take(2)->implode('')) }}</span>
                                 @endif
                             </div>
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden sm:inline-block max-w-[120px] truncate">

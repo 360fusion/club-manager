@@ -62,7 +62,7 @@
                 </div>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <x-input label="Hermes / GL member ID" wire:model="grand_lodge_number" placeholder="1482092" class="font-mono" />
-                    <x-select label="Current office" required wire:model="current_office">
+                    <x-select label="Current office" required wire:model.live="current_office">
                         @foreach($offices as $of)
                             <option value="{{ $of->value }}" @selected($current_office === $of->value)>{{ $of->label() }}</option>
                         @endforeach
@@ -112,6 +112,14 @@
                             <span class="block text-xs text-slate-500 dark:text-slate-400">Emails a private link so they can create their own login. Type an email address above to turn this on.</span>
                         </span>
                     </label>
+                    <div x-data x-show="$wire.sendInvitation" x-cloak>
+                        <x-select label="What they can do once signed in" wire:model="inviteRole" :error="$errors->first('inviteRole')" hint="A Secretary or Treasurer office suggests its own access. You can change it later under Sign-ins and access.">
+                            <option value="member">Member: their own replies, bookings and dues</option>
+                            <option value="coach">Secretary: meetings, summonses and events</option>
+                            <option value="treasurer">Treasurer: accounts, dues and payments</option>
+                            <option value="admin">Admin: everything except owners</option>
+                        </x-select>
+                    </div>
                 @endif
             </div>
         </x-card>

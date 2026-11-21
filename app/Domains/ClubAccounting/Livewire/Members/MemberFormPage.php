@@ -80,6 +80,9 @@ class MemberFormPage extends Component
 
     public bool $sendInvitation = false;
 
+    /** The access the invited account gets: Secretary and Treasurer offices suggest their own (see updatedCurrentOffice). */
+    public string $inviteRole = 'member';
+
     public function mount(string $clubSlug, ?int $memberId = null): void
     {
         $this->clubSlug = $clubSlug;
@@ -120,7 +123,19 @@ class MemberFormPage extends Component
     }
 
     /**
-     * @return RedirectResponse
+     * A Secretary or Treasurer usually needs that access too, so the invite suggests it (the admin can change it).
+     */
+    public function updatedCurrentOffice(string $office): void
+    {
+        $this->inviteRole = match ($office) {
+            LodgeOffice::Secretary->value => 'coach',
+            LodgeOffice::Treasurer->value => 'treasurer',
+            default => 'member',
+        };
+    }
+
+    /**
+     * @return RedirectResponse|null
      */
     public function save()
     {
@@ -150,10 +165,17 @@ class MemberFormPage extends Component
             'date_of_raising' => 'nullable|date',
             'date_of_joining' => 'nullable|date',
             'customer_account_id' => 'nullable|integer',
+            'inviteRole' => 'required|in:member,coach,treasurer,examiner,admin',
         ], [
             'grand_rank.in' => 'Choose a Grand rank from the list.',
             'provincial_rank.in' => 'Choose a Provincial rank from the list.',
         ]);
+
+        if (! $this->memberId && $this->sendInvitation && ! ClubAccess::canAssignRole(auth()->user(), $club, $this->inviteRole, null)) {
+            $this->addError('inviteRole', 'Your role cannot give this access.');
+
+            return null;
+        }
 
         $data = [
             'club_id' => $club->id,
@@ -256,7 +278,7 @@ class MemberFormPage extends Component
     private function invitationNote(Member $member, Club $club): string
     {
         try {
-            $sent = app(MemberInvitationService::class)->invite($member, $club, auth()->user());
+            $sent = app(MemberInvitationService::class)->invite($member, $club, auth()->user(), $this->inviteRole);
 
             return $sent['emailed'] ? " Invitation emailed to {$member->email}." : " Email could not be sent. Share this link: {$sent['url']}";
         } catch (MemberInvitationException $e) {

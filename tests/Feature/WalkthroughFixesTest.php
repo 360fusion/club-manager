@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Domains\ClubAccounting\Models\Member;
 use App\Mail\MeetingSummonsMail;
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
@@ -120,5 +122,34 @@ class WalkthroughFixesTest extends TestCase
         $this->join('visitor', 'pending');
         $this->actingAs($this->admin)->get('/members/dashboard')
             ->assertInertia(fn (AssertableInertia $page) => $page->where('inbox.0.kind', 'approvals')->where('inbox.0.url', route('admin.users.index', $this->club->slug, false)));
+    }
+
+    public function test_a_new_lodge_dashboard_lists_its_first_steps_until_they_are_done(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.analytics', ['slug' => $this->club->slug]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('gettingStarted', ['members' => false, 'payments' => false, 'meetings' => false]));
+
+        foreach (['Chris', 'Neil'] as $name) {
+            Member::create(['club_id' => $this->club->id, 'first_name' => $name, 'last_name' => 'Brother', 'masonic_rank' => 'Bro', 'membership_status' => 'active', 'current_office' => 'member']);
+        }
+        ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => ClubPaymentMethod::DOOR, 'label' => 'Pay on the night', 'is_active' => true, 'config' => []]);
+        $this->meeting();
+
+        $this->actingAs($this->admin)->get(route('admin.analytics', ['slug' => $this->club->slug]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('gettingStarted', ['members' => true, 'payments' => true, 'meetings' => true]));
+    }
+
+    public function test_only_an_owner_is_offered_the_owner_role_and_a_role_change_reads_plainly(): void
+    {
+        $owner = $this->join('owner');
+        $member = $this->join('member');
+
+        $this->actingAs($this->admin)->get(route('admin.users.index', ['clubSlug' => $this->club->slug]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('canGrantOwner', false));
+        $this->actingAs($owner)->get(route('admin.users.index', ['clubSlug' => $this->club->slug]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('canGrantOwner', true));
+
+        $this->actingAs($owner)->post(route('admin.users.role.update', ['clubSlug' => $this->club->slug, 'userId' => $member->id]), ['role' => 'coach'])
+            ->assertSessionHas('success', 'Role changed to Secretary.');
     }
 }

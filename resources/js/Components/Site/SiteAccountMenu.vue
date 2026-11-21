@@ -19,6 +19,8 @@ const user = computed(() => (props.interactive ? page.props.auth?.user : null));
 // The user's place in this club, if they belong to it (an active member sees the club's own member pages).
 const membership = computed(() => (page.props.auth?.clubs ?? []).find((c) => c.slug === props.club.slug && c.status === 'active') || null);
 const isStaff = computed(() => !!membership.value && membership.value.role !== 'member');
+// A coach cannot open the dashboard, so they go to the area their role covers (as in AccountMenu).
+const adminHref = computed(() => (membership.value?.role === 'coach' ? `/${props.club.slug}/admin/events` : `/${props.club.slug}/admin/analytics`));
 
 const base = computed(() => `/members/${props.club.slug}`);
 
@@ -80,7 +82,7 @@ const item = 'block w-full text-left rounded-xl px-3 py-2 text-xs font-semibold 
 
                 <Link v-for="link in links" :key="link.href" :href="link.href" role="menuitem" :class="item" @click="open = false">{{ link.label }}</Link>
 
-                <Link v-if="isStaff" :href="`/${club.slug}/overview`" role="menuitem" :class="[item, 'border-t border-neutral-100 dark:border-neutral-800 rounded-t-none mt-1 pt-2']" @click="open = false">Club admin</Link>
+                <Link v-if="isStaff" :href="adminHref" role="menuitem" :class="[item, 'border-t border-neutral-100 dark:border-neutral-800 rounded-t-none mt-1 pt-2']" @click="open = false">Club admin</Link>
 
                 <div class="border-t border-neutral-100 pt-1 dark:border-neutral-800">
                     <button type="button" role="menuitem" :class="[item, 'text-rose-600 dark:text-rose-400 cursor-pointer']" @click="logout">Log out</button>

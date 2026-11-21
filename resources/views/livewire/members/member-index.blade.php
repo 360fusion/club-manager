@@ -12,7 +12,7 @@
                         <x-badge variant="info">Rule 153 roster</x-badge>
                     </div>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        The lodge's members, masonic ranks, progressive offices and accounting ledger links.
+                        The lodge's members, Masonic ranks, offices and accounts. Who can sign in, and what each can do, is under <a href="{{ route('admin.users.index', ['clubSlug' => $club->slug]) }}" class="font-medium text-blue-700 underline underline-offset-2 dark:text-blue-300">Sign-ins and access</a>.
                     </p>
                 </div>
 

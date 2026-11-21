@@ -32,7 +32,10 @@ class MemberStatusAdminController extends Controller
 
         $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
 
-        return redirect()->back()->with('success', 'Member role updated to '.strtoupper($validated['role']));
+        // The screens call the coach role "Secretary".
+        $label = ['coach' => 'Secretary', 'examiner' => 'Examiner or auditor'][$validated['role']] ?? ucfirst($validated['role']);
+
+        return redirect()->back()->with('success', 'Role changed to '.$label.'.');
     }
 
     /**

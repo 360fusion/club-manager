@@ -48,6 +48,7 @@ const ATTENDING = ['attending', 'attending_dining', 'attending_meeting_only'];
 // The chip beside each coming-up item: what is owed first, then the member's reply, then an invitation to answer.
 const status = (item) => {
     if (item.owes && item.said_paid) return { label: 'Payment sent', variant: 'info' };
+    if (item.owes && item.pay_ahead === false) return { label: 'Pay on the night', variant: 'neutral' };
     if (item.owes) return { label: 'Unpaid', variant: 'warning' };
     if (ATTENDING.includes(item.reply)) return { label: 'Attending', variant: 'success' };
     if (item.reply) return { label: REPLIES[item.reply] ?? item.reply, variant: 'neutral' };
@@ -58,7 +59,8 @@ const status = (item) => {
 
 // The soonest booking that still owes money, shown on its own above everything else.
 // Not one they have said they paid by bank transfer: that waits for the Treasurer to see it in the bank.
-const nextBooking = computed(() => props.upNext.find((item) => item.owes && !item.said_paid) ?? null);
+// Only something that can be paid now: dining or a place paid on the night waits for the night.
+const nextBooking = computed(() => props.upNext.find((item) => item.owes && !item.said_paid && item.pay_ahead !== false) ?? null);
 
 // Its dining payment is already the highlighted card, so it is not listed again.
 const attention = computed(() => props.inbox.filter((item) => !(item.kind === 'dining_payment' && item.url === nextBooking.value?.url)));
@@ -157,7 +159,7 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
             <Card v-if="!clubs.length && !pendingClubs.length">
                 <div class="py-6 text-center">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Find your lodge</h3>
-                    <p class="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Browse the directory to see public meetings and events, and ask to join a lodge.</p>
+                    <p class="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Find your lodge in the directory to see its meetings and ask to join. If you are its Secretary, Master or Treasurer, open your lodge and press Claim this lodge to run it here.</p>
                     <Button class="mt-4" :href="route('lodges.index')">Open the directory</Button>
                 </div>
             </Card>

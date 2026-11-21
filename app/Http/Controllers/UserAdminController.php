@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\MemberInvitationException;
 use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Enums\DocumentStatus;
 use App\Http\Requests\UserAdmin\StoreMemberRequest;
 use App\Models\Club;
@@ -144,6 +145,8 @@ class UserAdminController extends Controller
             'filters' => $filters,
             'enableMemberRanks' => $enableMemberRanks,
             'memberRanks' => $memberRanks,
+            // Only an owner may make someone else an owner (ClubAccess::canAssignRole checks it again on save).
+            'canGrantOwner' => ClubAccess::role(auth()->user(), $club) === ClubRole::Owner->value || auth()->user()->actsAsSuperAdmin(),
         ]);
     }
 

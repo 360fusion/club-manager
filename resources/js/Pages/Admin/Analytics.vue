@@ -3,16 +3,39 @@ import { Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   club: Object,
   metrics: Object,
   upcomingMeetings: Array,
+  gettingStarted: { type: Object, default: null },
 });
+
+// The first three things a newly set-up lodge needs, each ticked off once done.
+const firstSteps = computed(() => props.gettingStarted ? [
+  { done: props.gettingStarted.members, label: 'Add your members and invite them to sign in', href: route('admin.club_acc.members.index', { clubSlug: props.club.slug }) },
+  { done: props.gettingStarted.payments, label: 'Choose how people pay for dining and events', href: route('admin.payment_options.index', { clubSlug: props.club.slug }) },
+  { done: props.gettingStarted.meetings, label: 'Add your first meeting and send the summons', href: route('admin.meetings.index', { clubSlug: props.club.slug }) },
+] : []);
+const stillToDo = computed(() => firstSteps.value.some((step) => !step.done));
 </script>
 
 <template>
   <AdminLayout title="Dashboard" :club="club" active-tab="dashboard">
-    
+
+    <section v-if="stillToDo" aria-labelledby="first-steps-heading" class="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 sm:mb-6 sm:p-6 dark:border-blue-900/60 dark:bg-blue-950/30">
+      <h2 id="first-steps-heading" class="text-base font-semibold text-slate-900 dark:text-white">Getting your lodge started</h2>
+      <ol class="mt-3 space-y-2">
+        <li v-for="step in firstSteps" :key="step.label" class="flex items-start gap-2 text-sm">
+          <UiIcon v-if="step.done" name="check" class="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span v-else aria-hidden="true" class="mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-slate-400" />
+          <span v-if="step.done" class="text-slate-500 line-through dark:text-slate-400">{{ step.label }}</span>
+          <Link v-else :href="step.href" class="font-medium text-blue-700 hover:underline dark:text-blue-300">{{ step.label }}</Link>
+        </li>
+      </ol>
+    </section>
+
     <!-- The headline numbers, two to a row even on a phone: members, then money. -->
     <div class="grid grid-cols-2 gap-3 sm:gap-6">
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col gap-2">

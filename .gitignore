@@ -28,3 +28,6 @@ Thumbs.db
 
 # Journey videos and screenshots (tests/journeys/record.sh)
 /tests/journeys/out/
+
+# Test accounts and passwords for the journey runs (local only, never committed)
+/tests/journeys/accounts.local.json

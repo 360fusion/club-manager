@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Enums\ClubMemberStatus;
 use App\Enums\EventStatus;
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\User;
+use App\Services\Meetings\MeetingDiningPayment;
 use App\Services\Meetings\MeetingReplies;
 use App\Services\MemberFeed;
 use App\Services\MemberInbox;
@@ -102,7 +104,7 @@ class MemberHomeController extends Controller
             ->limit(self::UP_NEXT_LIMIT)
             ->get();
 
-        $eventReplies = EventRegistration::withCount('attendees')
+        $eventReplies = EventRegistration::withCount('attendees')->with('paymentMethod')
             ->whereIn('event_id', $events->pluck('id'))
             ->where('user_id', $user->id)
             ->get()
@@ -110,7 +112,10 @@ class MemberHomeController extends Controller
 
         $owes = fn (float $amount, int $clubId): ?string => $amount > 0 ? Currencies::format($amount, $clubs->firstWhere('id', $clubId)) : null;
 
-        return $meetings->map(function (Meeting $meeting) use ($clubs, $meetingReplies, $owes) {
+        $diningPayment = app(MeetingDiningPayment::class);
+        $takesOnline = [];
+
+        return $meetings->map(function (Meeting $meeting) use ($clubs, $meetingReplies, $owes, $diningPayment, &$takesOnline) {
             $club = $clubs->firstWhere('id', $meeting->club_id);
             $rsvp = $meetingReplies[$meeting->id] ?? null;
 
@@ -128,6 +133,8 @@ class MemberHomeController extends Controller
                 'owes' => $rsvp ? $owes(MeetingReplies::owed($meeting, $rsvp)['amount'], $meeting->club_id) : null,
                 // They told the lodge they paid by bank transfer: not chased while the Treasurer waits for the statement.
                 'said_paid' => $rsvp?->said_paid_at !== null,
+                // No bank details, card or PayPal: dining is paid on the night, so there is nothing to pay now.
+                'pay_ahead' => MeetingDiningPayment::takesBank($meeting) || ($takesOnline[$club->id] ??= $diningPayment->takesOnline($club)),
                 'closed' => $meeting->rsvpClosed(),
                 'url' => route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false),
             ];
@@ -149,6 +156,7 @@ class MemberHomeController extends Controller
                 'guests' => $booking ? max(0, $booking->attendees_count - 1) : 0,
                 'owes' => $settled ? null : $owes($booking->balanceDue(), $event->club_id),
                 'said_paid' => $booking?->said_paid_at !== null,
+                'pay_ahead' => $booking?->paymentMethod?->type !== ClubPaymentMethod::DOOR,
                 'closed' => (bool) $event->is_booking_closed,
                 'url' => route('member.events', ['slug' => $club->slug], false),
             ];

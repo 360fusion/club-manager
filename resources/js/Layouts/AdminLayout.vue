@@ -423,7 +423,7 @@ provide('layoutHasHeading', true);
             >
               <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-blue-600 shadow-sm bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-xs flex items-center justify-center">
                 <img v-if="page.props.auth?.user?.avatar_url" :src="page.props.auth.user.avatar_url" class="w-full h-full object-cover" />
-                <span v-else>{{ page.props.auth?.user?.name ? page.props.auth.user.name.substring(0, 2).toUpperCase() : 'ME' }}</span>
+                <span v-else>{{ (page.props.auth?.user?.name || 'ME').split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase() }}</span>
               </div>
               <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 hidden sm:inline-block max-w-[120px] truncate dark:text-slate-200 dark:group-hover:text-blue-300">
                 {{ page.props.auth?.user?.name || 'Account' }}
