@@ -149,7 +149,7 @@ const openMeetingRsvpModal = (meeting) => {
         <div id="meetings-section" class="space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings and summonses</h2>
-            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ meetings.length }} meetings invited</span>
+            <span v-if="meetings.length" class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ meetings.length }} {{ meetings.length === 1 ? 'meeting' : 'meetings' }} invited</span>
           </div>
 
           <div v-if="meetings.length" class="space-y-4">
@@ -208,7 +208,7 @@ const openMeetingRsvpModal = (meeting) => {
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Upcoming events and training</h2>
-            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ events.length }} events scheduled</span>
+            <span v-if="events.length" class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ events.length }} {{ events.length === 1 ? 'event' : 'events' }} scheduled</span>
           </div>
 
           <div v-if="events.length" class="space-y-4">
