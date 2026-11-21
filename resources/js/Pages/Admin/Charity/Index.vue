@@ -116,7 +116,7 @@ const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded
         </template>
       </PageHeader>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard label="Total raised to date" :value="formattedTotalRaised" caption="Collections and member giving" />
         <StatCard label="Meeting alms and raffles" :value="formattedTotalCollections" caption="Takings verified under dual custody" />
         <StatCard label="Grants disbursed" :value="formattedTotalGrants" caption="Approved relief grants paid" />

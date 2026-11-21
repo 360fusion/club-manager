@@ -107,7 +107,7 @@ const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded
         </template>
       </PageHeader>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard label="Eligible donations" :value="giftAidSummary?.formatted_total_eligible || ($cs + '0.00')" caption="Meeting collections and envelope gifts" />
         <StatCard label="Gift Aid reclaimed (25%)" :value="giftAidSummary?.formatted_gift_aid_reclaimed || ($cs + '0.00')" caption="Reconciled to bank deposits" />
         <StatCard label="Unclaimed tax relief" :value="giftAidSummary?.formatted_pending_gift_aid || ($cs + '0.00')" :caption="`${giftAidSummary?.pending_claim_count || 0} collection batch(es) pending`" />

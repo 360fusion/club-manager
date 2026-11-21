@@ -55,6 +55,9 @@ final class HealthChecks
         $add('Secure cookies', (bool) config('session.secure'), 'SESSION_SECURE_COOKIE=true on a site served over https');
         $add('Proxies trusted', Request::getTrustedProxies() !== [], 'TRUSTED_PROXIES when a load balancer or Cloudflare is in front, or the client IP and https are read wrongly');
 
+        // Without these each page reads every config file and registers every route again: run php artisan optimize on deploy.
+        $add('Config and routes cached', app()->configurationIsCached() && app()->routesAreCached() && app()->eventsAreCached(), 'php artisan optimize after each deploy (config, routes, events and views); without it every page is slower');
+
         $driver = DB::connection()->getDriverName();
         $add('Database', $driver === 'pgsql', "Running on {$driver}. PostgreSQL is the intended database: financial rows are protected from cascade deletes there");
 

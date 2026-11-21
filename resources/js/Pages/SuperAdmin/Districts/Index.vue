@@ -120,7 +120,7 @@ const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2
                 </template>
             </PageHeader>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                 <StatCard label="Total overseas bodies" :value="districts.length" caption="UGLE international jurisdictions" />
                 <StatCard label="Active districts" :value="activeDistricts.length" caption="District Grand Lodges overseas" />
                 <StatCard label="Groups of lodges" :value="groups.length" caption="Informal groupings (no DGL)" />

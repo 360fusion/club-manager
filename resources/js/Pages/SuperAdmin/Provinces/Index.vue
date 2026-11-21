@@ -121,7 +121,7 @@ function deleteProvince(prov) {
                 </template>
             </PageHeader>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                 <StatCard label="Provinces managed" :value="provinces.length" caption="All Grand Lodges (UGLE, Scotland, Ireland, Malta)" />
                 <StatCard
                     label="UGLE provinces"

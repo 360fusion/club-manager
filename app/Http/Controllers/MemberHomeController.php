@@ -5,21 +5,18 @@ namespace App\Http\Controllers;
 use App\Enums\ClubMemberStatus;
 use App\Enums\EventStatus;
 use App\Models\Club;
-use App\Models\ClubUpdate;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
-use App\Models\Newsletter;
-use App\Models\Post;
 use App\Models\User;
 use App\Services\Meetings\MeetingReplies;
+use App\Services\MemberFeed;
 use App\Services\MemberInbox;
 use App\Support\Currencies;
 use App\Support\MemberScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,8 +26,6 @@ use Inertia\Response;
  */
 class MemberHomeController extends Controller
 {
-    private const FEED_LIMIT = 20;
-
     private const UP_NEXT_LIMIT = 6;
 
     public function __construct(private readonly MemberInbox $inbox) {}
@@ -49,7 +44,7 @@ class MemberHomeController extends Controller
             'pendingClubs' => $pending->map(fn (Club $club) => $this->clubSummary($club))->all(),
             'inbox' => $this->inbox->items($scope),
             'upNext' => $this->upNext($user, $clubs),
-            'feed' => Inertia::defer(fn () => $this->feed($user, $clubs)),
+            'feed' => Inertia::defer(fn () => app(MemberFeed::class)->items($user, $clubs)),
         ]);
     }
 
@@ -162,90 +157,5 @@ class MemberHomeController extends Controller
             ->take(self::UP_NEXT_LIMIT)
             ->values()
             ->all();
-    }
-
-    /**
-     * Recent news, events, updates and newsletters from the member's clubs.
-     *
-     * @param  Collection<int, Club>  $clubs
-     * @return list<array<string, mixed>>
-     */
-    private function feed(User $user, Collection $clubs): array
-    {
-        if ($clubs->isEmpty()) {
-            return [];
-        }
-
-        $clubIds = $clubs->pluck('id');
-        $club = fn (int $id): array => ['name' => $clubs->firstWhere('id', $id)->name, 'slug' => $clubs->firstWhere('id', $id)->slug, 'colour' => $clubs->firstWhere('id', $id)->colourKey()];
-        $roles = $clubs->mapWithKeys(fn (Club $c) => [$c->id => $c->pivot->role ?? 'member']);
-
-        $posts = Post::whereIn('club_id', $clubIds)->published()->visibleTo($user)
-            ->orderByRaw('COALESCE(published_at, created_at) DESC')
-            ->limit(self::FEED_LIMIT)->get()
-            ->map(fn (Post $post) => [
-                'key' => 'post-'.$post->id,
-                'type' => 'news',
-                'club' => $club($post->club_id),
-                'title' => $post->title,
-                'excerpt' => $this->excerpt($post->excerpt ?: $post->content),
-                'at' => ($post->published_at ?? $post->created_at)->toIso8601String(),
-                'important' => false,
-                'link' => ['name' => 'member.posts.show', 'params' => ['slug' => $club($post->club_id)['slug'], 'id' => $post->id]],
-            ]);
-
-        $events = Event::whereIn('club_id', $clubIds)->visibleTo($user)
-            ->where('status', EventStatus::Upcoming->value)
-            ->where('starts_at', '>=', now())
-            ->latest()->limit(self::FEED_LIMIT)->get()
-            ->map(fn (Event $event) => [
-                'key' => 'event-'.$event->id,
-                'type' => 'event',
-                'club' => $club($event->club_id),
-                'title' => $event->title,
-                'excerpt' => trim($event->starts_at->format('j M Y, H:i').' · '.$event->location, ' ·'),
-                'at' => $event->created_at->toIso8601String(),
-                'important' => false,
-                'link' => ['name' => 'member.events', 'params' => ['slug' => $club($event->club_id)['slug']]],
-            ]);
-
-        $updates = ClubUpdate::whereIn('club_id', $clubIds)->where('status', 'sent')
-            ->latest('sent_at')->limit(self::FEED_LIMIT)->get()
-            ->map(fn (ClubUpdate $update) => [
-                'key' => 'update-'.$update->id,
-                'type' => 'update',
-                'club' => $club($update->club_id),
-                'title' => $update->title,
-                'excerpt' => $this->excerpt($update->summary),
-                'at' => ($update->sent_at ?? $update->created_at)->toIso8601String(),
-                'important' => (bool) $update->is_important,
-                'link' => ['name' => 'member.dashboard', 'params' => ['slug' => $club($update->club_id)['slug']]],
-            ]);
-
-        $newsletters = Newsletter::whereIn('club_id', $clubIds)->where('status', 'sent')
-            ->latest('sent_at')->limit(self::FEED_LIMIT)->get()
-            ->filter(fn (Newsletter $n) => empty($n->target_roles) || in_array($roles[$n->club_id], $n->target_roles, true))
-            ->map(fn (Newsletter $newsletter) => [
-                'key' => 'newsletter-'.$newsletter->id,
-                'type' => 'newsletter',
-                'club' => $club($newsletter->club_id),
-                'title' => $newsletter->subject,
-                'excerpt' => $this->excerpt($newsletter->content),
-                'at' => ($newsletter->sent_at ?? $newsletter->created_at)->toIso8601String(),
-                'important' => false,
-                'link' => ['name' => 'member.dashboard', 'params' => ['slug' => $club($newsletter->club_id)['slug']]],
-            ]);
-
-        return $posts->concat($events)->concat($updates)->concat($newsletters)
-            ->sortBy([['important', 'desc'], ['at', 'desc']])
-            ->take(self::FEED_LIMIT)
-            ->values()
-            ->all();
-    }
-
-    private function excerpt(?string $html): string
-    {
-        // Decoded after the tags go, so "&amp;" reads as "&" (Vue escapes it again on screen).
-        return Str::limit(trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags((string) $html), ENT_QUOTES | ENT_HTML5))), 160);
     }
 }

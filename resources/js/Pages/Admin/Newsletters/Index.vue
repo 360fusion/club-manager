@@ -111,7 +111,7 @@ const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? 
         </div>
       </Card>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard label="Sent" :value="sentCount" />
         <StatCard label="Drafts" :value="draftCount" />
         <StatCard label="Channels" :value="(types || []).length" />

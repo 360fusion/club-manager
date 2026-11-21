@@ -71,5 +71,6 @@ class SuperAdminAuditLogTest extends TestCase
         $checks = collect(HealthChecks::run())->keyBy('name');
         $this->assertFalse($checks['Debug off']['ok'] && config('app.debug'));
         $this->assertFalse($checks['Mail driver']['ok'], 'the test mailer is array, which sends nothing');
+        $this->assertFalse($checks['Config and routes cached']['ok'], 'tests run without php artisan optimize');
     }
 }

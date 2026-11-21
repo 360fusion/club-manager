@@ -27,7 +27,7 @@ defineProps({
         </template>
       </PageHeader>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard label="Registered clubs" :value="metrics?.totalClubsCount || 0" caption="Across all order types" />
         <StatCard label="User accounts" :value="metrics?.totalUsersCount || 0" caption="Brethren, officers and members" />
         <StatCard label="Meeting summonses" :value="metrics?.totalMeetingsCount || 0" caption="Circulars and convocations" />

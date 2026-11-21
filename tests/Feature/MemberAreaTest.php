@@ -13,6 +13,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\Newsletter;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\ClubNotification;
@@ -574,16 +575,35 @@ class MemberAreaTest extends TestCase
         $other = $this->join($this->oxford);
         $other->notify(ClubNotification::news($this->newsPost($this->oxford, 'Other person'), $this->oxford));
 
+        // Only their own notification; the other person's post is listed as lodge news, not as their notification.
         $this->actingAs($this->member)->get('/members/notifications')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('notifications.data.0.title', 'Hello')
-                ->has('notifications.data', 1)
+                ->where('notifications.data', fn ($items) => collect($items)->map(fn ($item) => $item['title'].':'.(($item['feed'] ?? false) ? 'lodge' : 'sent'))->sort()->values()->all() === ['Hello:sent', 'Other person:lodge'])
                 ->where('unreadCount', 1)
                 ->where('auth.user.id', $this->member->id)
-                ->where('notifications.data.0.club.slug', 'oxford-lodge')
                 ->where('bell.unread', 1));
 
         $this->actingAs($this->member)->get('/members/dashboard')->assertInertia(fn (Assert $page) => $page->has('bell.unread')->has('bell.recent'));
+    }
+
+    public function test_the_inbox_also_lists_the_lodges_news_events_and_newsletters_once_each(): void
+    {
+        $announced = $this->newsPost($this->oxford, 'Announced news');
+        $this->member->notify(ClubNotification::news($announced, $this->oxford));
+        $this->newsPost($this->oxford, 'Quiet news');
+        $this->event($this->oxford, ['title' => 'Ladies festival']);
+        Newsletter::create(['club_id' => $this->oxford->id, 'subject' => 'November newsletter', 'content' => '<p>Hello &amp; welcome</p>', 'status' => 'sent', 'sent_at' => now()]);
+        $this->newsPost($this->bath, 'Another lodge news');
+
+        $titles = fn (array $query = []) => collect($this->actingAs($this->member)->get(route('members.notifications', $query))->viewData('page')['props']['notifications']['data']);
+
+        $all = $titles();
+        $this->assertEqualsCanonicalizing(['Announced news', 'Quiet news', 'Ladies festival', 'November newsletter'], $all->pluck('title')->all());
+        $this->assertFalse($all->firstWhere('title', 'Announced news')['feed'] ?? false, 'shown once, as the notification');
+        $this->assertSame('Hello & welcome', $all->firstWhere('title', 'November newsletter')['body']);
+
+        $this->assertSame(['November newsletter'], $titles(['category' => 'newsletter'])->pluck('title')->all());
+        $this->assertSame(['Announced news'], $titles(['unread' => 1])->pluck('title')->all());
     }
 
     public function test_opening_a_notification_marks_it_read_and_goes_to_its_page(): void

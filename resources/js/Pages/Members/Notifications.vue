@@ -20,6 +20,7 @@ const CATEGORIES = [
     { value: 'summons', label: 'Summonses' },
     { value: 'news', label: 'News' },
     { value: 'event', label: 'Events' },
+    { value: 'newsletter', label: 'Newsletters' },
     { value: 'reminder', label: 'Reminders' },
     { value: 'notice', label: 'Notices' },
     { value: 'membership', label: 'Membership' },
@@ -27,7 +28,7 @@ const CATEGORIES = [
     { value: 'passed_on', label: 'Other lodges' },
 ];
 
-const ICONS = { summons: 'document', news: 'mail', event: 'calendar', reminder: 'clock', notice: 'info', membership: 'user', signature: 'pencil', passed_on: 'document' };
+const ICONS = { summons: 'document', news: 'document', newsletter: 'mail', event: 'calendar', reminder: 'clock', notice: 'info', membership: 'user', signature: 'pencil', passed_on: 'document' };
 
 const categoryLabel = (value) => CATEGORIES.find((c) => c.value === value)?.label ?? value;
 
@@ -67,7 +68,7 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
                 <Card padding="none" class="overflow-hidden">
                     <ul>
                         <li v-for="item in group.items" :key="item.id" class="border-b border-slate-200 last:border-b-0 dark:border-slate-800">
-                            <Link :href="route('members.notifications.open', { id: item.id })" class="flex gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                            <Link :href="item.feed ? item.url : route('members.notifications.open', { id: item.id })" class="flex gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/60">
                                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                     <UiIcon :name="ICONS[item.category] ?? 'info'" :size="18" />
                                 </span>
@@ -90,7 +91,7 @@ const markAllRead = () => router.post(route('members.notifications.read_all'), {
                 </Card>
             </section>
 
-            <Card v-if="!notifications.data.length" padding="sm"><p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ filters.unread || filters.category ? 'Nothing matches those filters.' : "No notifications yet. Summonses, news and notices from your clubs will appear here." }}</p></Card>
+            <Card v-if="!notifications.data.length" padding="sm"><p class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">{{ filters.unread || filters.category ? 'Nothing matches those filters.' : "Nothing here yet. Summonses, news, events and newsletters from your lodges will appear here." }}</p></Card>
 
             <WebPushCard v-if="!isNativeApp" />
 

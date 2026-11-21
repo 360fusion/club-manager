@@ -236,7 +236,7 @@ const statusBadgeClass = (status) => {
       </Card>
 
       <!-- Stats -->
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div class="grid grid-cols-3 gap-2 sm:gap-6">
         <StatCard
           label="Attendance rate"
           :value="`${stats.attendance_rate}%`"
