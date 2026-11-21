@@ -67,7 +67,9 @@ const STATUS = {
   apologies: { variant: 'danger', label: 'Apologies sent' },
 };
 
-const answer = computed(() => props.userRsvp?.attendance_status ?? null);
+// The answer just tapped shows straight away (green), and goes back to the saved one if the save fails.
+const chosen = ref(null);
+const answer = computed(() => chosen.value ?? props.userRsvp?.attendance_status ?? null);
 const status = computed(() => STATUS[answer.value] ?? { variant: 'warning', label: 'Not replied yet' });
 const isDining = computed(() => answer.value === 'attending_dining');
 const diningGuests = computed(() => (props.userRsvp?.guests ?? []).filter((guest) => guest.attending_dining).length);
@@ -106,8 +108,8 @@ const confirmChange = () => {
 const send = (value) => {
   router.post(route('member.meetings.quick_rsvp', { slug: props.club.slug, id: props.meeting.id }), { attendance_status: value }, {
     preserveScroll: true,
-    onStart: () => { replying.value = value; },
-    onFinish: () => { replying.value = null; },
+    onStart: () => { chosen.value = value; replying.value = value; },
+    onFinish: () => { chosen.value = null; replying.value = null; },
   });
 };
 

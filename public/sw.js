@@ -70,8 +70,9 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Built files have their contents' hash in the name, so a kept copy never goes stale.
-    if (url.pathname.startsWith('/build/assets/')) {
+    // Built files have their contents' hash in the name, so a kept copy never goes stale. The route table's address
+    // carries a hash of the routes the same way.
+    if (url.pathname.startsWith('/build/assets/') || url.pathname.startsWith('/ziggy/')) {
         event.respondWith(caches.open(ASSETS).then((cache) => cache.match(request).then((hit) => hit || fetch(request).then((response) => {
             if (response.ok) cache.put(request, response.clone());
             return response;

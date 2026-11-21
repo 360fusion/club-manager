@@ -26,9 +26,13 @@ function find() {
 }
 
 const following = reactive({});
+// A followed lodge leaves the suggestions and the search results at once, and comes back if the save fails.
 function follow(lodge) {
     following[lodge.slug] = true;
-    router.post(route('lodges.follow', lodge.slug), {}, { preserveScroll: true, onFinish: () => { following[lodge.slug] = false; } });
+    router.optimistic((current) => ({
+        suggested: current.suggested.filter((item) => item.slug !== lodge.slug),
+        results: current.results.filter((item) => item.slug !== lodge.slug),
+    })).post(route('lodges.follow', lodge.slug), {}, { preserveScroll: true, onFinish: () => { following[lodge.slug] = false; } });
 }
 
 const replies = reactive({});

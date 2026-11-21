@@ -106,7 +106,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
 <template>
     <Head :title="`${club.name} - Workspace`" />
 
-    <div class="min-h-screen bg-slate-100 text-slate-800 font-sans dark:bg-slate-950 dark:text-slate-200">
+    <div class="min-h-dvh bg-slate-100 text-slate-800 font-sans dark:bg-slate-950 dark:text-slate-200">
         <!-- Header -->
         <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200 dark:bg-slate-950/80 dark:border-slate-800">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">

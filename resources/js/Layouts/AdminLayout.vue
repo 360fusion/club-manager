@@ -96,7 +96,7 @@ provide('layoutHasHeading', true);
     Skip to main content
   </a>
 
-  <div class="min-h-screen bg-slate-100 text-slate-800 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-slate-200">
+  <div class="min-h-dvh bg-slate-100 text-slate-800 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-slate-200">
     
     <!-- Mobile Sidebar Toggle Header -->
     <div class="cm-nav md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700">
@@ -395,7 +395,7 @@ provide('layoutHasHeading', true);
       
       <!-- Top Title Bar -->
       <!-- On a phone one compact row (title, bell, account), so the page itself starts near the top of the screen. -->
-      <header class="bg-white border-b border-slate-200 px-3 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+      <header class="app-top-bar bg-white border-b border-slate-200 px-3 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
         <div class="min-w-0">
           <h1 class="truncate text-lg sm:text-2xl font-black text-slate-900 tracking-tight dark:text-white">{{ title }}</h1>
           <p class="hidden sm:block text-xs text-slate-500 font-medium mt-0.5 dark:text-slate-400">Managing {{ clubName }}</p>

@@ -30,7 +30,7 @@ const filterClubs = () => {
     <Head title="Club Manager hub - Multi-tenant platform" />
 
     <!-- The landing page is always dark, so the kit components take their dark look on it. -->
-    <div class="dark min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
+    <div class="dark min-h-dvh bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
         <!-- Background gradient glows -->
         <div class="fixed inset-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>

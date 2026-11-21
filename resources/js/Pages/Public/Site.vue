@@ -69,7 +69,7 @@ const getSiteUrl = (urlPath) => {
     <!-- The description, share image and the rest of the head are written by the server (app.blade.php). -->
     <Head :title="pageTitle" />
 
-    <div :class="['min-h-screen transition-colors duration-300', theme.wrapper]" :style="theme.cssVars">
+    <div :class="['min-h-dvh transition-colors duration-300', theme.wrapper]" :style="theme.cssVars">
         <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-[var(--cm-accent-deep)] focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
             Skip to main content
         </a>

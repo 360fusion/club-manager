@@ -90,8 +90,8 @@ provide('layoutHasHeading', !props.ownHeading);
         Skip to main content
     </a>
 
-    <div class="min-h-screen bg-slate-100 font-sans text-slate-800 dark:bg-slate-950 dark:text-slate-200 lg:flex">
-        <aside v-if="side" class="cm-nav sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 overflow-y-auto bg-slate-800 p-4 text-slate-300 lg:flex">
+    <div class="min-h-dvh bg-slate-100 font-sans text-slate-800 dark:bg-slate-950 dark:text-slate-200 lg:flex">
+        <aside v-if="side" class="cm-nav sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 overflow-y-auto bg-slate-800 p-4 text-slate-300 lg:flex">
             <Link :href="route('members.dashboard')" class="flex items-center gap-2.5 px-2 pt-1" aria-label="ClubManager home">
                 <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white shadow-md shadow-blue-600/30">CM</span>
                 <span class="text-base font-bold tracking-tight text-white">ClubManager</span>
@@ -104,6 +104,7 @@ provide('layoutHasHeading', !props.ownHeading);
                     <li v-for="item in nav" :key="item.key">
                         <Link
                             :href="item.href"
+                            prefetch
                             :aria-current="activeTab === item.key ? 'page' : undefined"
                             :class="['flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors', activeTab === item.key ? 'bg-slate-700/70 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white']"
                         >
@@ -120,7 +121,7 @@ provide('layoutHasHeading', !props.ownHeading);
         </aside>
 
         <div class="min-w-0 flex-1">
-            <header :class="['cm-nav sticky top-0 z-40 border-b border-slate-800 bg-slate-800 text-slate-200', side ? 'lg:hidden' : '']">
+            <header :class="['cm-nav app-top-bar sticky top-0 z-40 border-b border-slate-800 bg-slate-800 text-slate-200', side ? 'lg:hidden' : '']">
                 <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-6">
                     <div class="flex min-w-0 items-center gap-3">
                         <Link :href="route('members.dashboard')" class="flex shrink-0 items-center gap-2" aria-label="ClubManager home">
@@ -143,6 +144,7 @@ provide('layoutHasHeading', !props.ownHeading);
                         <li v-for="item in nav" :key="item.key">
                             <Link
                                 :href="item.href"
+                                prefetch
                                 :aria-current="activeTab === item.key ? 'page' : undefined"
                                 :class="['-mb-px block whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors', activeTab === item.key ? 'border-blue-400 text-white' : 'border-transparent text-slate-400 hover:text-white']"
                             >

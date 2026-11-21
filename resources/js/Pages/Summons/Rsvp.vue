@@ -75,7 +75,7 @@ const showsPayment = () => form.attendance_status === 'attending_dining' || form
 <template>
   <Head :title="`Summons RSVP — ${meeting.title}`" />
 
-  <div class="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-dvh bg-slate-100 dark:bg-slate-950 flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full mx-auto space-y-6">
 
       <FlashMessages />

@@ -31,7 +31,7 @@ const submit = () => {
   <Head :title="`Visitor sign-up — ${club.name}`" />
 
   <!-- A standalone dark page: the dark class makes the kit's fields and alerts draw their dark look here. -->
-  <div class="dark min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
+  <div class="dark min-h-dvh bg-slate-900 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
       <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 mb-4 shadow-xl">
         <UiIcon name="building" :size="20" />

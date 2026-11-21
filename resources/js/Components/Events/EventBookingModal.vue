@@ -169,7 +169,7 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
             role="dialog"
             aria-modal="true"
             :aria-labelledby="titleId"
-            class="flex h-full w-full flex-col overflow-hidden bg-slate-100 outline-none sm:h-auto sm:max-h-[calc(100vh-2rem)] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200 sm:shadow-2xl dark:bg-slate-950 sm:dark:border-slate-800"
+            class="flex h-full w-full flex-col overflow-hidden bg-slate-100 outline-none sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-slate-200 sm:shadow-2xl dark:bg-slate-950 sm:dark:border-slate-800"
         >
             <header class="flex items-center gap-1 bg-slate-800 px-3 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 text-white sm:border-b sm:border-slate-200 sm:bg-white sm:px-5 sm:py-3 sm:text-slate-900 sm:dark:border-slate-800 sm:dark:bg-slate-900 sm:dark:text-white">
                 <button type="button" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-white/10 sm:order-last sm:text-slate-500 sm:hover:bg-slate-100 sm:dark:text-slate-400 sm:dark:hover:bg-slate-800" aria-label="Close" @click="emit('close')">

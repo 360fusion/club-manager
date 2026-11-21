@@ -58,6 +58,10 @@
             })();
         </script>
         {!! \App\Support\ZiggyScript::render(\App\Http\Middleware\HandleInertiaRequests::routeGroup(auth()->user())) !!}
+        {{-- The text font starts downloading with the page, so text doesn't redraw once it arrives. --}}
+        @unless (app(\Illuminate\Foundation\Vite::class)->isRunningHot())
+            <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('public/fonts/inter-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+        @endunless
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>

@@ -21,9 +21,20 @@ class RouteTableTest extends TestCase
         return $user;
     }
 
+    /**
+     * The route table a page sends: the kept file the page points to (ZiggyScript), fetched as the same visitor.
+     */
+    private function routeTable(string $page): string
+    {
+        preg_match('#<script src="(/ziggy/[^"]+)"></script>#', $this->get($page)->assertOk()->getContent(), $found);
+        $this->assertNotEmpty($found, 'the page points to its route table');
+
+        return $this->get($found[1])->assertOk()->getContent();
+    }
+
     public function test_a_logged_out_visitor_is_not_given_the_admin_or_superadmin_routes(): void
     {
-        $html = $this->get('/lodges')->assertOk()->getContent();
+        $html = $this->routeTable('/lodges');
 
         $this->assertStringContainsString('lodges.index', $html);
         $this->assertStringNotContainsString('superadmin.dashboard', $html);
@@ -33,33 +44,36 @@ class RouteTableTest extends TestCase
 
     public function test_a_plain_member_is_sent_no_club_admin_routes_but_keeps_the_security_page(): void
     {
-        $this->actingAs($this->memberOf(Club::factory()->create(), 'member'))->get(route('members.dashboard'))
-            ->assertOk()
-            ->assertDontSee('"admin.accounting.index"', false)
-            ->assertDontSee('"admin.pages.index"', false)
-            ->assertDontSee('"admin.analytics"', false)
-            ->assertDontSee('superadmin.dashboard', false)
-            ->assertSee('"admin.profile.two-factor"', false)
-            ->assertSee('"members.notifications"', false);
+        $this->actingAs($this->memberOf(Club::factory()->create(), 'member'));
+        $table = $this->routeTable(route('members.dashboard', [], false));
+
+        foreach (['"admin.accounting.index"', '"admin.pages.index"', '"admin.analytics"', 'superadmin.dashboard'] as $hidden) {
+            $this->assertStringNotContainsString($hidden, $table);
+        }
+        $this->assertStringContainsString('"admin.profile.two-factor"', $table);
+        $this->assertStringContainsString('"members.notifications"', $table);
     }
 
     public function test_staff_and_office_holders_get_the_admin_routes_but_not_the_superadmin_ones(): void
     {
         $club = Club::factory()->create();
-        $this->actingAs($this->memberOf($club, 'treasurer'))->get('/lodges')
-            ->assertSee('"admin.accounting.index"', false)
-            ->assertSee('"admin.pages.index"', false)
-            ->assertDontSee('superadmin.dashboard', false)
-            ->assertDontSee('make_me_superadmin', false);
+        $this->actingAs($this->memberOf($club, 'treasurer'));
+        $table = $this->routeTable('/lodges');
+        $this->assertStringContainsString('"admin.accounting.index"', $table);
+        $this->assertStringContainsString('"admin.pages.index"', $table);
+        $this->assertStringNotContainsString('superadmin.dashboard', $table);
+        $this->assertStringNotContainsString('make_me_superadmin', $table);
 
         $officer = $this->memberOf($club, 'member');
         Member::create(['club_id' => $club->id, 'user_id' => $officer->id, 'first_name' => 'Jo', 'last_name' => 'Lee', 'membership_status' => 'active', 'current_office' => 'treasurer']);
-        $this->actingAs($officer)->get(route('members.dashboard'))->assertSee('"admin.accounting.index"', false);
+        $this->actingAs($officer);
+        $this->assertStringContainsString('"admin.accounting.index"', $this->routeTable(route('members.dashboard', [], false)));
     }
 
     public function test_a_super_admin_gets_every_route(): void
     {
-        $html = $this->actingAs(User::factory()->create(['is_super_admin' => true]))->get('/lodges')->assertOk()->getContent();
+        $this->actingAs(User::factory()->create(['is_super_admin' => true]));
+        $html = $this->routeTable('/lodges');
 
         $this->assertStringContainsString('superadmin.dashboard', $html);
     }

@@ -32,7 +32,7 @@ const followError = computed(() => page.props.errors?.follow ?? null);
       Skip to main content
     </a>
 
-    <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
             <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-4">
                 <div class="flex min-w-0 items-center gap-3 sm:gap-6">

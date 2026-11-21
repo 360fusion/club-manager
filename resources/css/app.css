@@ -127,6 +127,28 @@
     /* Keep room for the scrollbar, so a page doesn't shift sideways when its content grows taller than the window. */
     html {
         scrollbar-gutter: stable;
+        /* No grey flash where a link or button is tapped: buttons show their own pressed state. */
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* The page itself doesn't bounce or reload when dragged past its end (the app has its own pull to refresh), and a
+       quick double tap on a control doesn't zoom the page. */
+    html,
+    body {
+        overscroll-behavior-y: none;
+    }
+
+    a,
+    button,
+    label,
+    summary,
+    select,
+    input,
+    textarea,
+    [role='button'],
+    [role='tab'],
+    [role='switch'] {
+        touch-action: manipulation;
     }
 
     h1,
@@ -212,6 +234,19 @@
 .rt-size-xlarge { font-size: 1.5em; }
 .rt-size-huge { font-size: 2em; }
 
+/* Moving between pages: a quick cross-fade of the page, while the header and the phone's tab bar stay where they are
+   (Inertia's view transitions; browsers without them just change the page). */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 150ms;
+}
+.app-top-bar {
+    view-transition-name: app-top-bar;
+}
+.app-tab-bar {
+    view-transition-name: app-tab-bar;
+}
+
 /* People who ask their system for less motion get no animations, transitions or smooth scrolling. */
 @media (prefers-reduced-motion: reduce) {
     *,
@@ -221,5 +256,11 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
     }
 }

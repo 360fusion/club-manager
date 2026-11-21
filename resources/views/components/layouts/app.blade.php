@@ -23,7 +23,7 @@
     @livewireStyles
     <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans antialiased">
+<body class="min-h-dvh bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans antialiased">
     @php
         $user = auth()->user();
         $currentClub ??= null;
@@ -39,7 +39,7 @@
 
     <div
         x-data="{ sidebarOpen: false, switcherOpen: false, userMenuOpen: false }"
-        class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans flex flex-col md:flex-row"
+        class="min-h-dvh bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans flex flex-col md:flex-row"
     >
         <!-- Mobile Sidebar Toggle Header -->
         <div class="cm-nav md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700 sticky top-0 z-40">

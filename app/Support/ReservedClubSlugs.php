@@ -18,7 +18,7 @@ class ReservedClubSlugs
         'lodges', 'login', 'logout', 'meetings', 'members', 'new', 'news', 'notifications', 'portal', 'pricing',
         'privacy', 'profile', 'register', 'reset-password', 'robots', 'sanctum', 'search', 'security',
         'settings', 'sign', 'site', 'storage', 'subscriptions', 'summons', 'superadmin', 'support', 'terms',
-        'two-factor', 'ui-kit', 'up', 'vendor', 'webhooks',
+        'two-factor', 'ui-kit', 'up', 'vendor', 'webhooks', 'ziggy',
     ];
 
     public static function isReserved(string $slug): bool

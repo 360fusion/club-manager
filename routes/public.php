@@ -34,12 +34,16 @@ use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StripeConnectWebhookController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\VisitorRegistrationController;
+use App\Http\Controllers\ZiggyRoutesController;
 use App\Models\Club;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\ConfirmablePasswordController;
 
 // Public and sign-in routes: authentication, the public lodge directory and club websites, passwordless links, webhooks.
 // Authentication Routes
+// The page's route table as a file the browser keeps (ZiggyScript); no extension, so no static-file rule catches it.
+Route::get('/ziggy/{group}/{hash}', ZiggyRoutesController::class)->where(['group' => 'guest|member|staff|all', 'hash' => '[a-f0-9]{16}'])->name('ziggy.routes');
+
 Route::get('/login', [LoginController::class, 'create'])->name('login');
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:auth-forms'])->name('verification.verify');
 Route::get('/email/confirm/{id}/{hash}', [EmailChangeController::class, 'confirm'])->whereNumber('id')->middleware(['signed', 'throttle:auth-forms'])->name('account.email.confirm');

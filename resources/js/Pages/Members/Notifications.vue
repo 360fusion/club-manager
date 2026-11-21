@@ -46,7 +46,12 @@ const groups = computed(() => [
     { label: 'Earlier', items: props.notifications.data.filter((item) => !isToday(item.at)) },
 ].filter((group) => group.items.length));
 
-const markAllRead = () => router.post(route('members.notifications.read_all'), {}, { preserveScroll: true });
+// Shown as read at once (and the bell's count cleared); put back if the save fails.
+const markAllRead = () => router.optimistic((current) => ({
+    unreadCount: 0,
+    bell: current.bell ? { ...current.bell, unread: 0 } : current.bell,
+    notifications: { ...current.notifications, data: current.notifications.data.map((item) => ({ ...item, read: true })) },
+})).post(route('members.notifications.read_all'), {}, { preserveScroll: true });
 </script>
 
 <template>

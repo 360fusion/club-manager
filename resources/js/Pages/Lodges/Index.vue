@@ -28,9 +28,13 @@ const advanced = ref(['province', 'order', 'day', 'when', 'near'].some((key) => 
 const searching = computed(() => ['q', 'province', 'order', 'day', 'when', 'near'].some((key) => props.filters[key]));
 
 const following = reactive({});
+// Shown as followed at once (and gone from the suggestions); put back if the save fails.
 function follow(lodge) {
     following[lodge.slug] = true;
-    router.post(route('lodges.follow', lodge.slug), {}, { preserveScroll: true, onFinish: () => { following[lodge.slug] = false; } });
+    router.optimistic((current) => ({
+        suggested: current.suggested.filter((item) => item.slug !== lodge.slug),
+        lodges: { ...current.lodges, data: current.lodges.data.map((item) => (item.slug === lodge.slug ? { ...item, following: true } : item)) },
+    })).post(route('lodges.follow', lodge.slug), {}, { preserveScroll: true, onFinish: () => { following[lodge.slug] = false; } });
 }
 
 // The place is only looked up when this is sent, never while typing (OpenStreetMap's usage policy).

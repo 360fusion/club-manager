@@ -9,7 +9,9 @@ const props = defineProps({
     item: { type: Object, required: true },
 });
 
-const busy = ref(null);
+// The answer just tapped shows straight away; it goes back to the saved one if the save fails.
+const chosen = ref(null);
+const current = computed(() => chosen.value ?? props.item.reply);
 
 const OPTIONS = {
     meeting: [
@@ -27,15 +29,15 @@ const OPTIONS = {
 const changingTo = ref(null);
 const labelFor = (value) => OPTIONS[props.item.type].find((option) => option.value === value)?.label ?? '';
 const choose = (status) => {
-    if (status === props.item.reply) return;
+    if (status === current.value) return;
     // Only a real reply asks first: someone who hasn't replied yet may be stored as pending.
-    if (labelFor(props.item.reply)) {
+    if (labelFor(current.value)) {
         changingTo.value = status;
         return;
     }
     reply(status);
 };
-const diningNote = computed(() => (props.item.type === 'meeting' && props.item.reply === 'attending_dining'
+const diningNote = computed(() => (props.item.type === 'meeting' && current.value === 'attending_dining'
     ? ` Your dining place will be given up${props.item.closed ? ', and dining numbers have gone to the caterer so it can\'t be added back here' : ''}. If you have paid, it is refunded: by card or PayPal straight away, by bank transfer through the Treasurer.`
     : ''));
 const confirmChange = () => {
@@ -45,20 +47,20 @@ const confirmChange = () => {
 };
 
 const reply = (status) => {
-    busy.value = status;
+    chosen.value = status;
 
     router.post(
         route(props.item.type === 'meeting' ? 'member.meetings.quick_rsvp' : 'member.events.quick_rsvp', { slug: props.item.slug, id: props.item.id }),
         { attendance_status: status },
-        { preserveScroll: true, onFinish: () => { busy.value = null; } },
+        { preserveScroll: true, onFinish: () => { chosen.value = null; } },
     );
 };
 
 // An event with tickets or a menu is booked on its own page; once booked, say so instead of offering a fresh reply.
-const booked = () => props.item.type === 'event' && !props.item.simple && ['attending', 'tentative'].includes(props.item.reply);
+const booked = () => props.item.type === 'event' && !props.item.simple && ['attending', 'tentative'].includes(current.value);
 
 // A meeting past its dining deadline still takes replies; only adding dining is closed (the caterer has the numbers).
-const isDisabled = (value) => (props.item.type === 'meeting' ? props.item.closed && value === 'attending_dining' && props.item.reply !== 'attending_dining' : props.item.closed);
+const isDisabled = (value) => (props.item.type === 'meeting' ? props.item.closed && value === 'attending_dining' && current.value !== 'attending_dining' : props.item.closed);
 
 const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) => props.item.type === 'meeting' || props.item.simple || option.value === 'declined'));
 </script>
@@ -69,10 +71,9 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
             v-for="option in options()"
             :key="option.value"
             size="sm"
-            :variant="item.reply === option.value ? 'success' : 'secondary'"
-            :loading="busy === option.value"
+            :variant="current === option.value ? 'success' : 'secondary'"
             :disabled="isDisabled(option.value)"
-            :aria-pressed="item.reply === option.value"
+            :aria-pressed="current === option.value"
             @click="choose(option.value)"
         >
             {{ option.label }}
@@ -83,7 +84,7 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
         </Link>
         <span v-if="item.closed" class="text-xs text-slate-500 dark:text-slate-400">{{ item.type === 'meeting' ? 'Dining closed' : 'Replies closed' }}</span>
         <ConfirmDialog :open="changingTo !== null" :title="`Change your reply to ${labelFor(changingTo)}?`" :confirm-label="`Yes, ${labelFor(changingTo).toLowerCase()}`" cancel-label="Keep my reply" variant="primary" @confirm="confirmChange" @close="changingTo = null">
-            You replied {{ labelFor(item.reply) }}.{{ diningNote }}
+            You replied {{ labelFor(current) }}.{{ diningNote }}
         </ConfirmDialog>
     </div>
 </template>

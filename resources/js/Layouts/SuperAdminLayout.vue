@@ -30,7 +30,7 @@ const user = page.props.auth?.user;
     Skip to main content
   </a>
 
-  <div class="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-white">
+  <div class="min-h-dvh bg-slate-100 text-slate-900 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-white">
     
     <!-- Sidebar Navigation -->
     <aside class="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4 flex-shrink-0 dark:bg-slate-900 dark:border-slate-800">

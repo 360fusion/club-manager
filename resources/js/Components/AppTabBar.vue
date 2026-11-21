@@ -36,11 +36,12 @@ function isActive(tab) {
 </script>
 
 <template>
-    <nav aria-label="App" class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900">
+    <nav aria-label="App" class="app-tab-bar fixed inset-x-0 bottom-0 z-40 select-none border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900">
         <ul class="mx-auto flex max-w-xl">
             <li v-for="tab in tabs" :key="tab.key" class="flex-1">
                 <Link
                     :href="tab.href"
+                    :prefetch="tab.key === 'inbox' ? 'click' : ['mount', 'click']"
                     :aria-current="isActive(tab) ? 'page' : undefined"
                     :class="['relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium', isActive(tab) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400']"
                 >

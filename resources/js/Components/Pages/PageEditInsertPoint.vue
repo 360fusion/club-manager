@@ -35,7 +35,7 @@ defineProps({
             <div
                 v-if="activeInsertIndex === index"
                 :class="[
-                    'absolute z-40 w-[1100px] max-w-[calc(100vw-3.5rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                    'absolute z-40 w-[1100px] max-w-[calc(100vw-3.5rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 max-h-[calc(100dvh-100px)] overflow-y-auto',
                     insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
                 ]"
                 :style="{ translate: `calc(-50% + ${insertMenuShift}px) 0` }"
