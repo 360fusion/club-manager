@@ -50,6 +50,7 @@ class Post extends Model implements HasMedia
             'blocks' => SanitizedHtmlBlocks::class,
             'attachments' => 'array',
             'published_at' => 'datetime',
+            'members_notified_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
     }

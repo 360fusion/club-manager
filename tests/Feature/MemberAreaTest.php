@@ -545,6 +545,37 @@ class MemberAreaTest extends TestCase
         $this->assertCount(0, $outsider->notifications);
     }
 
+    public function test_a_post_scheduled_for_later_is_announced_once_when_its_time_comes(): void
+    {
+        $admin = $this->join($this->oxford, null, 'admin');
+        $this->actingAs($admin)->post(route('admin.posts.store', ['clubSlug' => 'oxford-lodge']), ['title' => 'Ladies night', 'slug' => 'ladies-night', 'status' => 'published', 'published_at' => now()->addHour()->format('Y-m-d\TH:i')]);
+        $this->assertCount(0, $this->member->fresh()->notifications, 'not before its time');
+
+        $this->artisan('app:announce-scheduled-posts')->assertSuccessful();
+        $this->assertCount(0, $this->member->fresh()->notifications);
+
+        $this->travel(61)->minutes();
+        $this->artisan('app:announce-scheduled-posts')->assertSuccessful();
+        $this->artisan('app:announce-scheduled-posts')->assertSuccessful();
+
+        $notifications = $this->member->fresh()->notifications;
+        $this->assertCount(1, $notifications);
+        $this->assertSame('Ladies night', $notifications->first()->data['title']);
+        $this->assertCount(0, $admin->fresh()->notifications, 'the author is not told about their own post');
+    }
+
+    public function test_only_posts_that_have_just_gone_live_are_announced_not_old_or_expired_ones(): void
+    {
+        $author = $this->join($this->oxford, null, 'admin');
+        $this->newsPost($this->oxford, 'Long gone')->forceFill(['author_id' => $author->id, 'published_at' => now()->subDays(5)])->save();
+        $this->newsPost($this->oxford, 'Expired')->forceFill(['author_id' => $author->id, 'published_at' => now()->subHour(), 'expires_at' => now()->subMinute()])->save();
+        $this->newsPost($this->oxford, 'Just gone live')->forceFill(['author_id' => $author->id, 'published_at' => now()->subMinutes(3)])->save();
+
+        $this->artisan('app:announce-scheduled-posts')->assertSuccessful();
+
+        $this->assertSame(['Just gone live'], $this->member->fresh()->notifications->pluck('data.title')->all());
+    }
+
     public function test_saving_a_draft_or_editing_a_live_post_does_not_notify(): void
     {
         $admin = $this->join($this->oxford, null, 'admin');

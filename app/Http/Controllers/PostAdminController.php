@@ -249,8 +249,10 @@ class PostAdminController extends Controller
         // Only tags of this club can be chosen. Tags are made and removed under Settings.
         $post->tags()->sync($validated['tag_ids'] ?? []);
 
+        // Live now: tell the members now. Scheduled for later: app:announce-scheduled-posts tells them when it goes live.
         if ($post->status === 'published' && ! $wasLive && ($post->published_at === null || $post->published_at->lte(now()))) {
             app(ClubNotifier::class)->toMembers($club, ClubNotification::news($post, $club), $user);
+            $post->forceFill(['members_notified_at' => now()])->save();
         }
 
         $actionType = $validated['action_type'] ?? $request->input('action_type', null);
