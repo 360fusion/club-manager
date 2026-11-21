@@ -9,6 +9,12 @@ const props = defineProps({
     activeTab: { type: String, default: 'dashboard' },
     tone: { type: String, default: 'default' },
     block: { type: Boolean, default: false },
+    // What the button says; the lodge's own name when not given (the lodge header shows the name already).
+    label: { type: String, default: null },
+    // 'right' when the button sits at the right of the bar, so the list opens inwards.
+    align: { type: String, default: 'left' },
+    // The lodge's name as a heading with an arrow, not a boxed button (the phone header).
+    plain: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -28,8 +34,11 @@ const target = (clubSlug) => {
     return clubSlug ? route(clubRoutes[key], { slug: clubSlug }) : route(allRoutes[key]);
 };
 
-const buttonClasses = computed(() => (props.tone === 'onDark'
-    ? 'border-slate-600 bg-slate-800/60 text-slate-100 hover:bg-slate-700'
+// See-through white, so it sits on navy and on any lodge colour alike.
+const buttonClasses = computed(() => (props.plain
+    ? 'border-transparent px-1.5 py-1 font-display text-lg font-semibold text-white hover:bg-white/10'
+    : props.tone === 'onDark'
+    ? 'border-white/25 bg-white/10 text-white hover:bg-white/20'
     : 'border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'));
 </script>
 
@@ -39,16 +48,16 @@ const buttonClasses = computed(() => (props.tone === 'onDark'
 
         <button
             type="button"
-            :class="['relative z-50 flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors', block ? 'w-full justify-between' : 'max-w-[14rem]', buttonClasses]"
+            :class="['relative z-50 flex items-center gap-2 rounded-xl border transition-colors', plain ? '' : 'px-3 py-2 text-sm font-medium', block ? 'w-full justify-between' : (plain ? 'max-w-full' : 'max-w-[14rem]'), buttonClasses]"
             :aria-expanded="open"
             aria-haspopup="listbox"
             @click="open = !open"
         >
-            <span class="truncate">{{ club?.name ?? 'All my lodges' }}</span>
+            <span class="truncate">{{ label ?? club?.name ?? 'All my lodges' }}</span>
             <svg class="h-4 w-4 shrink-0 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </button>
 
-        <ul v-if="open" role="listbox" class="absolute left-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] space-y-0.5 rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <ul v-if="open" role="listbox" :class="align === 'right' ? 'right-0' : 'left-0'" class="absolute z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] space-y-0.5 rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <li>
                 <Link :href="target(null)" role="option" :aria-selected="!club" :class="['block rounded-xl px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800', !club ? 'bg-slate-100 dark:bg-slate-800' : '']" @click="open = false">All my lodges</Link>
             </li>

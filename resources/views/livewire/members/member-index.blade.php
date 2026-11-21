@@ -229,8 +229,13 @@
                     @empty
                         <tr>
                             <td colspan="7" class="py-12 text-center">
-                                <p class="text-base font-semibold text-slate-900 dark:text-white">No members match these filters</p>
-                                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Try changing the search or filters, or add a member.</p>
+                                @if ($totalMembers === 0)
+                                    <p class="text-base font-semibold text-slate-900 dark:text-white">No members yet</p>
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Add your members one at a time, or import them from a spreadsheet. You can invite each one to sign in as you go.</p>
+                                @else
+                                    <p class="text-base font-semibold text-slate-900 dark:text-white">No members match these filters</p>
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Try changing the search or filters, or add a member.</p>
+                                @endif
                             </td>
                         </tr>
                     @endforelse

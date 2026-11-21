@@ -117,7 +117,7 @@ class SuperAdminLodgeClaimController extends Controller
             'claimant' => [
                 'name' => $user->name,
                 'email' => $user->email,
-                'joined' => $user->created_at->toDateString(),
+                'joined' => $user->created_at->format('j M Y'),
                 'email_verified' => $user->email_verified_at !== null,
                 'clubs' => $user->clubs()->pluck('clubs.name')->all(),
                 'other_claims' => LodgeClaim::where('user_id', $user->id)->where('id', '!=', $claim->id)->count(),

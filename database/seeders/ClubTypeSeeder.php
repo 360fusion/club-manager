@@ -489,9 +489,9 @@ class ClubTypeSeeder extends Seeder
         DefaultEmailTemplate::updateOrCreate(
             ['template_key' => 'account_invitation'],
             [
-                'name' => 'Lodge Account Email Invitation',
-                'subject' => 'Invitation to Join {{club_name}} Portal',
-                'body_html' => '<p>Dear {{member_name}},</p><p>You have been invited by {{club_name}} to activate your online member portal access.</p><p><a href="{{invite_url}}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold;">Accept Invitation & Setup Password</a></p><p>This invitation link will expire in {{expiry_days}} days.</p>',
+                'name' => 'Invitation to sign in',
+                'subject' => '{{club_name}} has invited you to Club Manager',
+                'body_html' => '<p>Dear {{member_name}},</p><p>{{club_name}} has invited you to see its meetings, reply to summonses and book dinners online.</p><p><a href="{{invite_url}}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Choose your password</a></p><p>This link works for {{expiry_days}} days.</p>',
                 'available_placeholders' => ['member_name', 'club_name', 'invite_url', 'expiry_days'],
             ]
         );

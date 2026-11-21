@@ -66,6 +66,13 @@ class EventAdminController extends Controller
                 'status' => 'draft',
                 'visibility' => Visibility::Club,
                 'rsvp_audience' => Visibility::Club,
+                // Most events are at the lodge's own hall, so a new one starts there (the meeting form does the same).
+                'location' => $club->masonicHall?->name,
+                'address_line_1' => $club->masonicHall?->address_line_1,
+                'address_line_2' => $club->masonicHall?->address_line_2,
+                'city' => $club->masonicHall?->town,
+                'county' => $club->masonicHall?->county,
+                'postcode' => $club->masonicHall?->postcode,
             ]);
 
         return Inertia::render('Admin/Events/Form', [

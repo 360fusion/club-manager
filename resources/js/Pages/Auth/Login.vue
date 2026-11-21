@@ -11,14 +11,15 @@ import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     demoCredentials: { type: Object, default: null },
+    email: { type: String, default: null },
 });
 
 const page = usePage();
 const notice = computed(() => page.props.flash?.success || page.props.status || null);
 
 const form = useForm({
-    email: props.demoCredentials?.email ?? '',
-    password: props.demoCredentials?.password ?? '',
+    email: props.email ?? props.demoCredentials?.email ?? '',
+    password: props.email ? '' : (props.demoCredentials?.password ?? ''),
     remember: true,
 });
 

@@ -121,7 +121,7 @@ class SuperAdminLodgeCorrectionController extends Controller
             'decision_note' => $correction->decision_note,
             'decided_by' => $correction->decidedBy?->name,
             'decided_at' => $correction->decided_at?->toDateTimeString(),
-            'created_at' => $correction->created_at->toDateTimeString(),
+            'created_at' => $correction->created_at->format('j M Y, H:i'),
             'lodge' => [
                 'name' => $lodge->displayName(),
                 'number' => $lodge->number,
@@ -134,7 +134,7 @@ class SuperAdminLodgeCorrectionController extends Controller
             'suggester' => [
                 'name' => $user->name,
                 'email' => $user->email,
-                'joined' => $user->created_at->toDateString(),
+                'joined' => $user->created_at->format('j M Y'),
                 'email_verified' => $user->email_verified_at !== null,
             ],
             // Every detail as the listing has it now, so any of them can be changed when applying.

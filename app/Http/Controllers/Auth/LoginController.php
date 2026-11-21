@@ -21,6 +21,8 @@ class LoginController extends Controller
     public function create(): Response
     {
         return Inertia::render('Auth/Login', [
+            // Just signed up: their address is filled in (RegisterController).
+            'email' => session('registered_email'),
             'demoCredentials' => app()->isLocal()
                 ? ['email' => 'admin@example.com', 'password' => 'password']
                 : null,

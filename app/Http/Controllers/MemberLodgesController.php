@@ -99,7 +99,7 @@ class MemberLodgesController extends Controller
                 // What the team last asked, while the claim is waiting for an answer.
                 'question' => $claim->status === LodgeClaim::MORE_INFO ? $claim->events->where('type', 'more_info_requested')->last()?->note : null,
                 'club' => $claim->club ? ['name' => $claim->club->name, 'slug' => $claim->club->slug] : null,
-                'created_at' => $claim->created_at->toDateString(),
+                'created_at' => $claim->created_at->format('j M Y'),
             ]);
 
         $corrections = LodgeCorrection::where('user_id', $user->id)
@@ -111,7 +111,7 @@ class MemberLodgesController extends Controller
                 'status' => $correction->status,
                 'what' => array_map(fn (string $field) => LodgeCorrection::FIELDS[$field] ?? $field, array_keys($correction->changes)),
                 'decision_note' => $correction->status === LodgeCorrection::REJECTED ? $correction->decision_note : null,
-                'created_at' => $correction->created_at->toDateString(),
+                'created_at' => $correction->created_at->format('j M Y'),
             ]);
 
         $provinces = $request->user()->administeredProvinces()->get(['provinces.id', 'provinces.name']);

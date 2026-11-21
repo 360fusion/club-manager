@@ -59,6 +59,7 @@ class RegisterController extends Controller
             ? 'Check your email for a link to confirm your address, then sign in.'
             : 'Your account is ready, you can now sign in.';
 
-        return redirect()->route('login')->with('success', $message.' If you already have an account, use the login page or reset your password.');
+        // The address they typed is filled in on the sign-in page, so only the password is left (the same for any address).
+        return redirect()->route('login')->with('success', $message.' If you already have an account, use the login page or reset your password.')->with('registered_email', $email);
     }
 }

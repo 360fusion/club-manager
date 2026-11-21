@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
@@ -21,6 +22,9 @@ defineProps({
 
 const page = usePage();
 const user = page.props.auth?.user;
+
+// Phones: the menu folds away behind a button so the page itself comes first (each page opens with it closed).
+const menuOpen = ref(false);
 </script>
 
 <template>
@@ -40,14 +44,15 @@ const user = page.props.auth?.user;
           <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
             SA
           </div>
-          <div>
+          <div class="min-w-0 flex-1">
             <span class="font-semibold tracking-wider text-sm uppercase text-slate-900 block dark:text-white">Superadmin</span>
             <span class="text-[11px] text-slate-500 font-medium block dark:text-slate-400">Platform control centre</span>
           </div>
+          <Button variant="secondary" size="sm" class="md:hidden" :aria-expanded="menuOpen" aria-controls="superadmin-menu" @click="menuOpen = !menuOpen">{{ menuOpen ? 'Close' : 'Menu' }}</Button>
         </div>
 
         <!-- Navigation Menu -->
-        <nav aria-label="Superadmin" class="space-y-1 text-xs font-medium">
+        <nav id="superadmin-menu" aria-label="Superadmin" :class="menuOpen ? 'block' : 'hidden md:block'" class="space-y-1 text-xs font-medium">
           <Link
             :href="route('superadmin.dashboard')"
             :class="[
@@ -229,13 +234,13 @@ const user = page.props.auth?.user;
           </Link>
         </nav>
 
-        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <div :class="menuOpen ? 'block' : 'hidden md:block'" class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
           <ThemeToggle />
         </div>
       </div>
 
       <!-- User Profile Footer -->
-      <div class="pt-4 border-t border-slate-200 space-y-3 dark:border-slate-800">
+      <div :class="menuOpen ? 'block' : 'hidden md:block'" class="pt-4 border-t border-slate-200 space-y-3 dark:border-slate-800">
         <div class="px-3">
           <div class="text-xs font-semibold text-slate-900 truncate dark:text-white">{{ user?.name || 'Superadmin' }}</div>
           <div class="text-[11px] text-slate-500 truncate dark:text-slate-400">{{ user?.email }}</div>

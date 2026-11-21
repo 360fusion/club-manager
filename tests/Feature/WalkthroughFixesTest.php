@@ -7,9 +7,11 @@ use App\Mail\MeetingSummonsMail;
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Models\ClubType;
+use App\Models\MasonicHall;
 use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
@@ -151,5 +153,52 @@ class WalkthroughFixesTest extends TestCase
 
         $this->actingAs($owner)->post(route('admin.users.role.update', ['clubSlug' => $this->club->slug, 'userId' => $member->id]), ['role' => 'coach'])
             ->assertSessionHas('success', 'Role changed to Secretary.');
+    }
+
+    public function test_signing_up_fills_in_the_email_on_the_sign_in_page_whether_or_not_the_address_is_new(): void
+    {
+        $payload = ['name' => 'New Person', 'password' => 'a-long-safe-passphrase', 'password_confirmation' => 'a-long-safe-passphrase'];
+
+        foreach (['new@example.test', $this->admin->email] as $email) {
+            $this->post('/register', ['email' => $email] + $payload)->assertRedirect(route('login'));
+
+            $this->get(route('login'))->assertInertia(fn (AssertableInertia $page) => $page->where('email', strtolower($email)));
+        }
+
+        $this->get(route('login'))->assertInertia(fn (AssertableInertia $page) => $page->where('email', null));
+    }
+
+    public function test_a_new_event_starts_at_the_lodges_hall(): void
+    {
+        $hall = MasonicHall::create(['name' => 'Riverside Masonic Hall', 'slug' => 'riverside', 'address_line_1' => '12 Mill Lane', 'town' => 'Ashford', 'postcode' => 'TN24 8AA']);
+        $this->club->forceFill(['masonic_hall_id' => $hall->id])->save();
+
+        $this->actingAs($this->admin)->get(route('admin.events.create', ['clubSlug' => $this->club->slug]))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('event.location', 'Riverside Masonic Hall')
+                ->where('event.city', 'Ashford')
+                ->where('event.postcode', 'TN24 8AA'));
+    }
+
+    public function test_an_empty_roster_says_how_to_start_rather_than_blaming_the_filters(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.club_acc.members.index', ['clubSlug' => $this->club->slug]))
+            ->assertSee('No members yet')
+            ->assertDontSee('No members match these filters');
+    }
+
+    public function test_the_invitation_email_is_reworded_unless_a_superadmin_changed_it(): void
+    {
+        $migration = require database_path('migrations/2026_11_21_112425_reword_account_invitation_email.php');
+        $old = ['subject' => 'Invitation to Join {{club_name}} Portal', 'body_html' => '<p>Dear {{member_name}},</p><p>You have been invited by {{club_name}} to activate your online member portal access.</p><p><a href="{{invite_url}}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold;">Accept Invitation & Setup Password</a></p><p>This invitation link will expire in {{expiry_days}} days.</p>'];
+        DB::table('default_email_templates')->updateOrInsert(['template_key' => 'account_invitation'], $old + ['name' => 'Lodge Account Email Invitation', 'available_placeholders' => '[]']);
+
+        $migration->up();
+        $this->assertSame('{{club_name}} has invited you to Club Manager', DB::table('default_email_templates')->where('template_key', 'account_invitation')->value('subject'));
+
+        DB::table('default_email_templates')->where('template_key', 'account_invitation')->update(['subject' => 'Our own words']);
+        $migration->down();
+        $migration->up();
+        $this->assertSame('Our own words', DB::table('default_email_templates')->where('template_key', 'account_invitation')->value('subject'));
     }
 }

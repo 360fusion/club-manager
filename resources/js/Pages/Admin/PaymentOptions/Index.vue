@@ -188,7 +188,8 @@ const statusLine = (card) => {
               <p v-if="toggleError(card)" class="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400" role="alert">{{ toggleError(card) }}</p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <!-- Phones: the buttons and switch get their own row so the description is not squeezed beside them. -->
+            <div class="flex w-full items-center justify-end gap-2 sm:w-auto">
               <template v-if="card.method && methods.length > 1">
                 <Button variant="secondary" size="sm" :aria-label="`Move ${card.method.label} up`" @click="move(card, -1)">&uarr;</Button>
                 <Button variant="secondary" size="sm" :aria-label="`Move ${card.method.label} down`" @click="move(card, 1)">&darr;</Button>

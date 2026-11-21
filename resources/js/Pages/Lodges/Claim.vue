@@ -45,7 +45,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium" for="message">Why you are asking</label>
+                    <label class="mb-1 block text-sm font-medium" for="message">Why you are asking <span class="text-rose-600 dark:text-rose-400" aria-hidden="true">*</span></label>
                     <textarea id="message" v-model="form.message" rows="4" required :class="inputClass" placeholder="For example: I am the Secretary and would like to publish our summonses and keep our members' details here." />
                     <p v-if="form.errors.message" class="mt-1 text-xs text-rose-600">{{ form.errors.message }}</p>
                 </div>

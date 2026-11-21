@@ -7,7 +7,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover{{ $inApp ? ', maximum-scale=1' : '' }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ ($title ?? 'Committee') . ' - ClubAdmin' }}</title>
+    <title>{{ ($title ?? 'Committee') . ' - Club Manager' }}</title>
     @include('partials.web-app-head')
     <script>
         (function () {
@@ -43,11 +43,12 @@
     >
         <!-- Mobile Sidebar Toggle Header -->
         <div class="cm-nav md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700 sticky top-0 z-40">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs shadow-md">
-                    CA
+            {{-- The lodge being managed, so someone running two lodges can tell which one this is. --}}
+            <div class="flex min-w-0 items-center gap-2">
+                <div class="w-8 h-8 shrink-0 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-sm shadow-md" aria-hidden="true">
+                    {{ mb_strtoupper(mb_substr($clubName, 0, 1)) }}
                 </div>
-                <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
+                <span class="truncate font-semibold text-base">{{ $clubName }}</span>
             </div>
             {{-- The app, and the member area added to a home screen, have no back button and no tab bar on admin pages: this is the way back. --}}
             <a href="{{ route('members.dashboard') }}" class="ml-auto mr-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-slate-200 hover:text-white">

@@ -105,6 +105,9 @@ class HandleInertiaRequests extends Middleware
                     'name' => $c->name,
                     'slug' => $c->slug,
                     'colour' => $c->colourKey(),
+                    // For the lodge header (MembersLayout): "No. 1418 · Craft Lodge".
+                    'number' => $c->lodge_number,
+                    'type_name' => $c->clubType?->name,
                     'role' => $c->pivot->role ?? 'member',
                     'member_number' => $c->pivot->member_number ?? '',
                     'status' => $c->pivot->status ?? 'active',

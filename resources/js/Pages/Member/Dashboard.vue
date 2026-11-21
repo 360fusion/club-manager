@@ -38,7 +38,6 @@ const SUBSCRIPTION_BADGES = {
 };
 const subscriptionBadge = computed(() => SUBSCRIPTION_BADGES[props.subscription?.status] ?? { variant: 'warning', label: 'Unpaid' });
 
-const subtitle = computed(() => [props.club.lodge_number ? `No. ${props.club.lodge_number}` : null, props.club.meets].filter(Boolean).join(' · '));
 
 const subscriptionHint = computed(() => {
   const subscription = props.subscription;
@@ -73,17 +72,8 @@ const openMeetingRsvpModal = (meeting) => {
 </script>
 
 <template>
-  <MembersLayout :title="club.name" :club="club" :member-role="memberRole" active-tab="dashboard" own-heading>
-
-    <header class="flex items-center gap-3 rounded-2xl bg-blue-900 px-4 py-4 text-white dark:bg-blue-950 sm:px-6">
-      <div class="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-gold-400">
-        <UiIcon name="building" :size="24" />
-      </div>
-      <div class="min-w-0">
-        <h1 class="text-[22px] font-semibold leading-7">{{ club.name }}</h1>
-        <p v-if="subtitle" class="text-xs text-blue-100">{{ subtitle }}</p>
-      </div>
-    </header>
+  <!-- The lodge's name, number and colour are in the header (MembersLayout), so the page starts with its content. -->
+  <MembersLayout :title="club.name" :club="club" :member-role="memberRole" active-tab="dashboard">
 
     <!-- Pending Approval Banner -->
     <Alert v-if="isPending" variant="warning" title="Your membership is waiting for approval">

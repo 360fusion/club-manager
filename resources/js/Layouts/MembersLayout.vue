@@ -1,5 +1,5 @@
 <script setup>
-import { computed, provide } from 'vue';
+import { computed, provide, watchEffect } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AccountMenu from '@/Components/AccountMenu.vue';
 import Alert from '@/Components/Ui/Alert.vue';
@@ -13,6 +13,8 @@ import OfflineBanner from '@/Components/OfflineBanner.vue';
 import SavedCopyNotice from '@/Components/SavedCopyNotice.vue';
 import PullToRefresh from '@/Components/PullToRefresh.vue';
 import { isNativeApp } from '@/Support/nativeApp';
+import { orderColour } from '@/Utils/orderColour';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     title: { type: String, default: 'Members' },
@@ -80,6 +82,24 @@ const nav = computed(() => (slug.value
         href: item.key === 'directory' ? route('lodges.index') : item.key === 'subscriptions' ? route('portal.subscriptions') : route(allRoutes[item.key]),
     }))));
 
+// The lodge this page belongs to, from the signed-in member's lodges: its colour, number and order for the header.
+const lodge = computed(() => (slug.value ? ((page.props.auth?.clubs ?? []).find((c) => c.slug === slug.value) ?? { colour: null }) : null));
+const lodgeColour = computed(() => orderColour(lodge.value?.colour));
+// "No. 1418 · Craft Lodge", and when the page knows it (the overview), when the lodge meets.
+const lodgeLine = computed(() => {
+    const number = props.club?.lodge_number ?? lodge.value?.number;
+
+    return [number ? `No. ${number}` : null, lodge.value?.type_name, props.club?.meets].filter(Boolean).join(' · ');
+});
+
+// The strip behind the phone's clock (app.css) follows the header's colour.
+watchEffect(() => {
+    if (typeof document === 'undefined') return;
+    const shade = lodge.value ? lodgeColour.value.header.split(' ')[0].replace('bg-', '') : null;
+    if (shade) document.documentElement.style.setProperty('--cm-top', `var(--color-${shade})`);
+    else document.documentElement.style.removeProperty('--cm-top');
+});
+
 // This layout renders the page's <h1>, so PageHeader titles become <h2>.
 provide('layoutHasHeading', !props.ownHeading);
 </script>
@@ -122,18 +142,29 @@ provide('layoutHasHeading', !props.ownHeading);
         </aside>
 
         <div class="min-w-0 flex-1">
-            <header :class="['cm-nav app-top-bar sticky top-0 z-40 border-b border-slate-800 bg-slate-800 text-slate-200', side ? 'lg:hidden' : '']">
+            <!-- On a lodge's pages the header takes the lodge's colour and name, so someone in several lodges always knows which one
+                 they are in; the all-lodges pages keep the navy. -->
+            <header :class="['cm-nav app-top-bar sticky top-0 z-40 text-slate-200', lodge ? lodgeColour.header : 'border-b border-slate-800 bg-slate-800', side ? 'lg:hidden' : '']">
                 <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-6">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <Link :href="route('members.dashboard')" class="flex shrink-0 items-center gap-2" aria-label="ClubManager home">
+                    <div class="flex min-w-0 flex-1 items-center gap-3">
+                        <Link :href="route('members.dashboard')" :class="['flex shrink-0 items-center gap-2']" aria-label="ClubManager home">
                             <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white shadow-md shadow-blue-600/30">CM</span>
-                            <span class="hidden text-base font-bold tracking-tight text-white md:inline">ClubManager</span>
+                            <span v-if="!lodge" class="hidden text-base font-bold tracking-tight text-white md:inline">ClubManager</span>
                         </Link>
-                        <ClubSwitcher :club="club" :active-tab="activeTab" tone="onDark" />
+                        <!-- Phones: the lodge's name is the dropdown listing the other lodges, as before; wider screens show the name and number. -->
+                        <ClubSwitcher :club="club" :active-tab="activeTab" tone="onDark" plain class="sm:hidden" />
+                        <Link v-if="lodge" :href="route('member.dashboard', { slug: club.slug })" class="hidden min-w-0 items-center gap-3 sm:flex">
+                            <span class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-gold-400 sm:flex" aria-hidden="true"><UiIcon name="building" :size="20" /></span>
+                            <span class="min-w-0">
+                                <span class="block truncate font-display text-xl font-semibold leading-tight text-white">{{ club.name }}</span>
+                                <span v-if="lodgeLine" class="block truncate text-xs text-white/70">{{ lodgeLine }}</span>
+                            </span>
+                        </Link>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <Link v-if="isStaff" :href="adminHome" class="hidden rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
+                    <div class="flex shrink-0 items-center gap-2">
+                        <ClubSwitcher :club="club" :active-tab="activeTab" tone="onDark" align="right" :label="lodge ? 'Switch lodge' : null" class="hidden sm:block" />
+                        <Link v-if="isStaff" :href="adminHome" class="hidden rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20 sm:block">Admin</Link>
                         <NotificationBell tone="onDark" />
                         <AccountMenu tone="onDark" :links="nav" />
                     </div>
@@ -147,7 +178,7 @@ provide('layoutHasHeading', !props.ownHeading);
                                 :href="item.href"
                                 prefetch
                                 :aria-current="activeTab === item.key ? 'page' : undefined"
-                                :class="['-mb-px block whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors', activeTab === item.key ? 'border-blue-400 text-white' : 'border-transparent text-slate-400 hover:text-white']"
+                                :class="['-mb-px block whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors', activeTab === item.key ? (lodge ? 'border-white text-white' : 'border-blue-400 text-white') : (lodge ? 'border-transparent text-white/70 hover:text-white' : 'border-transparent text-slate-400 hover:text-white')]"
                             >
                                 {{ item.label }}
                             </Link>
