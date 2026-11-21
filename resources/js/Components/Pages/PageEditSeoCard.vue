@@ -22,7 +22,7 @@ defineProps({
         <button
             type="button"
             @click="seoOpen = !seoOpen"
-            class="w-full flex items-center gap-3 p-6 sm:px-8 text-left cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="w-full flex items-center gap-3 p-4 sm:p-6 sm:px-8 text-left cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             :aria-expanded="seoOpen"
             aria-controls="page-seo-panel"
         >
@@ -34,7 +34,7 @@ defineProps({
             </span>
         </button>
 
-        <div v-show="seoOpen" id="page-seo-panel" class="px-6 sm:px-8 pb-6 sm:pb-8 space-y-4">
+        <div v-show="seoOpen" id="page-seo-panel" class="px-4 sm:px-8 pb-6 sm:pb-8 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 sm:items-start gap-4">
                 <Input v-model="form.slug" label="Web address (slug)" placeholder="about" :disabled="form.is_homepage" :hint="form.is_homepage ? 'The homepage is always the site\'s front page.' : `/site/${club.slug}/${form.slug || ''}`" />
                 <Input v-model="form.meta_title" label="SEO title" maxlength="255" :placeholder="form.title || 'Page title'" />

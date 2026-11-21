@@ -172,7 +172,7 @@ const generateNewRecoveryCodes = () => {
 
         <!-- Setup step 2: pending confirmation (QR code) -->
         <div v-if="twoFactorPending" class="space-y-6">
-          <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-6">
+          <div class="p-4 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-6">
             <SanitizedHtml v-if="qrCodeSvg" :html="qrCodeSvg" class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0" />
 
             <div class="space-y-3">

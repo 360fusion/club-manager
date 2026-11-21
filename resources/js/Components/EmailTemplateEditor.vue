@@ -37,7 +37,7 @@ const insertPlaceholder = (name) => { body.value += ` {{${name}}}`; };
 </script>
 
 <template>
-    <div class="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+    <div class="space-y-6 rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
             <div>
                 <h2 class="text-xl font-bold text-slate-900 dark:text-white">

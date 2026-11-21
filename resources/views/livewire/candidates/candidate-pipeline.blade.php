@@ -188,7 +188,7 @@
     <!-- Finished: initiated, rejected and closed leave the board so it stays a size that fits -->
     @if($viewMode === 'kanban')
         <details class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-            <summary class="cursor-pointer select-none px-5 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+            <summary class="cursor-pointer select-none px-4 sm:px-5 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between">
                 <span>Initiated, rejected and closed</span>
                 <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ $completed['initiated']->count() }} initiated · {{ $completed['rejected']->count() }} rejected · {{ $completed['closed']->count() }} closed</span>
             </summary>

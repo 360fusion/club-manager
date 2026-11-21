@@ -15,7 +15,7 @@ defineProps({
 
 <template>
     <!-- View Mode Selector Header Card -->
-    <Card padding="none" class="px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+    <Card padding="none" class="px-4 sm:px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
         <div>
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">
                 {{ form.id ? form.title : 'New page' }}

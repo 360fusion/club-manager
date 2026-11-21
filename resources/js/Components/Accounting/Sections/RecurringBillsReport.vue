@@ -41,7 +41,7 @@ const submitRecurringBill = () => {
 
 <template>
     <div class="space-y-6">
-      <div class="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-800/50">
+      <div class="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-6 sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-800/50">
         <div>
           <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Recurring vendor bills</h3>
           <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-300">A daily scheduled task turns a due schedule into a real bill automatically.</p>
@@ -52,7 +52,7 @@ const submitRecurringBill = () => {
         </Button>
       </div>
 
-      <form v-if="showAddRecurringBillForm" class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-3 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submitRecurringBill">
+      <form v-if="showAddRecurringBillForm" class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 sm:grid-cols-3 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submitRecurringBill">
         <Input v-model="recurringBillForm.vendor_name" class="sm:col-span-2" label="Vendor name" required :error="recurringBillForm.errors.vendor_name" />
         <Input v-model="recurringBillForm.category" label="Category" :error="recurringBillForm.errors.category" />
         <Input v-model="recurringBillForm.amount" type="number" step="0.01" min="0.01" label="Amount" :prefix="$cs" required :error="recurringBillForm.errors.amount" />

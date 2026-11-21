@@ -24,7 +24,7 @@ const stay = () => emit('stay');
                 aria-modal="true"
                 aria-labelledby="unsaved-changes-modal-title"
                 v-focus-trap="stay"
-                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-5 relative overflow-hidden"
+                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-4 sm:p-6 space-y-5 relative overflow-hidden"
             >
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">

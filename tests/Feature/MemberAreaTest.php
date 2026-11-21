@@ -128,8 +128,11 @@ class MemberAreaTest extends TestCase
         $this->actingAs($this->member);
 
         $this->get('/members/news')->assertInertia(fn (Assert $page) => $page->has('posts.data', 1)->where('posts.data.0.title', 'Oxford news'));
-        $this->get('/members/meetings')->assertInertia(fn (Assert $page) => $page->has('meetings', 1)->where('meetings.0.title', 'Oxford meeting'));
-        $this->get('/members/events')->assertInertia(fn (Assert $page) => $page->has('events', 1)->where('events.0.title', 'Oxford dinner'));
+        // Meetings and bookings share one page; the old meetings address goes there.
+        $this->get('/members/meetings')->assertRedirect(route('members.events', ['show' => 'meetings']));
+        $this->get('/members/events')->assertInertia(fn (Assert $page) => $page
+            ->has('events', 1)->where('events.0.title', 'Oxford dinner')
+            ->has('meetings', 1)->where('meetings.0.title', 'Oxford meeting'));
     }
 
     public function test_the_bookings_page_carries_the_members_bookings_with_prices_and_waiting_list_place(): void
@@ -180,7 +183,7 @@ class MemberAreaTest extends TestCase
         $this->meeting($this->oxford, ['title' => 'Unanswered meeting', 'meeting_date' => now()->addDays(5)->toDateString()]);
         MeetingRsvp::create(['meeting_id' => $answered->id, 'user_id' => $this->member->id, 'token_hash' => 'x', 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'apologies', 'apology_reason' => 'Away', 'responded_at' => now()]);
 
-        $this->actingAs($this->member)->get('/members/meetings')->assertInertia(fn (Assert $page) => $page
+        $this->actingAs($this->member)->get('/members/events')->assertInertia(fn (Assert $page) => $page
             ->where('meetings.0.rsvp.attendance_status', 'apologies')
             ->where('meetings.0.rsvp.apology_reason', 'Away')
             ->where('meetings.1.rsvp', null));

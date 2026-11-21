@@ -2,9 +2,11 @@
 
 namespace App\Services\PassedOn;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Models\ClubLodgeLink;
 use App\Models\Lodge;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
@@ -112,5 +114,41 @@ class LodgeLinks
         $hallId = $club->lodge?->masonic_hall_id;
 
         return $relation === ClubLodgeLink::SISTER && $hallId !== null && $lodge->masonic_hall_id === $hallId;
+    }
+
+    /**
+     * Lodges a member might follow: those sharing a hall with their own lodges and the ones each of their lodges lists
+     * as sister or reciprocal visit lodges, less any they already follow or belong to. Shown on My lodges and the
+     * directory.
+     *
+     * @return list<array{slug: string, name: string, order: ?string, meets_text: ?string, reason: string}>
+     */
+    public function suggestionsFor(User $user, int $limit = 12): array
+    {
+        $clubs = $user->clubs()->wherePivot('status', ClubMemberStatus::Active->value)->with('lodge')->orderBy('name')->get();
+        $skip = $user->followedLodges()->pluck('lodges.id')->merge($clubs->pluck('lodge.id')->filter())->all();
+
+        $suggested = collect();
+        foreach ($clubs as $club) {
+            $hallId = $club->lodge?->masonic_hall_id;
+            foreach ([ClubLodgeLink::SISTER, ClubLodgeLink::RECIPROCAL] as $relation) {
+                foreach ($this->lodges($club, $relation) as $lodge) {
+                    $reason = match (true) {
+                        $hallId !== null && $lodge->masonic_hall_id === $hallId => 'Meets at your hall',
+                        $relation === ClubLodgeLink::SISTER => 'A sister lodge of '.$club->name,
+                        default => $club->name.' visits it',
+                    };
+                    $suggested->put($lodge->id, $suggested->get($lodge->id) ?? ['lodge' => $lodge, 'reason' => $reason]);
+                }
+            }
+        }
+
+        return $suggested->except($skip)->take($limit)->map(fn (array $entry) => [
+            'slug' => $entry['lodge']->slug,
+            'name' => $entry['lodge']->displayName(),
+            'order' => $entry['lodge']->clubType?->name,
+            'meets_text' => $entry['lodge']->meets_text,
+            'reason' => $entry['reason'],
+        ])->values()->all();
     }
 }

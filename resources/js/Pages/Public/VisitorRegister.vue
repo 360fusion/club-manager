@@ -45,7 +45,7 @@ const submit = () => {
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-xl px-4 sm:px-0">
-      <div class="bg-slate-800/90 border border-slate-700/80 backdrop-blur-xl py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
+      <div class="bg-slate-800/90 border border-slate-700/80 backdrop-blur-xl py-8 px-4 shadow-2xl rounded-2xl sm:px-10">
 
         <Alert v-if="$page.props.flash?.success" variant="success" title="Registration complete" class="mb-6">
           {{ $page.props.flash.success }}

@@ -222,7 +222,7 @@ const grantStatusLabel = (grantStatus) => {
             <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ isDining ? 'Dining booked' : 'Dining not booked' }}</p>
             <p v-if="isDining && diningGuests" class="text-xs text-slate-500 dark:text-slate-400">You and {{ diningGuests }} {{ diningGuests === 1 ? 'guest' : 'guests' }}</p>
           </div>
-          <Button v-if="!isDining && !isCutoffPassed" class="px-6" @click="openRsvpModal('attending_dining')">Book dinner</Button>
+          <Button v-if="!isDining && !isCutoffPassed" class="px-4 sm:px-6" @click="openRsvpModal('attending_dining')">Book dinner</Button>
           <Button v-else-if="isDining" variant="secondary" @click="openRsvpModal()">Change</Button>
         </div>
       </Card>

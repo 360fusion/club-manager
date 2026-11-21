@@ -27,6 +27,18 @@ const clubSlug = props.club?.slug || page.props.club?.slug || 'lodge-of-fraterni
 const clubName = props.club?.name || page.props.club?.name || '';
 
 const sidebarOpen = ref(false);
+const sidebar = ref(null);
+// The phone menu opens at the top of the page. Pressed further down, it goes back up to the menu (opening it if
+// needed) rather than closing a menu that is out of sight.
+const toggleMenu = () => {
+  const inView = sidebar.value && sidebar.value.getBoundingClientRect().bottom > 80;
+  if (sidebarOpen.value && inView) {
+    sidebarOpen.value = false;
+    return;
+  }
+  sidebarOpen.value = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 const switcherOpen = ref(false);
 const userMenuOpen = ref(false);
 
@@ -99,7 +111,7 @@ provide('layoutHasHeading', true);
         <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
         Member area
       </Link>
-      <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen ? 'true' : 'false'" @click="sidebarOpen = !sidebarOpen" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white">
+      <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen ? 'true' : 'false'" @click="toggleMenu" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white">
         <svg class="w-6 h-6" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
@@ -107,7 +119,8 @@ provide('layoutHasHeading', true);
     </div>
 
     <!-- Left Sidebar Navigation -->
-    <aside 
+    <aside
+      ref="sidebar"
       :class="[
         'cm-nav w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-200 z-30',
         sidebarOpen ? 'block' : 'hidden md:flex'
@@ -382,7 +395,7 @@ provide('layoutHasHeading', true);
       
       <!-- Top Title Bar -->
       <!-- On a phone one compact row (title, bell, account), so the page itself starts near the top of the screen. -->
-      <header class="bg-white border-b border-slate-200 px-4 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+      <header class="bg-white border-b border-slate-200 px-3 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
         <div class="min-w-0">
           <h1 class="truncate text-lg sm:text-2xl font-black text-slate-900 tracking-tight dark:text-white">{{ title }}</h1>
           <p class="hidden sm:block text-xs text-slate-500 font-medium mt-0.5 dark:text-slate-400">Managing {{ clubName }}</p>
@@ -531,7 +544,7 @@ provide('layoutHasHeading', true);
       </header>
 
       <!-- Main Slot Content -->
-      <div class="p-6 md:p-10 max-w-7xl w-full mx-auto space-y-8">
+      <div class="px-3 py-5 sm:p-6 md:p-10 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <FlashMessages />
         <slot />
       </div>

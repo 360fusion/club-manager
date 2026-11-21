@@ -23,7 +23,7 @@ defineProps({
                 </div>
             </div>
 
-            <section class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Meeting here ({{ lodges.length }})</h2>
 
                 <p v-if="!lodges.length" class="mt-3 text-sm text-slate-500">No lodges are listed at this hall yet.</p>

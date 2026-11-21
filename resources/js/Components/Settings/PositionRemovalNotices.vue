@@ -54,7 +54,7 @@ defineProps({
     <div
       v-if="positions.showUndoToast && positions.lastDeletedRank"
       role="status"
-      class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-4 text-sm"
+      class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 sm:px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-4 text-sm"
     >
       <div class="flex items-center gap-2.5">
         <UiIcon name="trash" class="text-slate-500 dark:text-slate-400" />

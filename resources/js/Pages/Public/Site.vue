@@ -119,7 +119,7 @@ const getSiteUrl = (urlPath) => {
                     :interactive="true"
                     :resolve-url="getSiteUrl"
                 />
-                <div class="mx-auto grid max-w-7xl gap-12 px-6 pb-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 pb-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
                     <div class="-mx-6 min-w-0">
                         <BlockRenderer
                             :blocks="bodyBlocks"

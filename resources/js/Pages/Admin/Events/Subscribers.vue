@@ -331,7 +331,7 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
                 </tr>
 
                 <tr v-if="filteredSubscribers.length === 0">
-                  <td colspan="8" class="p-8 text-center text-slate-500 dark:text-slate-400">No bookings match.</td>
+                  <td colspan="8" class="p-4 sm:p-8 text-center text-slate-500 dark:text-slate-400">No bookings match.</td>
                 </tr>
               </tbody>
             </table>

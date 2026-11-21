@@ -183,7 +183,7 @@ function handleSwitchOrder(event) {
       </div>
 
       <Card padding="none" class="overflow-hidden">
-        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-6 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-4 sm:p-6 dark:border-slate-800">
           <div>
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">Registered {{ clubType.name }} clubs</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">All active lodges and chapters of this order registered on the platform.</p>
@@ -218,7 +218,7 @@ function handleSwitchOrder(event) {
           </table>
         </div>
 
-        <div v-else class="p-8 text-center space-y-2">
+        <div v-else class="p-4 sm:p-8 text-center space-y-2">
           <UiIcon name="building" :size="20" class="mx-auto text-slate-500 dark:text-slate-400" />
           <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">No {{ clubType.name }} clubs registered yet</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400">Clubs registered under this order preset will appear here.</p>

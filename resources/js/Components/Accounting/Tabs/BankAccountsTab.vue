@@ -92,7 +92,7 @@ const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg
             <div
               v-for="acc in (bankAccounts || [])"
               :key="acc.id"
-              class="flex flex-col justify-between space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-colors hover:border-blue-300 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
+              class="flex flex-col justify-between space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 transition-colors hover:border-blue-300 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
             >
               <div>
                 <div class="flex items-start justify-between gap-2">
@@ -196,7 +196,7 @@ const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg
 
       <!-- General ledger journal entries -->
       <Card padding="none" class="overflow-hidden">
-        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-6 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-4 sm:p-6 dark:border-slate-800">
           <div>
             <h3 class="text-base font-semibold text-slate-900 dark:text-white">General ledger journal entries</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400">Double-entry records posted to the ledger.</p>
@@ -207,7 +207,7 @@ const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg
           </Button>
         </div>
 
-        <div class="space-y-4 p-6">
+        <div class="space-y-4 p-4 sm:p-6">
           <div v-if="!journalEntries.length" class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-800 dark:bg-slate-800/50">
             <UiIcon name="document" :size="20" class="mx-auto mb-2 text-slate-500 dark:text-slate-400" />
             <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">No journal entries yet</span>

@@ -13,67 +13,38 @@ defineProps({
 <template>
   <AdminLayout title="Dashboard" :club="club" active-tab="dashboard">
     
-    <!-- Top Big Stat Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      <!-- 1. Active Users Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-3">
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active users</div>
-        <div class="text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">
-          {{ metrics.total_members }}
-        </div>
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-          Active members on the roster or with an account
-        </div>
+    <!-- The headline numbers, two to a row even on a phone: members, then money. -->
+    <div class="grid grid-cols-2 gap-3 sm:gap-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col gap-2">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active members</div>
+        <div class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">{{ metrics.total_members || 0 }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">On the roster or with an account</div>
       </div>
 
-      <!-- 2. Total Sales Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-3">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col gap-2">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending</div>
+        <div class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">{{ metrics.pending_users_count || 0 }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Asking to join or visit</div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col gap-2">
         <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Money received</div>
-        <div class="text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">
-          {{ $cs }}{{ metrics.monthly_dues_est }}
-        </div>
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-          Paid invoices, dues and event payments, all time
-        </div>
+        <div class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">{{ $cs }}{{ metrics.monthly_dues_est }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Invoices, dues and events, all time</div>
       </div>
 
-    </div>
-
-    <!-- Second Row Metric Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      
-      <!-- Metric 1: Members -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2">
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">Active Members</div>
-        <div class="text-2xl font-extrabold text-slate-900 dark:text-white">
-          {{ metrics.total_members || 0 }}
-        </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col gap-2">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Open invoices and bills</div>
+        <div class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">{{ metrics.open_invoices_count || 0 }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Not yet paid</div>
       </div>
-
-      <!-- Metric 2: Pending users -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2">
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">Pending Users</div>
-        <div class="text-2xl font-extrabold text-slate-900 dark:text-white">
-          {{ metrics.pending_users_count || 0 }}
-        </div>
-      </div>
-
-      <!-- Metric 3: Open invoices -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-2">
-        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">Open Invoices &amp; Bills</div>
-        <div class="text-2xl font-extrabold text-slate-900 dark:text-white">
-          {{ metrics.open_invoices_count || 0 }}
-        </div>
-      </div>
-
     </div>
 
     <!-- Bottom Section Dual Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       
       <!-- Left Panel: Events -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">Events</h2>
           <Link :href="route('admin.events.index', { clubSlug: club.slug })" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">View all events →</Link>
@@ -100,7 +71,7 @@ defineProps({
       </div>
 
       <!-- Right Panel: Meetings Summary -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings</h2>
           <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-1">
@@ -135,7 +106,7 @@ defineProps({
           </div>
         </div>
 
-        <div v-else class="p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+        <div v-else class="p-4 sm:p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
           <div class="flex justify-center text-slate-500 dark:text-slate-400"><UiIcon name="document" :size="20" /></div>
           <div class="font-semibold text-slate-700 dark:text-slate-200 text-sm">No upcoming meetings scheduled</div>
           <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>

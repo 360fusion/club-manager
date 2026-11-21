@@ -23,8 +23,8 @@ const submit = () => {
   <Head title="Member registration" />
 
   <!-- The card is always dark, so the kit components take their dark look inside it. -->
-  <div class="dark min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
-    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
+  <div class="dark min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 sm:p-6 text-slate-100 font-sans">
+    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 sm:p-8 shadow-2xl shadow-blue-950/40 space-y-6">
 
       <!-- Header -->
       <div class="text-center space-y-2">

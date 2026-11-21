@@ -38,10 +38,11 @@ const deleteEvent = () => {
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Events and tickets</h2>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Create events with ticket types and dining menus, and see who has booked.</p>
           </div>
-          <div class="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" :href="route('admin.payment_options.index', { clubSlug: club.slug })">Payment options</Button>
-            <Button variant="secondary" size="sm" :href="route('admin.email_templates.index', { clubSlug: club.slug })">Email wording</Button>
-            <Button size="sm" :href="route('admin.events.create', { clubSlug: club.slug })">Create an event</Button>
+          <!-- Three across even on a phone, a long label going onto two lines. -->
+          <div class="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+            <Button variant="secondary" size="sm" class="text-center leading-tight" :href="route('admin.payment_options.index', { clubSlug: club.slug })">Payment options</Button>
+            <Button variant="secondary" size="sm" class="text-center leading-tight" :href="route('admin.email_templates.index', { clubSlug: club.slug })">Email wording</Button>
+            <Button size="sm" class="text-center leading-tight" :href="route('admin.events.create', { clubSlug: club.slug })">Create an event</Button>
           </div>
         </div>
       </Card>

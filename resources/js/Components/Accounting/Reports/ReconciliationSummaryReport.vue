@@ -19,7 +19,7 @@ defineProps({
 
 <template>
     <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div>
           <Badge variant="info">Audit and financial compliance</Badge>
           <h3 class="text-xl font-semibold text-slate-900 dark:text-white mt-2">Bank reconciliation summary</h3>
@@ -106,7 +106,7 @@ defineProps({
         </Card>
 
         <!-- Section 4: Calculated Statement Balance vs Real Bank Balance -->
-        <div class="bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-5 border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-4">
+        <div class="bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-4 sm:p-5 border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-4">
           <div class="flex justify-between items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <span>Calculated bank statement balance</span>
             <span class="tabular-nums text-lg">{{ formatMoney(reconciliationSummary.calculatedStatementBalance) }}</span>

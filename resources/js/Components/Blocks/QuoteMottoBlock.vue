@@ -20,7 +20,7 @@ const hasContent = computed(() => !!(props.block.heading || paragraphs.value.len
         <p v-for="(paragraph, i) in paragraphs" :key="i" :class="['text-base sm:text-lg leading-loose', theme.bodyText]">{{ paragraph }}</p>
         <p v-if="block.tagline" :class="['font-serif text-xl sm:text-2xl italic', theme.onDark ? 'text-[var(--cm-accent-bright)]' : 'text-[var(--cm-accent-deep)]']">{{ block.tagline }}</p>
     </section>
-    <section v-else-if="!interactive" :class="['mx-auto max-w-3xl border-2 border-dashed p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
+    <section v-else-if="!interactive" :class="['mx-auto max-w-3xl border-2 border-dashed p-4 sm:p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
         Add a heading, text or tagline to show this motto
     </section>
 </template>

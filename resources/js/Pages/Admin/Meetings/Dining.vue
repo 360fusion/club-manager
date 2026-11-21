@@ -122,7 +122,7 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
           <table class="w-full text-left text-sm text-slate-700 dark:text-slate-200">
             <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
               <tr>
-                <th scope="col" class="px-6 py-3 font-medium">Diner</th>
+                <th scope="col" class="px-4 sm:px-6 py-3 font-medium">Diner</th>
                 <th scope="col" class="px-4 py-3 font-medium">Dietary notes</th>
                 <th scope="col" class="px-4 py-3 text-right font-medium">Fee</th>
                 <th scope="col" class="px-4 py-3 font-medium">Payment</th>
@@ -131,7 +131,7 @@ const outstandingCount = computed(() => props.diners.filter(d => !['paid', 'waiv
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
               <tr v-for="diner in diners" :key="`${diner.kind}-${diner.id}`">
-                <td class="px-6 py-4">
+                <td class="px-4 sm:px-6 py-4">
                   <div class="font-medium text-slate-900 dark:text-white">{{ diner.name }}</div>
                   <div v-if="diner.kind === 'guest'" class="text-xs text-slate-500 dark:text-slate-400">
                     Guest of {{ diner.host || 'a member' }}

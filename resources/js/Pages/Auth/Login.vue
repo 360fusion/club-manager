@@ -66,7 +66,7 @@ const submit = () => {
 <template>
     <Head title="Sign in" />
 
-    <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans flex flex-col justify-center px-6 py-8">
+    <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans flex flex-col justify-center px-4 sm:px-6 py-8">
         <div class="w-full max-w-sm mx-auto flex flex-col gap-6">
             <div class="flex flex-col items-center gap-3 text-center">
                 <!-- cm-nav gives the tile the lodge navy of the app's top bar. -->

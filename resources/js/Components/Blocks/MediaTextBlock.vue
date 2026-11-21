@@ -37,7 +37,7 @@ const isInternal = (url) => typeof url === 'string' && url.startsWith('/');
             </div>
         </div>
     </section>
-    <section v-else-if="!interactive" :class="['mx-auto max-w-3xl border-2 border-dashed p-6 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
+    <section v-else-if="!interactive" :class="['mx-auto max-w-3xl border-2 border-dashed p-4 sm:p-6 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
         Add a photo, title or text to show this element
     </section>
 </template>

@@ -25,7 +25,7 @@ const cancel = () => emit('cancel');
                 aria-modal="true"
                 aria-labelledby="theme-confirm-modal-title"
                 v-focus-trap="cancel"
-                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-5 relative overflow-hidden"
+                class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-4 sm:p-6 space-y-5 relative overflow-hidden"
             >
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">

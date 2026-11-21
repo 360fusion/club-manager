@@ -20,7 +20,7 @@ defineProps({
 <template>
   <div class="space-y-6">
       <!-- Guided first-run setup checklist -->
-      <div v-if="showOnboarding" class="bg-blue-50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm p-6 space-y-4">
+      <div v-if="showOnboarding" class="bg-blue-50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm p-4 sm:p-6 space-y-4">
         <div class="flex items-start justify-between gap-4">
           <div>
             <h3 class="text-base font-semibold text-blue-900 dark:text-blue-100">Get your accounting set up</h3>

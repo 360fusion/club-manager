@@ -55,8 +55,8 @@ const adminHref = (club) => (club.role === 'coach' ? route('admin.events.index',
 
 const LINK_ICONS = { dashboard: 'home', calendar: 'calendar', events: 'ticket', meetings: 'users', news: 'document', dues: 'cash', profile: 'user', lodges: 'building', directory: 'search', subscriptions: 'mail' };
 
-// The phone's bottom tabs already reach home and the calendar.
-const goTo = computed(() => props.links.filter((link) => !isPhone.value || !['dashboard', 'calendar'].includes(link.key)));
+// The phone's bottom tabs already reach home, the calendar, bookings (events) and My lodges.
+const goTo = computed(() => props.links.filter((link) => !isPhone.value || !['dashboard', 'calendar', 'events', 'lodges'].includes(link.key)));
 const listsSubscriptions = computed(() => props.links.some((link) => link.key === 'subscriptions'));
 
 const account = computed(() => [

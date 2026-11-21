@@ -205,7 +205,7 @@ const statusLine = (card) => {
         </li>
       </ul>
 
-      <form v-if="editing !== null" ref="panelRef" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5" @submit.prevent="submit">
+      <form v-if="editing !== null" ref="panelRef" class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5" @submit.prevent="submit">
         <h3 class="text-base font-semibold text-slate-900 dark:text-white">{{ editing ? 'Edit payment option' : 'New payment option' }}</h3>
 
         <p class="text-sm text-slate-500 dark:text-slate-400">{{ typeInfo(form.type).help }}</p>

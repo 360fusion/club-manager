@@ -44,7 +44,7 @@ defineProps({
 
           <!-- Gateway Specs Grid -->
           <div class="grid grid-cols-1 gap-4">
-            <div class="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3">
+            <div class="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3">
               <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-slate-900 dark:text-white">Stripe</span>
                 <Badge :variant="stripeConfigured ? 'success' : 'warning'">

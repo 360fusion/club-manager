@@ -90,12 +90,12 @@ const {
           @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
           :class="[
-            'lg:col-span-3 bg-white dark:bg-slate-900 p-6 rounded-2xl border transition-colors shadow-sm space-y-6 relative',
+            'lg:col-span-3 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border transition-colors shadow-sm space-y-6 relative',
             isDragging ? 'border-blue-500 ring-4 ring-blue-100 dark:ring-blue-900/40' : 'border-slate-200 dark:border-slate-800'
           ]"
         >
           <!-- Drag Over Highlight Overlay -->
-          <div v-if="isDragging" class="absolute inset-0 bg-blue-500/10 backdrop-blur-[2px] rounded-2xl border-2 border-dashed border-blue-500 z-30 flex flex-col items-center justify-center gap-1 p-6 text-blue-700 dark:text-blue-300 pointer-events-none">
+          <div v-if="isDragging" class="absolute inset-0 bg-blue-500/10 backdrop-blur-[2px] rounded-2xl border-2 border-dashed border-blue-500 z-30 flex flex-col items-center justify-center gap-1 p-4 sm:p-6 text-blue-700 dark:text-blue-300 pointer-events-none">
             <UiIcon name="upload" :size="20" class="animate-bounce" />
             <span class="text-base font-semibold">Drop files here to upload</span>
             <span class="text-xs font-medium text-blue-600 dark:text-blue-400">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>

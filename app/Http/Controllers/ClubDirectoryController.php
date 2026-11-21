@@ -5,26 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\NewsletterSubscription;
 use App\Models\NewsletterType;
-use App\Services\ClubDirectoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ClubDirectoryController extends Controller
 {
     /**
-     * The searchable national directory of lodges and clubs.
+     * The old members' directory: lodges are found in the one Directory now (lodges.index), and their bulletins are
+     * subscribed to from each lodge's page there.
      */
-    public function index(Request $request, ClubDirectoryService $directory): Response
+    public function index(Request $request): RedirectResponse
     {
-        return Inertia::render('Members/Directory', [
-            'directory' => $directory->listing(
-                (string) $request->query('search', ''),
-                (string) $request->query('region', ''),
-            ),
-        ]);
+        return redirect()->route('lodges.index', array_filter(['q' => (string) $request->query('search', '')]));
     }
 
     /**

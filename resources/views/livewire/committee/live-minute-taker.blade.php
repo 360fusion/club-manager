@@ -347,7 +347,7 @@
                         @endif
 
                         @if(empty($parsedPreview['mentions']) && empty($parsedPreview['tasks']) && empty($parsedPreview['motions']))
-                            <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                            <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 sm:p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                                 Type notes in the editor. Mentions, tasks and motions show here as you type.
                             </p>
                         @endif
@@ -417,7 +417,7 @@
                                     @endif
                                 </div>
                             @empty
-                                <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                                <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 sm:p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                                     No tasks committed yet. Type [ ] in the notes and choose Sync.
                                 </p>
                             @endforelse
@@ -454,7 +454,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                                <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 sm:p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                                     No formal notices of motion drafted yet. Use /motion in the notes.
                                 </p>
                             @endforelse
@@ -508,7 +508,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                                <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 sm:p-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                                     No charitable donation proposals logged yet.
                                 </p>
                             @endforelse

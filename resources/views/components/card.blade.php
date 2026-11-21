@@ -2,7 +2,7 @@
 @props(['padding' => 'md'])
 
 @php
-    $paddings = ['none' => '', 'sm' => 'p-4', 'md' => 'p-6', 'lg' => 'p-6 sm:p-8'];
+    $paddings = ['none' => '', 'sm' => 'p-4', 'md' => 'p-4 sm:p-6', 'lg' => 'p-4 sm:p-8'];
 @endphp
 
 <div {{ $attributes->class(['bg-white border border-slate-200 rounded-2xl shadow-sm dark:bg-slate-900 dark:border-slate-800', $paddings[$padding] ?? $paddings['md']]) }}>

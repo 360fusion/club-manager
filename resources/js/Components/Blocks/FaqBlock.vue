@@ -47,17 +47,17 @@ const isOpen = (index) => !!query.value.trim() || (props.block.first_open === tr
 
         <div :class="['grid gap-3 items-start', Number(block.columns) === 2 ? 'md:grid-cols-2 md:gap-x-6' : '']">
             <template v-for="(item, index) in visible" :key="item.id || index">
-                <div v-if="expanded" :class="['p-5 space-y-2 border', radiusMd, theme.cardBg]">
+                <div v-if="expanded" :class="['p-4 sm:p-5 space-y-2 border', radiusMd, theme.cardBg]">
                     <h3 :class="['font-bold text-base', theme.headingText]"><span v-if="block.numbered" class="opacity-60 mr-1">{{ index + 1 }}.</span>{{ item.question }}</h3>
                     <SanitizedHtml :class="['prose dark:prose-invert max-w-none text-sm', theme.bodyText]" :html="item.answer" />
                 </div>
 
                 <details v-else :name="groupName" :open="isOpen(index)" :class="['group border', radiusMd, theme.cardBg]">
-                    <summary :class="['flex items-center justify-between gap-4 cursor-pointer select-none list-none px-5 py-4 font-bold text-base [&::-webkit-details-marker]:hidden', theme.headingText]">
+                    <summary :class="['flex items-center justify-between gap-4 cursor-pointer select-none list-none px-4 sm:px-5 py-4 font-bold text-base [&::-webkit-details-marker]:hidden', theme.headingText]">
                         <span><span v-if="block.numbered" class="opacity-60 mr-1">{{ index + 1 }}.</span>{{ item.question }}</span>
                         <svg viewBox="0 0 20 20" class="w-5 h-5 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </summary>
-                    <SanitizedHtml :class="['prose dark:prose-invert max-w-none px-5 pb-5 text-sm', theme.bodyText]" :html="item.answer" />
+                    <SanitizedHtml :class="['prose dark:prose-invert max-w-none px-4 sm:px-5 pb-5 text-sm', theme.bodyText]" :html="item.answer" />
                 </details>
             </template>
         </div>

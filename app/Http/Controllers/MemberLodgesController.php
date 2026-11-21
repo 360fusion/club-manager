@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\ClubMemberStatus;
 use App\Models\Club;
-use App\Models\ClubLodgeLink;
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use App\Models\LodgeCorrection;
@@ -71,27 +70,7 @@ class MemberLodgesController extends Controller
         ]);
 
         $skip = $user->followedLodges()->pluck('lodges.id')->merge($ownClubs->pluck('lodge.id')->filter())->all();
-        $suggested = collect();
-        foreach ($ownClubs as $club) {
-            $hallId = $club->lodge?->masonic_hall_id;
-            foreach ([ClubLodgeLink::SISTER, ClubLodgeLink::RECIPROCAL] as $relation) {
-                foreach ($links->lodges($club, $relation) as $lodge) {
-                    $reason = match (true) {
-                        $hallId !== null && $lodge->masonic_hall_id === $hallId => 'Meets at your hall',
-                        $relation === ClubLodgeLink::SISTER => 'A sister lodge of '.$club->name,
-                        default => $club->name.' visits it',
-                    };
-                    $suggested->put($lodge->id, $suggested->get($lodge->id) ?? ['lodge' => $lodge, 'reason' => $reason]);
-                }
-            }
-        }
-        $suggested = $suggested->except($skip)->take(12)->map(fn (array $entry) => [
-            'slug' => $entry['lodge']->slug,
-            'name' => $entry['lodge']->displayName(),
-            'order' => $entry['lodge']->clubType?->name,
-            'meets_text' => $entry['lodge']->meets_text,
-            'reason' => $entry['reason'],
-        ]);
+        $suggested = $links->suggestionsFor($user);
 
         // Find a lodge to follow by its name, number, hall or town, like the directory's own search.
         $search = trim((string) $request->query('q', ''));
@@ -152,7 +131,7 @@ class MemberLodgesController extends Controller
             'corrections' => $corrections->values(),
             'lodges' => $lodges->values(),
             'own' => $own->values(),
-            'suggested' => $suggested->values(),
+            'suggested' => $suggested,
             'search' => $search,
             'results' => $results->values(),
             'limit' => LodgeFollowController::MAX_FOLLOWS,

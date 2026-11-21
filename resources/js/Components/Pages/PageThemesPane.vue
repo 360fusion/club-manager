@@ -64,7 +64,7 @@ defineProps({
                     type="button"
                     @click="selectedLayoutId = opt.id"
                     :class="[
-                        'text-left rounded-2xl border p-5 space-y-3 transition-all duration-200 cursor-pointer',
+                        'text-left rounded-2xl border p-4 sm:p-5 space-y-3 transition-all duration-200 cursor-pointer',
                         selectedLayoutId === opt.id ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
                     ]"
                 >

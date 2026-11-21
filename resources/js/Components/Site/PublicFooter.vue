@@ -78,7 +78,7 @@ const copyright = computed(() => {
 
 <template>
     <footer :class="['mt-20 border-t text-sm', theme.footer]">
-        <div class="max-w-7xl mx-auto px-6 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
             <!-- One row of up to five columns: the first (the lodge's name and about text) is wider than the link columns -->
             <div v-if="isColumns" :style="{ '--footer-template': footerTemplate }" class="grid gap-x-8 gap-y-8 pb-8 text-left grid-cols-1 sm:grid-cols-2 md:grid-cols-[var(--footer-template)]">
                 <div class="min-w-0">

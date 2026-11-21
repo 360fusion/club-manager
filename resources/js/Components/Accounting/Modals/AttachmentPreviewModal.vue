@@ -27,7 +27,7 @@ defineProps({
         @click.stop
       >
         <!-- Toolbar -->
-        <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/90 px-6 py-4">
+        <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/90 px-4 sm:px-6 py-4">
           <div class="flex items-center gap-3">
             <span class="text-slate-500 dark:text-slate-400"><UiIcon name="document" :size="20" /></span>
             <div>
@@ -116,7 +116,7 @@ defineProps({
         </div>
 
         <!-- Document or image viewer -->
-        <div class="relative flex flex-1 items-center justify-center overflow-auto bg-slate-950 p-6">
+        <div class="relative flex flex-1 items-center justify-center overflow-auto bg-slate-950 p-4 sm:p-6">
           <!-- Image view -->
           <div
             v-if="!previewModal.mimeType.includes('pdf')"

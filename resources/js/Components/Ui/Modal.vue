@@ -33,7 +33,7 @@ const SIZES = {
             role="dialog"
             aria-modal="true"
             :aria-labelledby="titleId"
-            :class="['max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl outline-none dark:border-slate-800 dark:bg-slate-900', SIZES[size] ?? SIZES.md]"
+            :class="['max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-2xl outline-none dark:border-slate-800 dark:bg-slate-900', SIZES[size] ?? SIZES.md]"
         >
             <div class="mb-4 flex items-start justify-between gap-4 border-b border-slate-200 pb-4 dark:border-slate-800">
                 <div class="min-w-0">

@@ -11,7 +11,7 @@
     $sizes = [
         'sm' => 'px-3 py-1.5 text-xs gap-1.5',
         'md' => 'px-4 py-2 text-sm gap-2',
-        'lg' => 'px-5 py-2.5 text-sm gap-2',
+        'lg' => 'px-4 sm:px-5 py-2.5 text-sm gap-2',
     ];
     $classes = implode(' ', [
         'inline-flex items-center justify-center rounded-xl font-medium transition-colors cursor-pointer',

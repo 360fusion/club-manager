@@ -163,7 +163,7 @@ const channelOptions = computed(() => [{ value: 'all', label: 'All channels' }, 
                 </tr>
 
                 <tr v-if="filteredSubscriptions.length === 0">
-                  <td colspan="7" class="p-8 text-center text-slate-500 dark:text-slate-400">No subscribers match.</td>
+                  <td colspan="7" class="p-4 sm:p-8 text-center text-slate-500 dark:text-slate-400">No subscribers match.</td>
                 </tr>
               </tbody>
             </table>

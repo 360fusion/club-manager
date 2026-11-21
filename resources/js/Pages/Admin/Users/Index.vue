@@ -367,14 +367,14 @@ const submitAddMember = () => {
           <table class="w-full border-collapse text-left">
             <thead>
               <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                <th class="px-6 py-3.5">Name and email</th>
+                <th class="px-4 sm:px-6 py-3.5">Name and email</th>
                 <th class="px-4 py-3.5">Member number</th>
                 <th v-if="enableMemberRanks" class="px-4 py-3.5">Rank</th>
                 <th class="px-4 py-3.5">Club role</th>
                 <th class="px-4 py-3.5">Committee role</th>
                 <th class="px-4 py-3.5">Status</th>
                 <th class="px-4 py-3.5">Joined</th>
-                <th class="px-6 py-3.5 text-right">Actions</th>
+                <th class="px-4 sm:px-6 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs text-slate-700 dark:divide-slate-800 dark:text-slate-200">
@@ -384,7 +384,7 @@ const submitAddMember = () => {
                 class="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
               >
                 <!-- Name & Email -->
-                <td class="px-6 py-4">
+                <td class="px-4 sm:px-6 py-4">
                   <div class="flex items-center gap-3">
                     <Link
                       :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
@@ -481,7 +481,7 @@ const submitAddMember = () => {
                 </td>
 
                 <!-- Actions -->
-                <td class="space-x-1.5 whitespace-nowrap px-6 py-4 text-right">
+                <td class="space-x-1.5 whitespace-nowrap px-4 sm:px-6 py-4 text-right">
                   <!-- 1. Invitation Actions for pending/unaccepted members -->
                   <template v-if="m.status === 'pending' && !m.invitation_accepted_at">
                     <Button
@@ -539,7 +539,7 @@ const submitAddMember = () => {
             </tbody>
           </table>
         </div>
-        <div class="border-t border-slate-100 px-6 py-3 dark:border-slate-800"><Pagination :links="members.links" /></div>
+        <div class="border-t border-slate-100 px-4 sm:px-6 py-3 dark:border-slate-800"><Pagination :links="members.links" /></div>
       </Card>
 
       <!-- Public registration link -->

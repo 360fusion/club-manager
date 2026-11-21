@@ -6,7 +6,7 @@ defineProps({
 </script>
 
 <template>
-    <section v-if="groups.length" class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+    <section v-if="groups.length" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Where this comes from</h2>
         <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Listings are collected from these pages and can be out of date. Confirm the day, time and place before you travel<span v-if="checkedOn"> (last checked {{ checkedOn }})</span>.

@@ -12,7 +12,7 @@ const props = defineProps({
 });
 
 const OVERLAY = { light: 'bg-black/30', medium: 'bg-black/50', strong: 'bg-black/70' };
-const PADDING = { compact: 'py-8 px-6 sm:px-10', normal: 'py-12 px-6 sm:px-12', large: 'py-20 px-6 sm:px-16' };
+const PADDING = { compact: 'py-8 px-4 sm:px-10', normal: 'py-12 px-4 sm:px-12', large: 'py-20 px-4 sm:px-16' };
 
 const isImage = computed(() => props.block.style === 'image' && !!props.block.image_url);
 const isSoft = computed(() => props.block.style === 'soft');
@@ -38,7 +38,7 @@ const secondaryClass = computed(() => (isImage.value || isPanel.value
 <template>
     <section v-if="hasContent && isPanel" class="max-w-5xl mx-auto">
         <div :class="['relative overflow-hidden border-l-[6px] border-l-[color:var(--cm-accent)] bg-gradient-to-br from-[var(--cm-primary)] to-[var(--cm-primary-soft)] text-white shadow-[0_20px_50px_rgba(0,0,0,0.18)]', radiusMd]">
-            <div :class="['flex flex-col items-center gap-8 px-6 py-10 sm:px-12 md:gap-12', block.image_side === 'right' ? 'md:flex-row-reverse' : 'md:flex-row']">
+            <div :class="['flex flex-col items-center gap-8 px-4 py-10 sm:px-12 md:gap-12', block.image_side === 'right' ? 'md:flex-row-reverse' : 'md:flex-row']">
                 <img v-if="block.side_image_url" :src="block.side_image_url" alt="" loading="lazy" :class="panelImageClass" />
                 <div :class="['min-w-0 flex-1 space-y-4', block.side_image_url ? 'text-center md:text-left' : (centered ? 'text-center' : 'text-left')]">
                     <div v-if="block.eyebrow" :class="['inline-block border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]', theme.heroPill]">{{ block.eyebrow }}</div>
@@ -97,7 +97,7 @@ const secondaryClass = computed(() => (isImage.value || isPanel.value
             </div>
         </div>
     </section>
-    <section v-else-if="!interactive" :class="['max-w-5xl mx-auto border-2 border-dashed p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
+    <section v-else-if="!interactive" :class="['max-w-5xl mx-auto border-2 border-dashed p-4 sm:p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
         Add a heading, text or a button to show this banner
     </section>
 </template>

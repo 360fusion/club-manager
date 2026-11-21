@@ -221,72 +221,9 @@ class MemberHomeTest extends TestCase
                 ->loadDeferredProps(fn (Assert $reload) => $reload->has('feed', 0)));
     }
 
-    private function listInDirectory(Club $club, array $attributes = []): Club
+    public function test_the_old_directory_addresses_go_to_the_one_lodge_directory(): void
     {
-        $club->forceFill(array_merge(['is_directory_listed' => true], $attributes))->save();
-
-        return $club;
-    }
-
-    public function test_the_directory_page_lists_listed_clubs(): void
-    {
-        $this->listInDirectory($this->club, ['lodge_number' => '357', 'town_city' => 'Oxford', 'province_region' => 'Oxfordshire']);
-        $this->listInDirectory($this->otherClub, ['lodge_number' => '1234', 'town_city' => 'Bath', 'province_region' => 'Somerset']);
-
-        $this->actingAs($this->member)->get(route('directory.index'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Members/Directory')
-                ->has('directory.clubs', 2)
-                ->where('directory.regions', ['Oxfordshire', 'Somerset']));
-    }
-
-    public function test_the_directory_can_be_searched_by_name_number_or_town(): void
-    {
-        $this->listInDirectory($this->club, ['lodge_number' => '357', 'town_city' => 'Oxford']);
-        $this->listInDirectory($this->otherClub, ['lodge_number' => '1234', 'town_city' => 'Bath']);
-
-        foreach ([['oxford', 'oxford-lodge'], ['1234', 'bath-lodge'], ['BATH', 'bath-lodge']] as [$term, $slug]) {
-            $this->actingAs($this->member)->get(route('directory.index', ['search' => $term]))
-                ->assertInertia(fn (Assert $page) => $page
-                    ->has('directory.clubs', 1)
-                    ->where('directory.clubs.0.slug', $slug)
-                    ->where('directory.filters.search', $term));
-        }
-    }
-
-    public function test_the_directory_can_be_filtered_by_region(): void
-    {
-        $this->listInDirectory($this->club, ['province_region' => 'Oxfordshire']);
-        $this->listInDirectory($this->otherClub, ['province_region' => 'Somerset']);
-
-        $this->actingAs($this->member)->get(route('directory.index', ['region' => 'Somerset']))
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('directory.clubs', 1)
-                ->where('directory.clubs.0.slug', 'bath-lodge'));
-    }
-
-    public function test_unlisted_and_inactive_clubs_stay_out_of_the_directory(): void
-    {
-        $this->listInDirectory($this->club);
-        $this->listInDirectory($this->otherClub, ['is_directory_listed' => false]);
-        $inactive = Club::create(['club_type_id' => $this->club->club_type_id, 'name' => 'Dormant Lodge', 'slug' => 'dormant-lodge', 'status' => 'inactive']);
-        $this->listInDirectory($inactive);
-
-        $this->actingAs($this->member)->get(route('directory.index'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('directory.clubs', 1)
-                ->where('directory.clubs.0.slug', 'oxford-lodge'));
-    }
-
-    public function test_the_old_directory_address_redirects_permanently(): void
-    {
-        $this->get('/directory')->assertStatus(301)->assertRedirect('/members/directory');
-        $this->get('/directory?search=bath&region=Somerset')->assertRedirect('/members/directory?region=Somerset&search=bath');
-    }
-
-    public function test_guests_cannot_see_the_directory(): void
-    {
-        $this->get(route('directory.index'))->assertRedirect('/login');
+        $this->actingAs($this->member)->get(route('directory.index', ['search' => 'bath']))->assertRedirect(route('lodges.index', ['q' => 'bath']));
+        $this->get('/directory')->assertStatus(301)->assertRedirect(route('lodges.index'));
     }
 }

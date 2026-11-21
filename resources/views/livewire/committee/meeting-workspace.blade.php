@@ -85,7 +85,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400">
+                        <div class="p-4 sm:p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400">
                             No attendees added yet. Select "Add member" to fill the committee roll-call.
                         </div>
                     @endforelse
@@ -143,7 +143,7 @@
                             @endif
                         </div>
                     @empty
-                        <div class="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400">
+                        <div class="p-4 sm:p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400">
                             No agenda items yet. Add business items or run candidate vetting below.
                         </div>
                     @endforelse
@@ -378,7 +378,7 @@
             aria-modal="true"
             :aria-labelledby="'compliance-title-' + complianceModal"
             x-trap.noscroll="complianceModal"
-            class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 relative text-slate-800 dark:text-slate-100"
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 relative text-slate-800 dark:text-slate-100"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

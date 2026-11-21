@@ -34,7 +34,7 @@ const followError = computed(() => page.props.errors?.follow ?? null);
 
     <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
+            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-4">
                 <div class="flex min-w-0 items-center gap-3 sm:gap-6">
                     <Link :href="route('home')" class="text-base font-bold tracking-tight">ClubManager</Link>
                     <nav aria-label="Main" class="flex items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -49,13 +49,13 @@ const followError = computed(() => page.props.errors?.follow ?? null);
             </div>
         </header>
 
-        <main id="main-content" tabindex="-1" class="mx-auto max-w-6xl px-4 py-8 focus:outline-none">
+        <main id="main-content" tabindex="-1" class="mx-auto max-w-6xl px-3 py-5 focus:outline-none sm:px-4 sm:py-8">
             <p v-if="flash.success" role="status" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/50 dark:text-emerald-300">{{ flash.success }}</p>
             <p v-if="flash.error || followError" role="alert" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-800 dark:border-rose-800/50 dark:bg-rose-950/50 dark:text-rose-300">{{ flash.error || followError }}</p>
             <slot />
         </main>
 
-        <footer class="mx-auto max-w-6xl px-4 pb-10 text-xs text-slate-500 dark:text-slate-400">
+        <footer class="mx-auto max-w-6xl px-3 pb-10 sm:px-4 text-xs text-slate-500 dark:text-slate-400">
             Meeting times shown as "expected" are worked out from the lodge's published pattern and may change. Always confirm with the lodge before you travel.
         </footer>
     </div>

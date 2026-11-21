@@ -53,7 +53,7 @@ const radiusMd = computed(() => props.theme.radiusMd || 'rounded-2xl');
 // A block can also carry its own "Section" settings (see Support/blockSection.js): a full-width band with a colour,
 // a photo or a dark navy look, or a boxed panel inside the page. Blocks left on "auto" are drawn exactly as the theme
 // draws them; a block with its own band does not take a turn in the alternating white / tint sequence.
-const BAND_INNER = 'relative max-w-7xl mx-auto px-6';
+const BAND_INNER = 'relative max-w-7xl mx-auto px-4 sm:px-6';
 
 // The theme a block sees on its section: light or dark text, and on an accent-coloured band buttons switch to the dark
 // brand colour (an accent button on an accent band would disappear).
@@ -96,7 +96,7 @@ const decorated = computed(() => {
             innerClass = [BAND_INNER, sectionPadding(section, 'py-16 sm:py-20')];
         } else if (isBanded.value) {
             outerClass = ['w-full', block.type === 'hero' ? props.theme.heroBg : position % 2 === 0 ? props.theme.bandA : props.theme.bandB];
-            innerClass = 'max-w-7xl mx-auto px-6 py-16 sm:py-20';
+            innerClass = 'max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20';
         }
 
         const hasPanelBackground = isBoxed && section.bg !== 'none';
@@ -114,7 +114,7 @@ const decorated = computed(() => {
             hidden: !!block.hidden,
             innerClass: block.hidden ? [innerClass, 'opacity-40'] : innerClass,
             panelClass: isBoxed
-                ? ['relative', radiusLg.value, sectionBackgroundClass(section, props.theme), dark ? 'text-white' : '', hasPanelBackground ? 'px-6 sm:px-10' : '', sectionPadding(section, hasPanelBackground ? 'py-8 sm:py-12' : '')]
+                ? ['relative', radiusLg.value, sectionBackgroundClass(section, props.theme), dark ? 'text-white' : '', hasPanelBackground ? 'px-4 sm:px-10' : '', sectionPadding(section, hasPanelBackground ? 'py-8 sm:py-12' : '')]
                 : '',
             panelStyle: isBoxed ? sectionBackgroundStyle(section) : {},
             panelOverlayClass: isBoxed ? sectionOverlayClass(section) : '',
@@ -250,7 +250,7 @@ const submitContactForm = (block) => {
 
 <template>
     <div>
-        <div v-for="group in groups" :key="group.key" :class="group.flow ? 'max-w-7xl mx-auto px-6 py-8 space-y-16' : ''">
+        <div v-for="group in groups" :key="group.key" :class="group.flow ? 'max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-16' : ''">
         <div v-for="item in group.items" :id="item.anchor || undefined" :key="item.key" :class="[item.outerClass, item.anchor ? 'scroll-mt-24' : '']" :style="item.outerStyle">
         <div v-if="item.overlayClass" :class="['absolute inset-0', item.overlayClass]"></div>
         <span v-if="item.hidden" class="absolute left-3 top-3 z-20 rounded-full bg-[var(--cm-night)] px-3 py-1 text-[11px] font-bold text-white shadow-lg">Hidden on the live site</span>
@@ -292,7 +292,7 @@ const submitContactForm = (block) => {
 
             <!-- 5. Callout box -->
             <section v-else-if="block.type === 'notice'" class="max-w-4xl mx-auto">
-                <div :class="['p-6 border space-y-2', radiusMd,
+                <div :class="['p-4 sm:p-6 border space-y-2', radiusMd,
                     block.style === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-200' :
                     block.style === 'important' ? 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200' :
                     block.style === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-200' :
@@ -305,7 +305,7 @@ const submitContactForm = (block) => {
             <!-- 6. Button link -->
             <section v-else-if="block.type === 'button' && (block.url || !interactive)" class="max-w-4xl mx-auto">
                 <div :class="['flex', block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center']">
-                    <component :is="interactive ? 'a' : 'span'" :href="interactive ? resolveUrl(block.url) : undefined" :class="['py-3 px-6 font-bold text-sm shadow-lg hover:scale-105 transition-all', radiusMd, blockTheme.heroCta]">
+                    <component :is="interactive ? 'a' : 'span'" :href="interactive ? resolveUrl(block.url) : undefined" :class="['py-3 px-4 sm:px-6 font-bold text-sm shadow-lg hover:scale-105 transition-all', radiusMd, blockTheme.heroCta]">
                         {{ block.label || 'Learn more →' }}
                     </component>
                 </div>
@@ -356,7 +356,7 @@ const submitContactForm = (block) => {
                                 :href="interactive ? `https://www.youtube.com/watch?v=${youtubeVideo(block).id}` : undefined"
                                 target="_blank"
                                 rel="noopener"
-                                :class="['inline-block py-2.5 px-5 font-bold text-sm border transition-all hover:scale-105', radiusMd, blockTheme.cardBg]"
+                                :class="['inline-block py-2.5 px-4 sm:px-5 font-bold text-sm border transition-all hover:scale-105', radiusMd, blockTheme.cardBg]"
                             >
                                 ▶ Watch on YouTube
                             </component>
@@ -366,7 +366,7 @@ const submitContactForm = (block) => {
                                 :href="interactive ? resolveUrl(block.button_url) : undefined"
                                 :target="block.button_new_tab ? '_blank' : undefined"
                                 :rel="block.button_new_tab ? 'noopener' : undefined"
-                                :class="['inline-block py-2.5 px-5 font-bold text-sm shadow-lg transition-all hover:scale-105', radiusMd, blockTheme.heroCta]"
+                                :class="['inline-block py-2.5 px-4 sm:px-5 font-bold text-sm shadow-lg transition-all hover:scale-105', radiusMd, blockTheme.heroCta]"
                             >
                                 {{ block.button_label }}
                             </component>
@@ -394,7 +394,7 @@ const submitContactForm = (block) => {
             <section v-else-if="block.type === 'pricing_cards'" class="max-w-6xl mx-auto space-y-6">
                 <h2 :class="['text-2xl sm:text-3xl font-extrabold text-center', blockTheme.headingText]">{{ block.heading || 'Membership options & dues' }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div v-for="plan in membershipPlans" :key="plan.id" :class="['p-6 space-y-4 flex flex-col justify-between', radiusLg, blockTheme.cardBg]">
+                    <div v-for="plan in membershipPlans" :key="plan.id" :class="['p-4 sm:p-6 space-y-4 flex flex-col justify-between', radiusLg, blockTheme.cardBg]">
                         <div>
                             <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border', blockTheme.heroPill]">{{ plan.billing_period }}</span>
                             <h3 :class="['text-xl font-bold mt-2', blockTheme.headingText]">{{ plan.name }}</h3>
@@ -414,7 +414,7 @@ const submitContactForm = (block) => {
 
             <!-- 8. Donation campaign -->
             <section v-else-if="block.type === 'donation_campaign'" class="space-y-6">
-                <div v-for="d in donations" :key="d.id" :class="['p-8 sm:p-10 space-y-6', radiusLg, blockTheme.heroBg]">
+                <div v-for="d in donations" :key="d.id" :class="['p-4 sm:p-10 space-y-6', radiusLg, blockTheme.heroBg]">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--cm-accent)]/10 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] border border-[var(--cm-accent)]/20 uppercase tracking-wider inline-flex items-center gap-1.5"><UiIcon name="gift" /> Active fundraising campaign</span>
@@ -422,7 +422,7 @@ const submitContactForm = (block) => {
                             <p class="text-sm mt-1 max-w-2xl opacity-90">{{ d.description }}</p>
                         </div>
                         <!-- There is no payment flow here: the button goes to the lodge's own fundraising page, and is hidden without one. -->
-                        <component :is="interactive ? 'a' : 'span'" v-if="block.button_url" :href="interactive ? resolveUrl(block.button_url) : undefined" class="py-3.5 px-6 rounded-2xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-xl shadow-[var(--cm-accent)]/20 hover:scale-105 transition-transform">
+                        <component :is="interactive ? 'a' : 'span'" v-if="block.button_url" :href="interactive ? resolveUrl(block.button_url) : undefined" class="py-3.5 px-4 sm:px-6 rounded-2xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-xl shadow-[var(--cm-accent)]/20 hover:scale-105 transition-transform">
                             Make a contribution
                         </component>
                     </div>
@@ -449,7 +449,7 @@ const submitContactForm = (block) => {
                             post.cover_image_url && ['left', 'right'].includes(getPostImagePos(block, pIdx)) ? 'grid grid-cols-1 sm:grid-cols-3 gap-0' : 'flex flex-col justify-between']">
                             <template v-if="post.cover_image_url && getPostImagePos(block, pIdx) === 'left'">
                                 <div class="sm:col-span-1 min-h-[160px] bg-neutral-800 overflow-hidden"><img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" /></div>
-                                <div class="sm:col-span-2 p-6 space-y-2">
+                                <div class="sm:col-span-2 p-4 sm:p-6 space-y-2">
                                     <div class="flex items-center justify-between text-xs opacity-70"><span v-if="post.author_name">Published by {{ post.author_name }}</span><span>{{ post.published_at }}</span></div>
                                     <h3 :class="['text-lg font-bold leading-snug', blockTheme.headingText]">{{ post.title }}</h3>
                                     <p :class="['text-sm leading-relaxed line-clamp-3', blockTheme.bodyText]">{{ post.excerpt || post.content }}</p>
@@ -457,7 +457,7 @@ const submitContactForm = (block) => {
                                 </div>
                             </template>
                             <template v-else-if="post.cover_image_url && getPostImagePos(block, pIdx) === 'right'">
-                                <div class="sm:col-span-2 p-6 space-y-2 order-2 sm:order-1">
+                                <div class="sm:col-span-2 p-4 sm:p-6 space-y-2 order-2 sm:order-1">
                                     <div class="flex items-center justify-between text-xs opacity-70"><span v-if="post.author_name">Published by {{ post.author_name }}</span><span>{{ post.published_at }}</span></div>
                                     <h3 :class="['text-lg font-bold leading-snug', blockTheme.headingText]">{{ post.title }}</h3>
                                     <p :class="['text-sm leading-relaxed line-clamp-3', blockTheme.bodyText]">{{ post.excerpt || post.content }}</p>
@@ -466,7 +466,7 @@ const submitContactForm = (block) => {
                                 <div class="sm:col-span-1 min-h-[160px] bg-neutral-800 overflow-hidden order-1 sm:order-2"><img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" /></div>
                             </template>
                             <template v-else-if="post.cover_image_url && getPostImagePos(block, pIdx) === 'below'">
-                                <div class="p-6 space-y-2">
+                                <div class="p-4 sm:p-6 space-y-2">
                                     <div class="flex items-center justify-between text-xs opacity-70"><span v-if="post.author_name">Published by {{ post.author_name }}</span><span>{{ post.published_at }}</span></div>
                                     <h3 :class="['text-lg font-bold leading-snug', blockTheme.headingText]">{{ post.title }}</h3>
                                     <p :class="['text-sm leading-relaxed line-clamp-3', blockTheme.bodyText]">{{ post.excerpt || post.content }}</p>
@@ -476,14 +476,14 @@ const submitContactForm = (block) => {
                             </template>
                             <template v-else-if="post.cover_image_url">
                                 <div class="h-48 w-full bg-neutral-800 overflow-hidden border-b border-black/10"><img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" /></div>
-                                <div class="p-6 space-y-2">
+                                <div class="p-4 sm:p-6 space-y-2">
                                     <div class="flex items-center justify-between text-xs opacity-70"><span v-if="post.author_name">Published by {{ post.author_name }}</span><span>{{ post.published_at }}</span></div>
                                     <h3 :class="['text-lg font-bold leading-snug', blockTheme.headingText]">{{ post.title }}</h3>
                                     <p :class="['text-sm leading-relaxed line-clamp-3', blockTheme.bodyText]">{{ post.excerpt || post.content }}</p>
                                     <span v-if="interactive && post.slug" :class="['inline-block pt-1 text-xs font-semibold uppercase tracking-[0.15em]', blockTheme.accentText]">Read more →</span>
                                 </div>
                             </template>
-                            <div v-else class="p-6 space-y-2">
+                            <div v-else class="p-4 sm:p-6 space-y-2">
                                 <div class="flex items-center justify-between text-xs opacity-70"><span v-if="post.author_name">Published by {{ post.author_name }}</span><span>{{ post.published_at }}</span></div>
                                 <h3 :class="['text-lg font-bold leading-snug', blockTheme.headingText]">{{ post.title }}</h3>
                                 <p :class="['text-sm leading-relaxed line-clamp-3', blockTheme.bodyText]">{{ post.excerpt || post.content }}</p>
@@ -504,7 +504,7 @@ const submitContactForm = (block) => {
             <section v-else-if="block.type === 'events_calendar'" class="space-y-6">
                 <h2 :class="['text-2xl font-bold', blockTheme.headingText]">{{ block.heading || 'Upcoming events & formal dinners' }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div v-for="e in upcomingEvents" :key="e.id" :class="['p-6 space-y-4', radiusMd, blockTheme.cardBg]">
+                    <div v-for="e in upcomingEvents" :key="e.id" :class="['p-4 sm:p-6 space-y-4', radiusMd, blockTheme.cardBg]">
                         <h3 :class="['text-lg font-bold', blockTheme.headingText]">{{ e.title }}</h3>
                         <p :class="['text-xs flex flex-wrap items-center gap-x-3 gap-y-1', blockTheme.bodyText]"><span class="inline-flex items-center gap-1.5"><UiIcon name="building" />{{ e.location }}</span><span class="inline-flex items-center gap-1.5"><UiIcon name="clock" />{{ e.starts_at }}</span></p>
                         <Link v-if="interactive" :href="resolveUrl(`/site/${club.slug}/events/${e.slug}`)" :class="['block w-full py-2.5 px-4 bg-black/10 dark:bg-white/10 text-center font-bold text-xs', radiusMd]">Event details & booking →</Link>
@@ -526,7 +526,7 @@ const submitContactForm = (block) => {
                         { icon: 'mail', heading: block.email_heading || 'Email', value: block.email || club.contact_email, kind: 'email' },
                         { icon: 'calendar', heading: block.times_heading || 'Meeting times', value: block.times || club.meeting_formula, kind: 'text' },
                         { icon: 'building', heading: block.location_heading || 'Location', value: block.location || club.address, kind: 'text' },
-                    ]" :key="card.heading" :class="['p-8 text-center space-y-4 transition-all', radiusMd, blockTheme.cardBg]">
+                    ]" :key="card.heading" :class="['p-4 sm:p-8 text-center space-y-4 transition-all', radiusMd, blockTheme.cardBg]">
                         <div class="w-14 h-14 rounded-full bg-[var(--cm-accent)]/10 border border-[var(--cm-accent)]/30 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] flex items-center justify-center mx-auto text-xl"><UiIcon :name="card.icon" :size="20" /></div>
                         <h3 :class="['font-bold text-lg', blockTheme.headingText]">{{ card.heading }}</h3>
                         <ObfuscatedEmail v-if="card.kind === 'email' && card.value" :email="card.value" custom-class="text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] hover:underline font-semibold text-sm sm:text-base break-all cursor-pointer transition-colors" />
@@ -548,7 +548,7 @@ const submitContactForm = (block) => {
                     <UiIcon name="check" :size="20" /><span>{{ contactSuccessMap[block.id] }}</span>
                 </div>
 
-                <form @submit.prevent="submitContactForm(block)" :class="['p-6 sm:p-10 shadow-2xl space-y-6 text-sm', radiusLg, blockTheme.cardBg]">
+                <form @submit.prevent="submitContactForm(block)" :class="['p-4 sm:p-10 shadow-2xl space-y-6 text-sm', radiusLg, blockTheme.cardBg]">
                     <!-- Left empty by people; spam robots fill in every field. Kept off-screen rather than display:none, which some robots skip. -->
                     <div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
                         <label :for="`contact-website-${block.id}`">Website</label>

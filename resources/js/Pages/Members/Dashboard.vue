@@ -158,7 +158,7 @@ const chip = (active) => ['inline-flex min-h-11 shrink-0 items-center rounded-fu
                 <div class="py-6 text-center">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Find your lodge</h3>
                     <p class="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Browse the directory to see public meetings and events, and ask to join a lodge.</p>
-                    <Button class="mt-4" :href="route('directory.index')">Open the directory</Button>
+                    <Button class="mt-4" :href="route('lodges.index')">Open the directory</Button>
                 </div>
             </Card>
 

@@ -63,7 +63,7 @@ const orders = [
     <Head title="UI kit" />
 
     <div class="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-white">
-        <div class="max-w-5xl mx-auto p-6 md:p-10 space-y-10">
+        <div class="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 space-y-10">
 
             <header class="flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
                 <div>

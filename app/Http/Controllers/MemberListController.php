@@ -80,7 +80,15 @@ class MemberListController extends Controller
             ])
             ->values();
 
-        return Inertia::render('Members/AllEvents', [...$this->scopeProps($scope), 'events' => $items, 'past' => $past]);
+        return Inertia::render('Members/AllEvents', [
+            ...$this->scopeProps($scope),
+            'events' => $items,
+            'past' => $past,
+            // Meetings share the page, so a member sees everything they have said they will go to in one place.
+            'meetings' => $this->upcomingMeetings($scope),
+            'recent' => $this->recentMeetings($scope),
+            'show' => in_array($request->query('show'), ['meetings', 'events', 'past'], true) ? $request->query('show') : 'all',
+        ]);
     }
 
     /**
@@ -95,9 +103,27 @@ class MemberListController extends Controller
             ->with(['event.club', 'paymentMethod', 'attendees.starter', 'attendees.main', 'attendees.dessert']);
     }
 
-    public function meetings(Request $request, ?string $slug = null): Response
+    /**
+     * A lodge's own meetings page. The all-lodges one is part of "Meetings and bookings" (the events page).
+     */
+    public function meetings(Request $request, ?string $slug = null): Response|RedirectResponse
     {
+        if ($slug === null) {
+            return redirect()->route('members.events', ['show' => 'meetings', ...$request->only('club')]);
+        }
+
         $scope = MemberScope::fromRequest($request, $slug);
+
+        return Inertia::render('Members/Meetings', [...$this->scopeProps($scope), 'meetings' => $this->upcomingMeetings($scope), 'recent' => $this->recentMeetings($scope)]);
+    }
+
+    /**
+     * Published meetings in the next year, each with the member's own reply for the edit pop-up.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function upcomingMeetings(MemberScope $scope): array
+    {
         $now = CarbonImmutable::now();
 
         $items = app(MemberCalendar::class)
@@ -112,7 +138,7 @@ class MemberListController extends Controller
             ->get()
             ->keyBy('meeting_id');
 
-        $items = $items->map(function (array $item) use ($rsvps) {
+        return $items->map(function (array $item) use ($rsvps) {
             $rsvp = $rsvps->get($item['id']);
 
             return [...$item, 'rsvp' => $rsvp ? [
@@ -122,23 +148,31 @@ class MemberListController extends Controller
                 'payment_status' => $rsvp->payment_status ?? 'unpaid',
                 'guests' => $rsvp->guests,
             ] : null];
-        });
+        })->values()->all();
+    }
 
-        $recent = Meeting::whereIn('club_id', $scope->clubIds())
+    /**
+     * The last ten meetings and the member's reply to each.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function recentMeetings(MemberScope $scope): array
+    {
+        $meetings = Meeting::whereIn('club_id', $scope->clubIds())
             ->where('status', 'published')
             ->whereDate('meeting_date', '<', today())
             ->orderByDesc('meeting_date')
             ->limit(10)
-            ->get()
-            ->map(fn (Meeting $meeting) => [
-                'id' => $meeting->id,
-                'club' => $this->clubPayload($scope->clubFor($meeting->club_id)),
-                'title' => $meeting->title,
-                'date' => $meeting->meeting_date->toDateString(),
-                'reply' => MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $scope->user->id)->value('attendance_status'),
-            ]);
+            ->get();
+        $replies = MeetingRsvp::whereIn('meeting_id', $meetings->pluck('id'))->where('user_id', $scope->user->id)->pluck('attendance_status', 'meeting_id');
 
-        return Inertia::render('Members/Meetings', [...$this->scopeProps($scope), 'meetings' => $items, 'recent' => $recent]);
+        return $meetings->map(fn (Meeting $meeting) => [
+            'id' => $meeting->id,
+            'club' => $this->clubPayload($scope->clubFor($meeting->club_id)),
+            'title' => $meeting->title,
+            'date' => $meeting->meeting_date->toDateString(),
+            'reply' => $replies->get($meeting->id),
+        ])->values()->all();
     }
 
     public function news(Request $request, ?string $slug = null): Response

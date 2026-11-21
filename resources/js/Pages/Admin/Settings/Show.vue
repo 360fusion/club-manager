@@ -280,7 +280,7 @@ const updateMemberRole = (userId, newRole) => {
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="isSavedSuccess" role="status" class="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-700/80 flex items-center gap-3.5">
+      <div v-if="isSavedSuccess" role="status" class="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white px-4 sm:px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-700/80 flex items-center gap-3.5">
         <span class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
           <UiIcon name="check" :size="14" />
         </span>

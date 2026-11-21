@@ -68,7 +68,7 @@
     </div>
 
     <!-- Upload Zone -->
-    <div class="p-6 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-2xl text-center space-y-2 transition-colors">
+    <div class="p-4 sm:p-6 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-2xl text-center space-y-2 transition-colors">
         <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Upload a UK bank statement (CSV or OFX file)</h3>
         <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">Supports Barclays, HSBC, Lloyds, NatWest, Santander, Revolut, Starling and standard OFX exports.</p>
         <div class="pt-2">

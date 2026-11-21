@@ -18,7 +18,7 @@ defineProps({
 });
 
 const urlScoped = computed(() => Boolean(route().params.slug));
-const chipsRoute = 'members.meetings';
+const chipsRoute = 'members.events';
 const when = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const day = (date) => new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const selectedMeeting = ref(null);

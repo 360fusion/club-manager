@@ -148,7 +148,7 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="p-6 text-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 text-xs space-y-1">
+                            <div class="p-4 sm:p-6 text-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 text-xs space-y-1">
                                 <p class="font-medium">No automatic match found for this statement line.</p>
                                 <p>Use manual allocation below to allocate it to a member, vendor bill or ledger code.</p>
                             </div>

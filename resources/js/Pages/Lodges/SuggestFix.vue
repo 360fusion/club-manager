@@ -60,7 +60,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                 Change whatever is wrong and leave the rest as it is. Our team checks every suggestion before the listing changes, and we will let you know what happens.
             </p>
 
-            <form class="space-y-5 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submit">
+            <form class="space-y-5 rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submit">
                 <p v-if="form.errors.lodge || form.errors.changes" role="alert" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{{ form.errors.lodge || form.errors.changes }}</p>
 
                 <div>

@@ -244,7 +244,7 @@ const user = page.props.auth?.user;
     </aside>
 
     <!-- Main Content Area -->
-    <main id="main-content" tabindex="-1" class="flex-1 min-w-0 p-6 md:p-10 space-y-8 overflow-y-auto focus:outline-none">
+    <main id="main-content" tabindex="-1" class="flex-1 min-w-0 px-3 py-5 sm:p-6 md:p-10 space-y-6 sm:space-y-8 overflow-y-auto focus:outline-none">
       <FlashMessages />
       <slot />
     </main>

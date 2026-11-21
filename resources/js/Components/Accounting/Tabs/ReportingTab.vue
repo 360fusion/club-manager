@@ -24,7 +24,7 @@ import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { formatMoney } from '@/Utils/currency';
 
 // Shared looks for the report gallery: a card per report, the preset range buttons, and download links styled as kit buttons.
-const reportCardClass = 'group w-full space-y-3 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/30';
+const reportCardClass = 'group w-full space-y-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 text-left shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/30';
 const rangeButtonClass = (isActive) => [
     'inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors',
     isActive
@@ -482,7 +482,7 @@ defineProps({
 
         <!-- Report: Independent Examiner's Report -->
         <div v-if="selectedReport === 'independent_examiner' && charityCommission.registered" class="space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
             <div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Independent examiner's report — {{ independentExaminer.financial_year }}</h3>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Charity number {{ charityCommission.charity_number }}</p>
@@ -507,7 +507,7 @@ defineProps({
             <button v-if="canManageBilling && !independentExaminer.report.examined_at" type="button" @click="resendExaminerSignature" class="text-xs font-medium text-blue-700 dark:text-blue-300 hover:underline">Resend signature request</button>
           </Card>
 
-          <form v-if="canManageBilling && !independentExaminer.report?.examined_at" @submit.prevent="submitExaminerRequest" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <form v-if="canManageBilling && !independentExaminer.report?.examined_at" @submit.prevent="submitExaminerRequest" class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <h4 class="text-base font-semibold text-slate-900 dark:text-white">{{ independentExaminer.report ? 'Change examiner' : 'Ask an examiner to sign' }}</h4>
             <p v-if="!independentExaminer.examiners.length" class="text-sm text-slate-500 dark:text-slate-400">Invite your examiner to the lodge first and give them the "Examiner / Auditor" role, then choose them here.</p>
             <template v-else>

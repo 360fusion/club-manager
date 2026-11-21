@@ -33,7 +33,7 @@ defineProps({
 
 <template>
     <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div>
           <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Annual Treasurer's report — {{ annualTreasurerReport.financial_year }}</h3>
           <p v-if="annualTreasurerReport.period_start" class="text-sm text-slate-600 dark:text-slate-300 mt-1">{{ annualTreasurerReport.period_start }} to {{ annualTreasurerReport.period_end }}</p>
@@ -98,7 +98,7 @@ defineProps({
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <form @submit.prevent="submitCloseYear" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <form @submit.prevent="submitCloseYear" class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
           <h4 class="text-base font-semibold text-slate-900 dark:text-white">Close financial year</h4>
           <p class="text-xs text-slate-500 dark:text-slate-400">Blocks new entries dated in {{ annualTreasurerReport.financial_year }}. A super admin can reopen it later if needed.</p>
           <Input v-model="closeYearForm.notes" label="Notes" placeholder="Notes (optional)" />
@@ -107,7 +107,7 @@ defineProps({
           </Button>
         </form>
 
-        <form @submit.prevent="submitSignOff" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <form @submit.prevent="submitSignOff" class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
           <h4 class="text-base font-semibold text-slate-900 dark:text-white">Auditors' sign-off</h4>
           <template v-if="!annualTreasurerReport.audit_sign_off">
             <p class="text-xs text-slate-500 dark:text-slate-400">Two elected members, neither the Treasurer nor Secretary (Rule 153). Each is emailed a private link to sign themselves. To replace someone, cancel their request first — picking someone else here does nothing on its own.</p>

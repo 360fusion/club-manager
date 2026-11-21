@@ -90,7 +90,7 @@ onBeforeUnmount(() => { observer?.disconnect(); cancelAnimationFrame(frame); });
             </div>
         </div>
     </section>
-    <section v-else-if="!interactive" :class="['mx-auto max-w-5xl border-2 border-dashed p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
+    <section v-else-if="!interactive" :class="['mx-auto max-w-5xl border-2 border-dashed p-4 sm:p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
         Add figures to show them here
     </section>
 </template>

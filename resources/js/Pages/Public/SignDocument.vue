@@ -49,7 +49,7 @@ const submitDecline = () => {
     <Head title="Sign document" />
 
     <div class="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-lg w-full mx-auto bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-slate-800 space-y-5">
+        <div class="max-w-lg w-full mx-auto bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-8 shadow-xl border border-slate-200 dark:border-slate-800 space-y-5">
             <template v-if="!found">
                 <div class="text-center space-y-3">
                     <div class="w-12 h-12 bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto"><UiIcon name="warning" :size="20" /></div>

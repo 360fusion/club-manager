@@ -90,13 +90,13 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
   <Head :title="`${event.title} - ${club.name}`" />
 
   <SiteShell :club="club" :site="site" :navigation="navigation" :footer-navigation="footerNavigation" v-slot="{ theme }">
-    <div class="mx-auto max-w-5xl px-6 py-10 space-y-6">
+    <div class="mx-auto max-w-5xl px-4 sm:px-6 py-10 space-y-6">
       <Link :href="`/site/${club.slug}`" :class="['text-xs font-semibold hover:underline', theme.accentText]">&larr; {{ club.name }}</Link>
 
       <Alert v-if="flash" variant="success">{{ flash }}</Alert>
 
       <!-- Event details -->
-      <div :class="['border p-6 space-y-4', theme.radiusLg || 'rounded-2xl', theme.cardBg]">
+      <div :class="['border p-4 sm:p-6 space-y-4', theme.radiusLg || 'rounded-2xl', theme.cardBg]">
         <div>
           <p :class="['text-xs font-bold uppercase tracking-wider', theme.accentText]">{{ club.name }}</p>
           <h1 :class="['text-2xl sm:text-3xl font-black mt-1', theme.headingText]">{{ event.title }}</h1>
@@ -138,7 +138,7 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
       </div>
 
       <!-- Booking -->
-      <form v-if="bookingOpen" :class="['border p-6 space-y-5', theme.radiusLg || 'rounded-2xl', theme.cardBg]" @submit.prevent="submit">
+      <form v-if="bookingOpen" :class="['border p-4 sm:p-6 space-y-5', theme.radiusLg || 'rounded-2xl', theme.cardBg]" @submit.prevent="submit">
         <h2 :class="['text-lg font-bold', theme.headingText]">Book your place</h2>
         <p v-if="full" class="rounded-xl bg-[var(--cm-accent)]/10 p-3 text-xs">This event is full, but you can join the waiting list. We'll email you if a place opens up.</p>
 
@@ -239,7 +239,7 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
         <p class="text-[11px] opacity-60">We'll email you a private link to view or cancel your booking. Your details are shared only with {{ club.name }}.</p>
       </form>
 
-      <div v-else :class="['border p-6 text-sm space-y-2', theme.radiusLg || 'rounded-2xl', theme.cardBg, theme.bodyText]">
+      <div v-else :class="['border p-4 sm:p-6 text-sm space-y-2', theme.radiusLg || 'rounded-2xl', theme.cardBg, theme.bodyText]">
         <template v-if="event.status === 'cancelled'">This event has been cancelled.</template>
         <template v-else-if="event.is_booking_closed">Booking for this event has closed.</template>
         <template v-else-if="canBookAsGuest && full">This event is fully booked.</template>

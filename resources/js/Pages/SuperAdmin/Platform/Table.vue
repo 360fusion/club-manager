@@ -46,7 +46,7 @@ const find = () => router.get(window.location.pathname, query.value ? { q: query
                 <template v-else>{{ row[col.key] }}</template>
               </td>
             </tr>
-            <tr v-if="!rows.length"><td :colspan="columns.length" class="p-8 text-center text-slate-500 dark:text-slate-400">Nothing to show yet.</td></tr>
+            <tr v-if="!rows.length"><td :colspan="columns.length" class="p-4 sm:p-8 text-center text-slate-500 dark:text-slate-400">Nothing to show yet.</td></tr>
           </tbody>
         </table>
       </Card>

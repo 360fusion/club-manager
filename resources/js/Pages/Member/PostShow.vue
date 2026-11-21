@@ -164,7 +164,7 @@ const getFileIcon = (mimeOrName) => {
               <a
                 :href="block.url"
                 target="_blank"
-                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
+                class="px-4 sm:px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
               >
                 {{ block.label }}
               </a>
@@ -214,14 +214,14 @@ const getFileIcon = (mimeOrName) => {
 
       <!-- Right-hand menu: tags, latest and related news -->
       <aside class="space-y-4 lg:sticky lg:top-6" aria-label="More news">
-        <section v-if="tagOptions.length" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+        <section v-if="tagOptions.length" class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
           <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Browse by tag</h2>
           <div class="flex flex-wrap gap-1.5">
             <NewsTagPill v-for="tag in tagOptions" :key="tag.slug" :tag="tag" :club-slug="club.slug" :count="tag.count" :active="post.tags?.some((t) => t.slug === tag.slug)" />
           </div>
         </section>
 
-        <section v-if="related.length" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+        <section v-if="related.length" class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
           <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Related news</h2>
           <ul class="space-y-3">
             <li v-for="item in related" :key="item.id">
@@ -231,7 +231,7 @@ const getFileIcon = (mimeOrName) => {
           </ul>
         </section>
 
-        <section v-if="latest.length" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+        <section v-if="latest.length" class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
           <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Latest news</h2>
           <ul class="space-y-3">
             <li v-for="item in latest" :key="item.id">

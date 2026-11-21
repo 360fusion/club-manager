@@ -54,7 +54,7 @@
                 <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 Member area
             </a>
-            <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen.toString()" @click="sidebarOpen = !sidebarOpen" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white cursor-pointer">
+            <button type="button" aria-label="Menu" :aria-expanded="sidebarOpen.toString()" @click="if (sidebarOpen && $refs.sidebar.getBoundingClientRect().bottom > 80) { sidebarOpen = false } else { sidebarOpen = true; window.scrollTo({ top: 0, behavior: 'smooth' }) }" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white cursor-pointer">
                 <svg aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -62,7 +62,9 @@
         </div>
 
         <!-- Left Sidebar Navigation -->
+        {{-- Pressed further down the page, the menu button goes back up to the menu rather than closing it out of sight. --}}
         <aside
+            x-ref="sidebar"
             :class="{ '!flex': sidebarOpen }"
             class="cm-nav hidden md:flex w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex-col justify-between transition-all duration-200 z-30"
         >
@@ -277,8 +279,8 @@
                         <svg class="dark:hidden w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                        <span class="dark:hidden">Light mode</span>
-                        <span class="hidden dark:inline">Dark mode</span>
+                        {{-- One fixed label, as in ThemeToggle.vue, so the switch being on always means dark. --}}
+                        <span>Dark mode</span>
                     </span>
 
                     <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-slate-600 group-hover:bg-slate-500 dark:bg-blue-600 dark:group-hover:bg-blue-600 transition-colors duration-200">
@@ -292,7 +294,7 @@
         <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto flex flex-col min-w-0 focus:outline-none">
             <!-- Top Title Bar -->
             {{-- On a phone one compact row (title, bell, account), so the page itself starts near the top of the screen. --}}
-            <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm">
+            <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 py-2.5 sm:px-6 md:px-10 sm:py-4 flex flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm">
                 <div class="min-w-0">
                     <h1 class="truncate text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">{{ $pageTitle }}</h1>
                     <p class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Managing {{ $clubName }}</p>
@@ -435,7 +437,7 @@
             </header>
 
             <!-- Main Slot Content -->
-            <div class="p-6 md:p-10 max-w-7xl 2xl:max-w-[1536px] w-full mx-auto space-y-8 flex-1">
+            <div class="px-3 py-5 sm:p-6 md:p-10 max-w-7xl 2xl:max-w-[1536px] w-full mx-auto space-y-6 sm:space-y-8 flex-1">
                 @if (session()->has('success'))
                     <x-notice variant="success">{{ session('success') }}</x-notice>
                 @endif

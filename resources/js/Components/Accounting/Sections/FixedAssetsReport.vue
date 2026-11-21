@@ -61,7 +61,7 @@ const disposeAsset = (assetId) => {
 
 <template>
     <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div>
           <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Fixed asset register</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cost, accumulated depreciation and net book value.</p>
@@ -79,7 +79,7 @@ const disposeAsset = (assetId) => {
         </div>
       </div>
 
-      <form v-if="canManageBilling && showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <form v-if="canManageBilling && showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Input v-model="fixedAssetForm.name" label="Asset name" placeholder="e.g. racing eight" required class="sm:col-span-2" />
         <Input v-model="fixedAssetForm.category" label="Category" placeholder="Category" />
         <Input v-model="fixedAssetForm.purchase_date" type="date" label="Purchase date" required />

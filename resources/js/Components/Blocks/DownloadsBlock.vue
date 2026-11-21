@@ -62,7 +62,7 @@ const buttonLabel = computed(() => props.block.button_label || 'Download');
             <p v-if="block.intro" :class="['whitespace-pre-line', theme.bodyText]">{{ block.intro }}</p>
         </div>
 
-        <div v-if="block.locked" :class="['p-6 border flex items-center gap-4', radiusMd, theme.cardBg]">
+        <div v-if="block.locked" :class="['p-4 sm:p-6 border flex items-center gap-4', radiusMd, theme.cardBg]">
             <UiIcon name="lock" :size="20" />
             <div class="space-y-1">
                 <p :class="['font-bold', theme.headingText]">These documents are for members.</p>

@@ -35,7 +35,7 @@ const VAT_SCHEMES = [
     { value: 'annual_accounting', label: 'Annual accounting scheme' },
 ];
 
-const PANEL = 'space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50';
+const PANEL = 'space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-800/50';
 const PANEL_TITLE = 'flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white';
 const LABEL = 'block text-xs font-medium text-slate-500 dark:text-slate-400';
 const CHECKBOX = 'rounded border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500 dark:border-slate-700';

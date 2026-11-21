@@ -11,7 +11,7 @@ Route::redirect('/members', '/members/dashboard', 301);
 Route::redirect('/portal/subscriptions', '/members/subscriptions', 301);
 Route::redirect('/admin/profile', '/members/profile', 301);
 Route::redirect('/admin/profile/two-factor', '/members/security', 301);
-Route::get('/directory', fn (Request $request) => redirect('/members/directory'.($request->getQueryString() ? '?'.$request->getQueryString() : ''), 301));
+Route::get('/directory', fn (Request $request) => redirect()->route('lodges.index', array_filter(['q' => (string) $request->query('search', '')]), 301));
 Route::redirect('/{slug}/events', '/members/{slug}/events', 301);
 Route::redirect('/{slug}/dues', '/members/{slug}/dues', 301);
 Route::redirect('/{slug}/profile', '/members/{slug}/profile', 301);

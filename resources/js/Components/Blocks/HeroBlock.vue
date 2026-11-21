@@ -27,7 +27,7 @@ const spacing = computed(() => {
         tall: isEditorial.value ? 'py-24 sm:py-40' : 'py-32 sm:py-48',
     };
 
-    return heights[props.block.height] || (isEditorial.value ? 'py-16 sm:py-24' : isBanded.value ? 'py-20 sm:py-28' : 'p-10 sm:p-16');
+    return heights[props.block.height] || (isEditorial.value ? 'py-16 sm:py-24' : isBanded.value ? 'py-20 sm:py-28' : 'p-5 sm:p-16');
 });
 
 const wrapperClass = computed(() => {

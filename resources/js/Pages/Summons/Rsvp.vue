@@ -80,7 +80,7 @@ const showsPayment = () => form.attendance_status === 'attending_dining' || form
 
       <FlashMessages />
 
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6">
 
         <!-- Club and meeting -->
         <div class="text-center border-b border-slate-200 dark:border-slate-800 pb-5">

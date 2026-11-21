@@ -324,7 +324,7 @@ const isPastMeeting = computed(() => {
                   </td>
                 </tr>
                 <tr v-if="!visitorsList?.length">
-                  <td colspan="7" class="p-6 text-center text-slate-500 dark:text-slate-400">No visitors have registered for this club yet.</td>
+                  <td colspan="7" class="p-4 sm:p-6 text-center text-slate-500 dark:text-slate-400">No visitors have registered for this club yet.</td>
                 </tr>
               </tbody>
             </table>
@@ -369,7 +369,7 @@ const isPastMeeting = computed(() => {
                   </td>
                 </tr>
                 <tr v-if="!filteredRsvps?.length">
-                  <td colspan="6" class="p-6 text-center text-slate-500 dark:text-slate-400">No member responses in this filter.</td>
+                  <td colspan="6" class="p-4 sm:p-6 text-center text-slate-500 dark:text-slate-400">No member responses in this filter.</td>
                 </tr>
               </tbody>
             </table>

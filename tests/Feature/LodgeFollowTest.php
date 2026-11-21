@@ -327,4 +327,20 @@ class LodgeFollowTest extends TestCase
         $this->actingAs($this->user)->get(route('members.lodges', ['q' => 'Industry']))->assertInertia(fn ($page) => $page->has('results', 1)->where('results.0.name', fn ($name) => str_contains($name, 'Chapter Friends')));
         $this->actingAs($this->user)->get(route('members.lodges', ['q' => 'x']))->assertInertia(fn ($page) => $page->has('results', 0));
     }
+
+    public function test_the_directory_suggests_hall_lodges_to_follow_and_marks_your_own_lodge(): void
+    {
+        $club = Club::factory()->create();
+        $this->user->clubs()->attach($club->id, ['role' => 'member', 'status' => 'active']);
+        $this->lodge->forceFill(['club_id' => $club->id])->save();
+        Lodge::factory()->create(['name' => 'Hall Neighbour Lodge', 'masonic_hall_id' => $this->lodge->masonic_hall_id]);
+
+        $this->actingAs($this->user)->get(route('lodges.index'))->assertInertia(fn ($page) => $page
+            ->has('suggested', 1)
+            ->where('suggested.0.reason', 'Meets at your hall')
+            ->where('lodges.data', fn ($lodges) => collect($lodges)->pluck('own_club_slug', 'slug')->get('lodge-of-industry-48') === $club->slug));
+
+        auth()->logout();
+        $this->get(route('lodges.index'))->assertInertia(fn ($page) => $page->where('suggested', []));
+    }
 }

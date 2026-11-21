@@ -31,7 +31,7 @@ const label = computed(() => props.block.location_name || props.block.address ||
     <section v-if="located || !interactive" class="max-w-5xl mx-auto space-y-6">
         <h2 v-if="block.heading" :class="['text-2xl sm:text-3xl font-bold', theme.headingText]">{{ block.heading }}</h2>
 
-        <div v-if="!located" :class="['flex items-center justify-center border-2 border-dashed text-sm font-semibold opacity-70 text-center p-6', heightClass, radiusMd, theme.bodyText]">
+        <div v-if="!located" :class="['flex items-center justify-center border-2 border-dashed text-sm font-semibold opacity-70 text-center p-4 sm:p-6', heightClass, radiusMd, theme.bodyText]">
             Find the address or enter a latitude and longitude to show the map
         </div>
 
@@ -49,10 +49,10 @@ const label = computed(() => props.block.location_name || props.block.address ||
                         :label="`Map of ${label}`"
                         :radius="radiusMd"
                     />
-                    <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                    <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 sm:p-6 text-center">
                         <UiIcon name="globe" :size="20" :class="theme.bodyText" />
                         <p :class="['text-sm max-w-xs', theme.bodyText]">The map is loaded from {{ block.map_style && block.map_style !== 'street' ? 'Esri' : 'OpenStreetMap' }} when you choose to show it.</p>
-                        <button type="button" :class="['py-2.5 px-5 font-bold text-sm shadow-lg hover:scale-105 transition-transform cursor-pointer', radiusMd, theme.heroCta]" @click="loaded = true">Show the map</button>
+                        <button type="button" :class="['py-2.5 px-4 sm:px-5 font-bold text-sm shadow-lg hover:scale-105 transition-transform cursor-pointer', radiusMd, theme.heroCta]" @click="loaded = true">Show the map</button>
                     </div>
                 </div>
             </div>
@@ -68,7 +68,7 @@ const label = computed(() => props.block.location_name || props.block.address ||
                         :href="interactive ? osmDirectionsUrl(block) : undefined"
                         target="_blank"
                         rel="noopener"
-                        :class="['inline-block py-2.5 px-5 font-bold text-sm shadow-lg transition-all hover:scale-105', radiusMd, theme.heroCta]"
+                        :class="['inline-block py-2.5 px-4 sm:px-5 font-bold text-sm shadow-lg transition-all hover:scale-105', radiusMd, theme.heroCta]"
                     >Get directions</component>
                     <component
                         :is="interactive ? 'a' : 'span'"
@@ -76,7 +76,7 @@ const label = computed(() => props.block.location_name || props.block.address ||
                         :href="interactive ? osmLargerUrl(block) : undefined"
                         target="_blank"
                         rel="noopener"
-                        :class="['inline-block py-2.5 px-5 font-bold text-sm border transition-all hover:scale-105', radiusMd, theme.cardBg]"
+                        :class="['inline-block py-2.5 px-4 sm:px-5 font-bold text-sm border transition-all hover:scale-105', radiusMd, theme.cardBg]"
                     >Open larger map</component>
                 </div>
             </div>

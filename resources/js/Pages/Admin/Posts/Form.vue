@@ -775,7 +775,7 @@ const submitWithAction = (actionType) => {
           <button
             v-else
             type="button"
-            class="block w-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center transition-colors hover:border-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
+            class="block w-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 sm:p-6 text-center transition-colors hover:border-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
             @click="triggerFileInput"
           >
             <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">Choose files to upload</span>
@@ -923,7 +923,7 @@ const submitWithAction = (actionType) => {
                 :href="block.url"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+                class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
               >
                 {{ block.label }}
               </a>

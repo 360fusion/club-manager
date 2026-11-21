@@ -103,7 +103,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     </div>
                 </div>
 
-                <section class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">When it meets</h2>
 
                     <ul v-if="lodge.schedules.length" class="mt-3 space-y-1 text-sm">
@@ -204,7 +204,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     </div>
                 </section>
 
-                <section v-if="signedIn && !ownLodge" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="visited-heading">
+                <section v-if="signedIn && !ownLodge" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="visited-heading">
                     <h2 id="visited-heading" class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Your visits</h2>
                     <p v-if="lodge.visited_on.length" class="mt-2 text-sm text-slate-700 dark:text-slate-300">You visited on {{ lodge.visited_on.join(', ') }}.</p>
                     <form class="mt-3 flex flex-wrap items-end gap-2" @submit.prevent="recordVisit">
@@ -217,7 +217,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     <p v-for="(error, field) in visited.errors" :key="field" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ error }}</p>
                 </section>
 
-                <section v-if="lodge.is_managed && (lodge.news.length || lodge.bulletins.length)" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <section v-if="lodge.is_managed && (lodge.news.length || lodge.bulletins.length)" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">News from the lodge</h2>
                         <a v-if="lodge.feed_url" :href="lodge.feed_url" class="text-xs text-blue-600 hover:underline dark:text-blue-400">RSS feed</a>
@@ -242,7 +242,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     </div>
                 </section>
 
-                <section v-if="sharing.length" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <section v-if="sharing.length" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Also meeting at {{ hall.name }}</h2>
                     <ul class="mt-3 grid gap-2 sm:grid-cols-2">
                         <li v-for="other in sharing" :key="other.slug" class="text-sm">
@@ -254,7 +254,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
             </div>
 
             <aside class="space-y-4">
-                <section v-if="hall" class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <section v-if="hall" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Where</h2>
                     <Link :href="route('lodges.hall', hall.slug)" class="mt-3 block text-base font-semibold hover:underline">{{ hall.name }}</Link>
                     <p class="text-xs text-slate-500 dark:text-slate-400">{{ hall.kind }}</p>
@@ -262,7 +262,7 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     <a v-if="hall.map_url" :href="hall.map_url" target="_blank" rel="noopener noreferrer" class="mt-3 inline-block text-sm text-blue-600 hover:underline dark:text-blue-400">Open in maps ↗</a>
                 </section>
 
-                <section v-if="lodge.can_claim" class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                <section v-if="lodge.can_claim" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Is this your lodge?</h2>
                     <p v-if="lodge.claim && ['pending', 'more_info'].includes(lodge.claim.status)" class="mt-2">
                         Your claim is <strong>{{ lodge.claim.status === 'more_info' ? 'waiting for your reply' : 'being checked' }}</strong>.
@@ -275,19 +275,19 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                     </template>
                 </section>
 
-                <section class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                     <a v-if="lodge.website_url" :href="lodge.website_url" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline dark:text-blue-400">Lodge website ↗</a>
                 </section>
 
                 <ReferenceLinks :groups="lodge.references" :checked-on="lodge.last_verified_at" />
 
-                <section v-if="lodge.can_confirm" class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                <section v-if="lodge.can_confirm" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Your lodge's listing</h2>
                     <p class="mt-2 text-slate-600 dark:text-slate-400">If the meeting dates and hall above are right, say so and the listing shows it was checked today. If not, suggest a fix below.</p>
                     <button type="button" class="mt-3 rounded-xl border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" @click="confirmListing">This listing is right</button>
                 </section>
 
-                <section class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Something wrong?</h2>
                     <p v-if="lodge.correction_waiting" class="mt-2">
                         Your suggestion is <strong>being checked</strong>.

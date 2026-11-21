@@ -535,7 +535,7 @@ const sectionTitle = 'text-sm font-semibold text-slate-900 dark:text-white';
           <button
             v-else
             type="button"
-            class="block w-full rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center transition-colors hover:border-blue-300 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
+            class="block w-full rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 sm:p-6 text-center transition-colors hover:border-blue-300 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
             @click="triggerFileInput"
           >
             <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">Click to upload attachments</span>

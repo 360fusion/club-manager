@@ -429,7 +429,7 @@ const confirmExact = () => router.post(route('admin.accounting.reconcile_exact',
         </div>
 
         <!-- Empty state -->
-        <div v-if="filteredUnmatchedTx.length === 0" class="p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-center text-slate-500 dark:text-slate-400 text-sm">
+        <div v-if="filteredUnmatchedTx.length === 0" class="p-6 sm:p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-center text-slate-500 dark:text-slate-400 text-sm">
           <UiIcon name="check" :size="20" class="mx-auto mb-2 block text-emerald-700 dark:text-emerald-400" />
           All bank statement lines are reconciled. Nothing is waiting to be matched.
         </div>

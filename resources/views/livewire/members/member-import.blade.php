@@ -62,7 +62,7 @@
                     x-on:dragleave.prevent="over = false"
                     x-on:drop.prevent="over = false; $refs.picker.files = $event.dataTransfer.files; $refs.picker.dispatchEvent(new Event('change', { bubbles: true }))"
                     :class="over ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/30' : 'border-slate-300 dark:border-slate-700'"
-                    class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors"
+                    class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 sm:px-6 py-12 text-center transition-colors"
                 >
                     <svg class="h-8 w-8 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.63a3.38 3.38 0 0 0-3.38-3.37h-1.5A1.13 1.13 0 0 1 13.5 7.13v-1.5A3.38 3.38 0 0 0 10.13 2.25H8.25m2.25 0H5.63c-.62 0-1.13.5-1.13 1.13v17.25c0 .62.5 1.12 1.13 1.12h12.75c.62 0 1.12-.5 1.12-1.12V11.25a9 9 0 0 0-9-9Z" /></svg>
                     <span class="text-sm font-semibold text-slate-900 dark:text-white">Drop a CSV file here, or click to choose one</span>
@@ -209,7 +209,7 @@
         </div>
 
         <x-card padding="none" class="overflow-hidden">
-            <div class="flex flex-col gap-3 border-b border-slate-100 p-5 text-sm lg:flex-row lg:items-center lg:justify-between dark:border-slate-800">
+            <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:p-5 text-sm lg:flex-row lg:items-center lg:justify-between dark:border-slate-800">
                 <p class="max-w-2xl text-slate-600 dark:text-slate-300">
                     Rows that match someone already on the roster are skipped unless you choose otherwise. A <strong>possible</strong> duplicate only shares a name, so check it before updating anyone.
                 </p>
@@ -405,14 +405,14 @@
     {{-- ============ History ============ --}}
     @if(in_array($step, ['upload', 'done'], true) && $history->isNotEmpty())
         <x-card padding="none" class="overflow-hidden">
-            <div class="border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+            <div class="border-b border-slate-100 px-4 sm:px-6 py-4 dark:border-slate-800">
                 <h3 class="text-base font-semibold text-slate-900 dark:text-white">Recent imports</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
                         <tr class="bg-slate-50 text-xs font-medium text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
-                            <th class="px-6 py-3">When</th>
+                            <th class="px-4 sm:px-6 py-3">When</th>
                             <th class="px-4 py-3">File</th>
                             <th class="px-4 py-3">By</th>
                             <th class="px-4 py-3">Result</th>
@@ -423,7 +423,7 @@
                         @foreach($history as $past)
                             @php $r = $past->result ?? []; @endphp
                             <tr wire:key="history-{{ $past->id }}">
-                                <td class="whitespace-nowrap px-6 py-3 text-slate-500 dark:text-slate-400">{{ $past->imported_at?->format('j M Y, H:i') }}</td>
+                                <td class="whitespace-nowrap px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400">{{ $past->imported_at?->format('j M Y, H:i') }}</td>
                                 <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ $past->filename }}</td>
                                 <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ $past->user?->name ?? '—' }}</td>
                                 <td class="px-4 py-3 text-slate-600 dark:text-slate-300">

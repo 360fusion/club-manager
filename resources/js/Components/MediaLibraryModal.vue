@@ -323,7 +323,7 @@ const isImage = (mimeOrUrl) => {
     >
 
       <!-- Modal Header -->
-      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
+      <div class="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
         <div class="min-w-0">
           <h2 id="media-library-modal-title" class="text-base font-semibold text-slate-900 dark:text-white">File manager</h2>
           <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Choose a file, or upload a new one.</p>
@@ -386,7 +386,7 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Main Media Grid Area -->
-        <div class="flex-1 flex flex-col p-6 space-y-4 overflow-hidden bg-white dark:bg-slate-900">
+        <div class="flex-1 flex flex-col p-4 sm:p-6 space-y-4 overflow-hidden bg-white dark:bg-slate-900">
 
           <!-- Breadcrumb: viewing a custom folder, inside one of the fixed folders -->
           <nav v-if="activeCustomFolder" aria-label="Breadcrumb" class="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">

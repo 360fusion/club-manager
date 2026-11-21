@@ -60,7 +60,7 @@ defineProps({
       </Card>
 
       <Card padding="none" class="overflow-hidden">
-        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-6 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-4 sm:p-6 dark:border-slate-800">
           <div>
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">Club directory</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">All clubs registered on the platform with member counts and order types.</p>

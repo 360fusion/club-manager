@@ -68,7 +68,7 @@ const show = (value) => JSON.stringify(value, null, 2);
                 </td>
               </tr>
             </template>
-            <tr v-if="!actions.data.length"><td colspan="6" class="p-8 text-center text-slate-500 dark:text-slate-400">Nothing has been recorded yet.</td></tr>
+            <tr v-if="!actions.data.length"><td colspan="6" class="p-4 sm:p-8 text-center text-slate-500 dark:text-slate-400">Nothing has been recorded yet.</td></tr>
           </tbody>
         </table>
       </Card>

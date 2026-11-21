@@ -109,7 +109,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
     <div class="min-h-screen bg-slate-100 text-slate-800 font-sans dark:bg-slate-950 dark:text-slate-200">
         <!-- Header -->
         <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200 dark:bg-slate-950/80 dark:border-slate-800">
-            <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
                     <Button variant="ghost" size="sm" href="/">
                         <UiIcon name="arrow-left" /> Back to hub
@@ -154,7 +154,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
         </header>
 
         <!-- Main Workspace -->
-        <main class="max-w-7xl mx-auto px-6 py-8">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
             <!-- Navigation Tabs -->
             <div class="mb-8 max-w-full overflow-x-auto">
                 <div class="flex w-fit items-center gap-1 rounded-2xl border border-slate-300/60 bg-slate-200/80 p-1.5 dark:border-slate-700/60 dark:bg-slate-800/80">
@@ -259,7 +259,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
                 </Card>
 
                 <!-- Pending Member Invites Banner -->
-                <div v-if="club.members.filter(m => m.status === 'pending').length > 0" class="p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-4 dark:bg-amber-950/30 dark:border-amber-800/40">
+                <div v-if="club.members.filter(m => m.status === 'pending').length > 0" class="p-4 sm:p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-4 dark:bg-amber-950/30 dark:border-amber-800/40">
                     <div class="flex items-center gap-2 text-amber-700 font-semibold text-xs uppercase tracking-wider dark:text-amber-300">
                         <UiIcon name="clock" /> Waiting for approval ({{ club.members.filter(m => m.status === 'pending').length }})
                     </div>

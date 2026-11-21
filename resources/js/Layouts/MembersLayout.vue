@@ -51,7 +51,7 @@ const ICONS = {
     profile: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
 };
 
-const allRoutes = { dashboard: 'members.dashboard', calendar: 'members.calendar', events: 'members.events', meetings: 'members.meetings', news: 'members.news', dues: 'members.dues', lodges: 'members.lodges' };
+const allRoutes = { dashboard: 'members.dashboard', calendar: 'members.calendar', events: 'members.events', meetings: 'members.events', news: 'members.news', dues: 'members.dues', lodges: 'members.lodges' };
 const clubRoutes = { dashboard: 'member.dashboard', calendar: 'member.calendar', events: 'member.events', meetings: 'member.meetings', news: 'member.news', dues: 'member.dues' };
 
 const nav = computed(() => (slug.value
@@ -67,8 +67,8 @@ const nav = computed(() => (slug.value
     : [
         { key: 'dashboard', label: 'Dashboard' },
         { key: 'calendar', label: 'Calendar' },
-        { key: 'events', label: 'Events' },
-        { key: 'meetings', label: 'Meetings' },
+        // Meetings and events share one page across all lodges.
+        { key: 'events', label: 'Meetings and bookings' },
         { key: 'news', label: 'News' },
         { key: 'dues', label: 'Dues' },
         { key: 'lodges', label: 'My lodges' },
@@ -76,7 +76,7 @@ const nav = computed(() => (slug.value
         { key: 'subscriptions', label: 'Subscriptions' },
     ].map((item) => ({
         ...item,
-        href: item.key === 'directory' ? route('directory.index') : item.key === 'subscriptions' ? route('portal.subscriptions') : route(allRoutes[item.key]),
+        href: item.key === 'directory' ? route('lodges.index') : item.key === 'subscriptions' ? route('portal.subscriptions') : route(allRoutes[item.key]),
     }))));
 
 // This layout renders the page's <h1>, so PageHeader titles become <h2>.

@@ -40,7 +40,7 @@ const filterClubs = () => {
 
         <!-- Header / navbar -->
         <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80">
-            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
                         <UiIcon name="lightning" :size="20" />
@@ -80,10 +80,10 @@ const filterClubs = () => {
         </header>
 
         <!-- Main content -->
-        <main class="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-12">
+        <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-12">
 
             <!-- Logged-in user's workspaces -->
-            <div v-if="currentUser && userClubs.length > 0" class="bg-slate-900/90 border border-blue-500/30 rounded-2xl p-8 shadow-2xl backdrop-blur-xl space-y-6">
+            <div v-if="currentUser && userClubs.length > 0" class="bg-slate-900/90 border border-blue-500/30 rounded-2xl p-4 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-semibold text-white tracking-tight">My active workspaces</h2>
@@ -95,7 +95,7 @@ const filterClubs = () => {
                     <div
                         v-for="userClub in userClubs"
                         :key="userClub.id"
-                        class="bg-slate-950/80 rounded-2xl p-6 border border-slate-800 hover:border-blue-500/50 transition-all flex flex-col justify-between space-y-6 group"
+                        class="bg-slate-950/80 rounded-2xl p-4 sm:p-6 border border-slate-800 hover:border-blue-500/50 transition-all flex flex-col justify-between space-y-6 group"
                     >
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
@@ -178,7 +178,7 @@ const filterClubs = () => {
                 <div
                     v-for="club in filterClubs()"
                     :key="club.id"
-                    class="group relative rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col justify-between"
+                    class="group relative rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 p-4 sm:p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col justify-between"
                 >
                     <div>
                         <div class="flex items-start justify-between gap-4 mb-4">

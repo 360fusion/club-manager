@@ -66,24 +66,24 @@ defineProps({
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <th class="py-3.5 px-6">Invoice #</th>
+                  <th class="py-3.5 px-4 sm:px-6">Invoice #</th>
                   <th class="py-3.5 px-4">Title or description</th>
                   <th class="py-3.5 px-4">Amount</th>
                   <th class="py-3.5 px-4">Status</th>
                   <th class="py-3.5 px-4">Date paid</th>
-                  <th class="py-3.5 px-6 text-right">Receipt</th>
+                  <th class="py-3.5 px-4 sm:px-6 text-right">Receipt</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200">
                 <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td class="py-4 px-6 font-mono font-semibold text-slate-900 dark:text-white">{{ inv.invoice_number }}</td>
+                  <td class="py-4 px-4 sm:px-6 font-mono font-semibold text-slate-900 dark:text-white">{{ inv.invoice_number }}</td>
                   <td class="py-4 px-4 font-semibold text-slate-800 dark:text-slate-100">{{ inv.title }}</td>
                   <td class="py-4 px-4 font-semibold text-slate-900 dark:text-white">{{ $cs }}{{ inv.amount }}</td>
                   <td class="py-4 px-4">
                     <Badge :variant="inv.status === 'paid' ? 'success' : 'warning'" class="capitalize">{{ inv.status }}</Badge>
                   </td>
                   <td class="py-4 px-4 text-slate-500 dark:text-slate-400">{{ inv.paid_at || inv.created_at }}</td>
-                  <td class="py-4 px-6 text-right">
+                  <td class="py-4 px-4 sm:px-6 text-right">
                     <a
                       :href="route('invoices.download', { slug: club.slug, id: inv.id })"
                       target="_blank"

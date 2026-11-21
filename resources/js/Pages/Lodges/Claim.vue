@@ -32,7 +32,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                 before it is approved, and we may ask you for more. Only ask to manage a lodge you belong to.
             </p>
 
-            <form class="space-y-4 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submit">
+            <form class="space-y-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submit">
                 <p v-if="form.errors.lodge" role="alert" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{{ form.errors.lodge }}</p>
 
                 <div>

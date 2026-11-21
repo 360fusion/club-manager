@@ -128,7 +128,7 @@ const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? 
           </div>
 
           <div v-if="newsletters.data.length" class="space-y-4">
-            <div v-for="item in newsletters.data" :key="item.id" class="flex flex-col justify-between gap-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50 md:flex-row md:items-center">
+            <div v-for="item in newsletters.data" :key="item.id" class="flex flex-col justify-between gap-6 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-800/50 md:flex-row md:items-center">
               <div class="min-w-0 space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
                   <Badge v-if="item.status === 'sent'" variant="success">Sent {{ item.sent_at_iso ? formatLocal(item.sent_at_iso) : item.sent_at }}</Badge>
@@ -184,7 +184,7 @@ const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? 
             <Pagination :links="newsletters.links" />
           </div>
 
-          <p v-else class="p-12 text-center text-sm text-slate-500 dark:text-slate-400">No newsletters match these filters.</p>
+          <p v-else class="p-6 sm:p-12 text-center text-sm text-slate-500 dark:text-slate-400">No newsletters match these filters.</p>
         </div>
       </Card>
     </div>

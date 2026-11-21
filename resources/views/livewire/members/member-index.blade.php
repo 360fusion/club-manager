@@ -106,7 +106,7 @@
                 <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                         @if($canInvite)
-                            <th class="w-8 py-3 pl-6 pr-0">
+                            <th class="hidden w-8 py-3 pl-6 pr-0 sm:table-cell">
                                 <input
                                     type="checkbox"
                                     aria-label="Select everyone on this page who can be invited"
@@ -118,27 +118,27 @@
                                 />
                             </th>
                         @endif
-                        <th class="px-6 py-3">
+                        <th class="px-3 py-2.5 sm:px-6 sm:py-3">
                             <button type="button" wire:click="sortBy('full_name')" class="cursor-pointer font-medium hover:text-slate-900 dark:hover:text-white">
                                 Member name
                                 @if($sortField === 'full_name') <span aria-hidden="true">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                             </button>
                         </th>
-                        <th class="px-4 py-3">
+                        <th class="hidden px-4 py-3 sm:table-cell">
                             <button type="button" wire:click="sortBy('current_office')" class="cursor-pointer font-medium hover:text-slate-900 dark:hover:text-white">
                                 Lodge office
                                 @if($sortField === 'current_office') <span aria-hidden="true">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                             </button>
                         </th>
-                        <th class="px-4 py-3">Grand / provincial rank</th>
-                        <th class="px-4 py-3">
+                        <th class="hidden px-4 py-3 sm:table-cell">Grand / provincial rank</th>
+                        <th class="hidden px-4 py-3 sm:table-cell">
                             <button type="button" wire:click="sortBy('membership_status')" class="cursor-pointer font-medium hover:text-slate-900 dark:hover:text-white">
                                 Status
                                 @if($sortField === 'membership_status') <span aria-hidden="true">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                             </button>
                         </th>
-                        <th class="px-4 py-3">Portal account</th>
-                        <th class="relative px-4 py-3 text-right"><span class="sr-only">Actions</span></th>
+                        <th class="hidden px-4 py-3 sm:table-cell">Portal account</th>
+                        <th class="relative px-3 py-2.5 text-right sm:px-4 sm:py-3"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -146,27 +146,27 @@
                         @php($account = $m->accountStatus($club))
                         <tr class="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/70" wire:key="member-{{ $m->id }}">
                             @if($canInvite)
-                                <td class="w-8 py-4 pl-6 pr-0">
+                                <td class="hidden w-8 py-4 pl-6 pr-0 sm:table-cell">
                                     @if(in_array($m->id, $invitableIds, true))
                                         <input type="checkbox" value="{{ $m->id }}" wire:model.live="selected" aria-label="Select {{ $m->full_name }}" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600" />
                                     @endif
                                 </td>
                             @endif
-                            <td class="px-6 py-4">
+                            <td class="px-3 py-2.5 sm:px-6 sm:py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white dark:bg-slate-700" aria-hidden="true">
+                                    <div class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white sm:flex dark:bg-slate-700" aria-hidden="true">
                                         {{ strtoupper(substr($m->first_name, 0, 1) . substr($m->last_name, 0, 1)) }}
                                     </div>
                                     <div>
                                         <a href="{{ route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $m->id]) }}" class="block font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400">
-                                            {{ $m->full_name }}
+                                            <span class="sm:hidden">{{ $m->formatted_rank_name }}</span><span class="hidden sm:inline">{{ $m->full_name }}</span>
                                         </a>
                                         <span class="block text-xs text-slate-500 dark:text-slate-400">{{ $m->email ?: 'No email on record' }}</span>
                                     </div>
                                 </div>
                             </td>
 
-                            <td class="px-4 py-4">
+                            <td class="hidden px-4 py-4 sm:table-cell">
                                 <div class="flex flex-wrap gap-1">
                                     @foreach($m->active_offices as $office)
                                         <span class="inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium {{ $office->badgeClass() }}">{{ $office->label() }}</span>
@@ -174,7 +174,7 @@
                                 </div>
                             </td>
 
-                            <td class="px-4 py-4">
+                            <td class="hidden px-4 py-4 sm:table-cell">
                                 <div class="flex flex-wrap gap-1">
                                     @if($m->grand_rank)
                                         <x-badge>GL: {{ $m->grand_rank }}</x-badge>
@@ -188,26 +188,29 @@
                                 </div>
                             </td>
 
-                            <td class="px-4 py-4">
+                            <td class="hidden px-4 py-4 sm:table-cell">
                                 <span class="inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium {{ $m->membership_status->badgeClass() }}">{{ $m->membership_status->label() }}</span>
                             </td>
 
-                            <td class="px-4 py-4">
+                            <td class="hidden px-4 py-4 sm:table-cell">
                                 <span class="inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium {{ $account->badgeClass() }}">{{ $account->label() }}</span>
                                 @if($account->isInvitePending() && $m->acct_invited_at)
                                     <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">Sent {{ \Illuminate\Support\Carbon::parse($m->acct_invited_at)->format('j M Y') }}</span>
                                 @endif
                             </td>
 
-                            <td class="whitespace-nowrap px-4 py-4 text-right">
+                            <td class="whitespace-nowrap px-3 py-2.5 text-right sm:px-4 sm:py-4">
                                 <div class="inline-flex items-center gap-1.5">
+                                    {{-- On a phone the row keeps only the edit button; invitations are managed from tablet width or the member's page. --}}
                                     @if($canInvite)
+                                        <span class="hidden items-center gap-1.5 sm:inline-flex">
                                         @if($account->canInvite() && $m->email && $m->membership_status->isSubscribing())
                                             <x-button variant="secondary" size="sm" wire:click="inviteMember({{ $m->id }})" wire:loading.attr="disabled" wire:target="inviteMember({{ $m->id }})">Invite</x-button>
                                         @elseif($account->isInvitePending())
                                             <x-button variant="secondary" size="sm" wire:click="resendInvite({{ $m->id }})" wire:loading.attr="disabled" wire:target="resendInvite({{ $m->id }})">Resend</x-button>
                                             <x-button variant="ghost" size="sm" wire:click="revokeInvite({{ $m->id }})" wire:confirm="Withdraw the invitation for {{ $m->full_name }}? The link in their email will stop working.">Revoke</x-button>
                                         @endif
+                                        </span>
                                     @endif
                                     <x-button
                                         variant="secondary"

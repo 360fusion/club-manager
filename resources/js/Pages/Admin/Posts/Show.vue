@@ -142,7 +142,7 @@ const noticeVariant = (style) => ({ warning: 'warning', success: 'success' }[sty
                     :href="block.url"
                     target="_blank"
                     rel="noopener"
-                    class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+                    class="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
                   >
                     {{ block.label }}
                   </a>

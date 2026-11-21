@@ -84,7 +84,7 @@ const label = (key) => props.events.find((e) => e.key === key)?.label ?? key;
 
             <section class="space-y-3">
                 <h2 class="text-lg font-bold text-slate-900 dark:text-white">Endpoints</h2>
-                <p v-if="!endpoints.length" class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No endpoints yet.</p>
+                <p v-if="!endpoints.length" class="rounded-xl border border-dashed border-slate-300 p-4 sm:p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No endpoints yet.</p>
                 <ul v-else class="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
                     <li v-for="endpoint in endpoints" :key="endpoint.id" class="flex flex-wrap items-start justify-between gap-3 px-4 py-3 text-sm">
                         <div class="min-w-0">

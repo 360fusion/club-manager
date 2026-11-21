@@ -26,8 +26,8 @@ const onDark = computed(() => !!props.theme.onDark);
 const cardClass = computed(() => {
     const style = props.block.card_style || 'soft';
     if (style === 'plain') return 'p-4';
-    if (style === 'outlined') return ['p-8 border transition-all duration-300', onDark.value ? 'border-white/30 hover:border-white/60' : 'border-[var(--cm-accent)]/40 hover:border-[var(--cm-accent)]', props.theme.bodyText];
-    return ['p-8', props.theme.cardBg];
+    if (style === 'outlined') return ['p-4 sm:p-8 border transition-all duration-300', onDark.value ? 'border-white/30 hover:border-white/60' : 'border-[var(--cm-accent)]/40 hover:border-[var(--cm-accent)]', props.theme.bodyText];
+    return ['p-4 sm:p-8', props.theme.cardBg];
 });
 
 const iconClass = computed(() => (props.block.icon_style === 'circle'
@@ -59,7 +59,7 @@ const tag = (item) => (item.link && props.interactive ? 'a' : 'div');
             </component>
         </div>
     </section>
-    <section v-else-if="!interactive" :class="['mx-auto max-w-5xl border-2 border-dashed p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
+    <section v-else-if="!interactive" :class="['mx-auto max-w-5xl border-2 border-dashed p-4 sm:p-8 text-center text-sm font-semibold opacity-70', radiusMd, theme.bodyText]">
         Add cards to show them here
     </section>
 </template>

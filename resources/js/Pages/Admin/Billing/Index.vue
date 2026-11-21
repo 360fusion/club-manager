@@ -86,7 +86,7 @@ const saveBusinessAccount = () => {
 
       <!-- Main Business Entity Setup Form Card -->
       <Card padding="none" class="overflow-hidden">
-        <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/50">
           <div>
             <h3 class="text-base font-semibold text-slate-900 dark:text-white">
               Organization legal business entity account
@@ -96,7 +96,7 @@ const saveBusinessAccount = () => {
           <Badge>Corporate entity</Badge>
         </div>
 
-        <form @submit.prevent="saveBusinessAccount" class="p-6 space-y-5 text-xs">
+        <form @submit.prevent="saveBusinessAccount" class="p-4 sm:p-6 space-y-5 text-xs">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               v-model="businessForm.business_name"
@@ -252,7 +252,7 @@ const saveBusinessAccount = () => {
                 </td>
               </tr>
               <tr v-if="!billingHistory.length">
-                <td colspan="6" class="p-6 text-center text-slate-500 dark:text-slate-400">No invoices yet.</td>
+                <td colspan="6" class="p-4 sm:p-6 text-center text-slate-500 dark:text-slate-400">No invoices yet.</td>
               </tr>
             </tbody>
           </table>

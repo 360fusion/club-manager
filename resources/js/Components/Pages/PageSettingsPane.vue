@@ -70,7 +70,7 @@ const CHECKBOX = 'w-4 h-4 mt-0.5 rounded border-slate-300 accent-blue-600 cursor
             <!-- Section 1: Custom Domain Setup -->
             <div class="space-y-4">
                 <h3 :class="SECTION_TITLE">Custom domain</h3>
-                <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4">
+                <div class="p-4 sm:p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4">
                     <div>
                         <Input v-model="settingsForm.custom_domain" label="Custom domain name" :placeholder="`e.g. ${domainExample}`" class="sm:w-96 font-mono" />
                         <p :class="[HINT, 'mt-1']">Connect your custom domain (e.g. <code class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded font-medium">{{ domainExample }}</code>) to your club portal.</p>

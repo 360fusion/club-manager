@@ -65,7 +65,7 @@ const input = 'w-24 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text
               <td class="p-3 text-right font-mono font-semibold"><div v-for="t in lodge.totals" :key="t.currency">{{ t.currency }} {{ t.commission }}</div></td>
               <td class="p-3 text-right font-mono"><div v-for="t in lodge.totals" :key="t.currency">{{ t.currency }} {{ t.refunded }}</div></td>
             </tr>
-            <tr v-if="!lodges.length"><td colspan="7" class="p-8 text-center text-slate-500 dark:text-slate-400">No lodge has connected Stripe yet.</td></tr>
+            <tr v-if="!lodges.length"><td colspan="7" class="p-4 sm:p-8 text-center text-slate-500 dark:text-slate-400">No lodge has connected Stripe yet.</td></tr>
           </tbody>
         </table>
       </Card>

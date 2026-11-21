@@ -79,7 +79,7 @@ const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded
       </Card>
 
       <!-- Educational & Rule Explanation Banner -->
-      <div class="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+      <div class="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
         <h5 class="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
           <UiIcon name="info" class="text-slate-500 dark:text-slate-400" />
           <span>How Gift Aid and Relief Chest reconciliation works</span>
@@ -107,7 +107,7 @@ const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded
       </div>
 
       <!-- DETAILED RECONCILED DONATIONS & GIFT AID TRANSACTIONS LEDGER WITH FILTERS -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
 
         <!-- Header & Filter Summary -->
         <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 gap-4">

@@ -18,7 +18,7 @@ const clubs = computed(() => (page.props.auth?.clubs ?? []).filter((club) => clu
 const slug = computed(() => props.club?.slug ?? null);
 
 const SCOPED = ['calendar', 'events', 'meetings', 'news', 'dues'];
-const allRoutes = { dashboard: 'members.dashboard', calendar: 'members.calendar', events: 'members.events', meetings: 'members.meetings', news: 'members.news', dues: 'members.dues' };
+const allRoutes = { dashboard: 'members.dashboard', calendar: 'members.calendar', events: 'members.events', meetings: 'members.events', news: 'members.news', dues: 'members.dues' };
 const clubRoutes = { dashboard: 'member.dashboard', calendar: 'member.calendar', events: 'member.events', meetings: 'member.meetings', news: 'member.news', dues: 'member.dues' };
 
 // Switching club keeps you on the same section when that section exists at the other scope.

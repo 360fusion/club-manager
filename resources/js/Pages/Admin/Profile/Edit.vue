@@ -90,7 +90,7 @@ const updatePassword = () => {
     <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">Profile & Security Settings</h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage your account details, upload your profile photo, password, and two-factor authentication.</p>
@@ -211,7 +211,7 @@ const updatePassword = () => {
           <button
             type="submit"
             :disabled="profileForm.processing"
-            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-600/20"
+            class="px-4 sm:px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-600/20"
           >
             {{ profileForm.processing ? 'Saving...' : 'Save profile & photo' }}
           </button>
@@ -273,7 +273,7 @@ const updatePassword = () => {
           <button
             type="submit"
             :disabled="passwordForm.processing"
-            class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20"
+            class="px-4 sm:px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20"
           >
             {{ passwordForm.processing ? 'Updating password...' : 'Update password' }}
           </button>

@@ -86,7 +86,7 @@
                     </div>
                 </div>
             @empty
-                <div class="md:col-span-3 p-6 text-center text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                <div class="md:col-span-3 p-4 sm:p-6 text-center text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
                     No custom fee tiers configured. Default {{ $cs }}160.00 rate will apply to annual billing runs.
                 </div>
             @endforelse

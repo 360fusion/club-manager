@@ -11,7 +11,7 @@ defineProps({
 </script>
 
 <template>
-    <aside v-if="sidebar.items?.length" aria-labelledby="latest-news-heading" :class="['space-y-5 border p-6', theme.radiusLg || 'rounded-2xl', theme.cardBg]">
+    <aside v-if="sidebar.items?.length" aria-labelledby="latest-news-heading" :class="['space-y-5 border p-4 sm:p-6', theme.radiusLg || 'rounded-2xl', theme.cardBg]">
         <h2 id="latest-news-heading" :class="['text-sm font-bold uppercase tracking-[0.15em]', theme.accentText]">{{ sidebar.heading || 'Latest news' }}</h2>
 
         <ul class="space-y-5">

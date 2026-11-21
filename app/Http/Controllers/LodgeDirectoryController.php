@@ -17,6 +17,7 @@ use App\Models\Post;
 use App\Models\Province;
 use App\Models\User;
 use App\Services\Geocoder;
+use App\Services\PassedOn\LodgeLinks;
 use App\Support\ClubAccess;
 use App\Support\LodgeReferenceLinks;
 use App\Support\VisitorSummons;
@@ -33,7 +34,7 @@ use Inertia\Response;
  */
 class LodgeDirectoryController extends Controller
 {
-    public function index(IndexLodgeDirectoryRequest $request, Geocoder $geocoder): Response
+    public function index(IndexLodgeDirectoryRequest $request, Geocoder $geocoder, LodgeLinks $links): Response
     {
         $filters = $request->validated();
 
@@ -96,11 +97,15 @@ class LodgeDirectoryController extends Controller
         }
 
         $following = $this->followedIds($request);
+        $viewer = $request->user();
+        // A signed-in member's own lodges, which offer their members page instead of Follow.
+        $own = $viewer ? Lodge::whereIn('club_id', $viewer->clubs()->wherePivot('status', ClubMemberStatus::Active->value)->pluck('clubs.id'))->pluck('id')->all() : [];
 
         $lodges = $query->orderBy('name')->paginate(24)->withQueryString()
             ->through(fn (Lodge $lodge) => [
                 ...$this->card($lodge),
                 'following' => in_array($lodge->id, $following, true),
+                'own_club_slug' => in_array($lodge->id, $own, true) ? $lodge->club?->slug : null,
                 'miles' => isset($distances[$lodge->masonic_hall_id]) ? round($distances[$lodge->masonic_hall_id], 1) : null,
             ]);
 
@@ -126,6 +131,7 @@ class LodgeDirectoryController extends Controller
                 ->map(fn (ClubType $type) => ['code' => $type->code, 'name' => $type->name, 'count' => $type->lodges_count]),
             'days' => LodgeSchedule::DAYS,
             'total' => Lodge::listed()->count(),
+            'suggested' => $viewer ? $links->suggestionsFor($viewer, 6) : [],
         ]);
     }
 

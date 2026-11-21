@@ -56,9 +56,9 @@ function act(request, action) {
 
             <section class="space-y-3">
                 <h2 class="text-lg font-bold text-slate-900 dark:text-white">Requests to visit a meeting</h2>
-                <p v-if="!visits.length" class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No one has asked to visit yet. Anyone signed in can ask from your lodge's directory page.</p>
+                <p v-if="!visits.length" class="rounded-xl border border-dashed border-slate-300 p-4 sm:p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No one has asked to visit yet. Anyone signed in can ask from your lodge's directory page.</p>
                 <ul v-else class="space-y-3">
-                    <li v-for="visit in visits" :key="visit.id" class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                    <li v-for="visit in visits" :key="visit.id" class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <p class="font-bold text-slate-900 dark:text-white">{{ visit.name }} · {{ visit.meeting_date }}</p>
@@ -89,10 +89,10 @@ function act(request, action) {
                 Visitors can only ask to receive your summonses when your lodge shares with <em>{{ visibilityOptions.approved_visitors }}</em>.
             </p>
 
-            <p v-if="!requests.data.length" class="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No requests yet.</p>
+            <p v-if="!requests.data.length" class="rounded-xl border border-dashed border-slate-300 p-5 sm:p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No requests yet.</p>
 
             <ul v-else class="space-y-3">
-                <li v-for="request in requests.data" :key="request.id" class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <li v-for="request in requests.data" :key="request.id" class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <p class="font-bold text-slate-900 dark:text-white">{{ request.name }}</p>
