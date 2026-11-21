@@ -2,7 +2,8 @@
 import { formatEventTime } from '@/Utils/localDateTime';
 import { formatMeetingDate } from '@/Utils/lodgeDates';
 import { computed, ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { isOffline, queueReply, queuedStatus } from '@/Support/offlineReplies';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -69,7 +70,10 @@ const STATUS = {
 
 // The answer just tapped shows straight away (green), and goes back to the saved one if the save fails.
 const chosen = ref(null);
-const answer = computed(() => chosen.value ?? props.userRsvp?.attendance_status ?? null);
+// A reply made without signal waits on this phone (and shows) until it can be sent.
+const replyUrl = computed(() => route('member.meetings.quick_rsvp', { slug: props.club.slug, id: props.meeting.id }, false));
+const waiting = computed(() => queuedStatus(replyUrl.value));
+const answer = computed(() => chosen.value ?? waiting.value ?? props.userRsvp?.attendance_status ?? null);
 const status = computed(() => STATUS[answer.value] ?? { variant: 'warning', label: 'Not replied yet' });
 const isDining = computed(() => answer.value === 'attending_dining');
 const diningGuests = computed(() => (props.userRsvp?.guests ?? []).filter((guest) => guest.attending_dining).length);
@@ -105,9 +109,16 @@ const confirmChange = () => {
   send(value);
 };
 // One tap saves the answer through the quick reply route, which keeps guests and dietary notes already given.
+const page = usePage();
 const send = (value) => {
-  router.post(route('member.meetings.quick_rsvp', { slug: props.club.slug, id: props.meeting.id }), { attendance_status: value }, {
+  const userId = page.props.auth?.user?.id;
+  if (isOffline()) {
+    queueReply(replyUrl.value, value, userId);
+    return;
+  }
+  router.post(replyUrl.value, { attendance_status: value }, {
     preserveScroll: true,
+    onNetworkError: () => { queueReply(replyUrl.value, value, userId); },
     onStart: () => { chosen.value = value; replying.value = value; },
     onFinish: () => { chosen.value = null; replying.value = null; },
   });
@@ -175,6 +186,7 @@ const grantStatusLabel = (grantStatus) => {
         <ConfirmDialog :open="changingTo !== null" :title="`Change your reply to ${labelFor(changingTo)}?`" :confirm-label="`Yes, ${labelFor(changingTo).toLowerCase()}`" cancel-label="Keep my reply" variant="primary" @confirm="confirmChange" @close="changingTo = null">
           You replied {{ labelFor(answer) }}.{{ changeNote ? ` ${changeNote}` : '' }}
         </ConfirmDialog>
+        <p v-if="waiting" role="status" class="text-xs font-medium text-amber-700 dark:text-amber-300">Waiting for signal: your reply is sent as soon as you're back online.</p>
         <p v-if="isCutoffPassed && !isDining" class="text-xs text-slate-500 dark:text-slate-400">Dining numbers have gone to the caterer, so dining can no longer be added here. To dine, please ask the Secretary.</p>
         <button v-if="answer === 'attending_dining' || answer === 'apologies'" type="button" class="-my-2 inline-flex min-h-11 items-center text-sm font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 sm:min-h-0 sm:my-0" @click="openRsvpModal()">
           {{ answer === 'apologies' ? 'Add a reason' : 'Guests and dietary needs' }}

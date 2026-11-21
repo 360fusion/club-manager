@@ -28,11 +28,11 @@
 <body>
 <header>
   <h1>You're offline</h1>
-  <p>This page needs a signal. These are saved on this phone and open without one.</p>
+  <p>This page isn't saved on this phone. These are, and they open without a signal.</p>
 </header>
 <main>
   <ul id="saved" hidden></ul>
-  <p class="empty" id="empty" hidden>Nothing is saved on this phone yet. Open a ticket or a summons once while you have signal and it will be here next time.</p>
+  <p class="empty" id="empty" hidden>Nothing is saved on this phone yet. Open the app once while you have signal and your main pages will be here next time.</p>
   <button type="button" id="retry">Try again</button>
 </main>
 <script>
@@ -45,7 +45,15 @@
       case 'Members/Dashboard': return ['Your dashboard', 'Your lodges, meetings and events'];
       case 'Member/EventTicket': return ['Ticket: ' + (props.event?.title || 'event'), props.event?.starts_at ? new Date(props.event.starts_at).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : ''];
       case 'Member/Meetings/Summons': return ['Summons: ' + (props.meeting?.title || 'meeting'), props.meeting?.meeting_date ? new Date(props.meeting.meeting_date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : ''];
-      default: return [document.title, ''];
+      case 'Members/Calendar': return ['Calendar', 'Your meetings and events'];
+      case 'Members/AllEvents': return ['Meetings and bookings', 'Your replies and bookings'];
+      case 'Members/Notifications': return ['Inbox', 'Notices, news and summonses'];
+      case 'Members/Lodges': return ['My lodges', 'Your lodges and the ones you follow'];
+      case 'Members/News': return ['News', 'From your lodges'];
+      case 'Member/Dashboard': return [props.club?.name || 'Your lodge', 'Officers, meetings and broadcasts'];
+      case 'Lodges/Index': return ['Directory', 'Lodges and where they meet'];
+      case 'Lodges/Show': return [props.lodge?.name || 'Lodge', 'Where and when it meets'];
+      default: return [page?.component ? page.component.split('/').pop().replace(/([a-z])([A-Z])/g, '$1 $2') : 'Saved page', ''];
     }
   }
 

@@ -2,6 +2,7 @@
 // the service worker in public/sw.js, notifications from the website, and the unread count on the home screen icon.
 import { router } from '@inertiajs/vue3';
 import { isNativeApp } from '@/Support/nativeApp';
+import { startOfflinePages } from '@/Support/offlinePages';
 
 const canUseWorker = () => !isNativeApp && typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
 
@@ -38,6 +39,7 @@ export function startWebApp(initialPage) {
     });
 
     navigator.serviceWorker.register('/sw.js').then(() => reclaimSubscription(initialPage.props.webPushKey)).catch(() => {});
+    startOfflinePages(initialPage);
     setBadge(initialPage.props.bell?.unread ?? 0);
     router.on('navigate', (event) => setBadge(event.detail.page.props.bell?.unread ?? 0));
 }

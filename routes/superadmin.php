@@ -9,6 +9,7 @@ use App\Http\Controllers\SuperAdminHallController;
 use App\Http\Controllers\SuperAdminLodgeClaimController;
 use App\Http\Controllers\SuperAdminLodgeController;
 use App\Http\Controllers\SuperAdminLodgeCorrectionController;
+use App\Http\Controllers\SuperAdminPageSpeedController;
 use App\Http\Controllers\SuperAdminPlatformController;
 use App\Http\Controllers\SuperAdminProvinceController;
 use App\Http\Middleware\EnsureUserIsSuperAdmin;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 // Superadmin Management Console Routes
 Route::middleware(['auth', EnsureUserIsSuperAdmin::class, RecordSuperAdminActions::class])->group(function () {
     Route::get('/superadmin/audit-log', [SuperAdminAuditLogController::class, 'index'])->name('superadmin.audit_log.index');
+    Route::get('/superadmin/page-speed', [SuperAdminPageSpeedController::class, 'index'])->name('superadmin.page_speed.index');
     Route::get('/superadmin', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
     Route::get('/superadmin/users', [SuperAdminPlatformController::class, 'users'])->name('superadmin.users.index');
     Route::get('/superadmin/clubs', [SuperAdminPlatformController::class, 'clubs'])->name('superadmin.clubs.index');

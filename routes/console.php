@@ -2,6 +2,7 @@
 
 use App\Jobs\BuildStaticSite;
 use App\Models\Club;
+use App\Models\PageTiming;
 use App\Models\SiteDeployTarget;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -28,6 +29,8 @@ Schedule::command('app:prune-member-imports')->dailyAt('03:30')->withoutOverlapp
 Schedule::command('app:prune-media')->dailyAt('03:45')->withoutOverlapping();
 // Trims each lodge's website page history to its own limits (newest N versions per page, and an age limit).
 Schedule::command('app:prune-page-revisions')->dailyAt('04:00')->withoutOverlapping();
+// Page timings from members' devices are kept 90 days (PageTiming::prunable).
+Schedule::command('model:prune', ['--model' => [PageTiming::class]])->dailyAt('04:15')->withoutOverlapping();
 Schedule::command('app:send-invitation-reminders')->dailyAt('10:00')->withoutOverlapping();
 // Sends each club's automated digest when its channel's day and hour come round.
 Schedule::command('app:send-weekly-digest --scheduled')->hourly()->withoutOverlapping();

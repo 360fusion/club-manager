@@ -96,6 +96,7 @@ use App\Http\Controllers\PagePlacesController;
 use App\Http\Controllers\PageRedirectController;
 use App\Http\Controllers\PageSiteSettingsController;
 use App\Http\Controllers\PageThemeController;
+use App\Http\Controllers\PageTimingController;
 use App\Http\Controllers\PassedOnController;
 use App\Http\Controllers\PassOnController;
 use App\Http\Controllers\PaymentOptionsController;
@@ -557,6 +558,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/notifications', [NotificationController::class, 'index'])->name('members.notifications');
     Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
+    // How long pages take on members' devices, for the superadmin's page speed report.
+    Route::post('/members/page-timings', [PageTimingController::class, 'store'])->middleware('throttle:30,1')->name('members.page_timings.store');
     Route::post('/members/push-devices', [NativeAppController::class, 'storeDevice'])->middleware('throttle:30,1')->name('members.push_devices.store');
     Route::post('/members/sign-in-keys', [DeviceSignInController::class, 'store'])->middleware('throttle:10,1')->name('members.sign_in_keys.store');
     Route::delete('/members/sign-in-keys/{id}', [DeviceSignInController::class, 'destroy'])->whereNumber('id')->middleware('throttle:30,1')->name('members.sign_in_keys.destroy');

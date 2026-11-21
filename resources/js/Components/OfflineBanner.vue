@@ -36,7 +36,7 @@ onBeforeUnmount(() => {
 <template>
     <div v-if="(offline || failed) && !hidden" role="status" class="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 mx-auto max-w-md rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg dark:bg-slate-800">
         <p class="font-semibold">{{ offline ? "You're offline" : "That page didn't load" }}</p>
-        <p class="mt-0.5 text-slate-300">{{ offline ? 'Pages need a signal, apart from tickets, summonses and the dashboard you have opened before.' : 'The signal may be too weak. Try again in a moment.' }}</p>
+        <p class="mt-0.5 text-slate-300">{{ offline ? 'Pages you have opened, and your main pages, still open. Replies to summonses are sent when the signal is back.' : 'The signal may be too weak. Try again in a moment.' }}</p>
         <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
             <a v-if="canListSaved" href="/offline.html" class="inline-flex min-h-11 items-center font-semibold text-amber-300 underline">See what's saved on this phone</a>
             <button type="button" class="inline-flex min-h-11 items-center font-semibold text-amber-300 underline" @click="hide">Hide</button>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { isOffline, queueReply, queuedStatus } from '@/Support/offlineReplies';
 import Button from '@/Components/Ui/Button.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 
@@ -11,7 +12,11 @@ const props = defineProps({
 
 // The answer just tapped shows straight away; it goes back to the saved one if the save fails.
 const chosen = ref(null);
-const current = computed(() => chosen.value ?? props.item.reply);
+const page = usePage();
+const replyUrl = computed(() => route(props.item.type === 'meeting' ? 'member.meetings.quick_rsvp' : 'member.events.quick_rsvp', { slug: props.item.slug, id: props.item.id }, false));
+// A meeting reply made without signal waits on this phone (and shows) until it can be sent.
+const waiting = computed(() => (props.item.type === 'meeting' ? queuedStatus(replyUrl.value) : null));
+const current = computed(() => chosen.value ?? waiting.value ?? props.item.reply);
 
 const OPTIONS = {
     meeting: [
@@ -47,13 +52,19 @@ const confirmChange = () => {
 };
 
 const reply = (status) => {
+    const userId = page.props.auth?.user?.id;
+    if (props.item.type === 'meeting' && isOffline()) {
+        queueReply(replyUrl.value, status, userId);
+        return;
+    }
+
     chosen.value = status;
 
-    router.post(
-        route(props.item.type === 'meeting' ? 'member.meetings.quick_rsvp' : 'member.events.quick_rsvp', { slug: props.item.slug, id: props.item.id }),
-        { attendance_status: status },
-        { preserveScroll: true, onFinish: () => { chosen.value = null; } },
-    );
+    router.post(replyUrl.value, { attendance_status: status }, {
+        preserveScroll: true,
+        onNetworkError: () => { if (props.item.type === 'meeting') queueReply(replyUrl.value, status, userId); },
+        onFinish: () => { chosen.value = null; },
+    });
 };
 
 // An event with tickets or a menu is booked on its own page; once booked, say so instead of offering a fresh reply.
@@ -78,6 +89,7 @@ const options = () => (booked() ? [] : OPTIONS[props.item.type].filter((option) 
         >
             {{ option.label }}
         </Button>
+        <span v-if="waiting" role="status" class="text-xs font-medium text-amber-700 dark:text-amber-300">Waiting for signal</span>
         <span v-if="booked()" class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Booked</span>
         <Link v-if="item.type === 'event' && !item.simple && (booked() || !item.closed)" :href="route('member.events', { slug: item.slug })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
             {{ booked() ? 'View booking' : 'Choose options' }}
