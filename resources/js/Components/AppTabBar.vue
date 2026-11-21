@@ -1,9 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { tapFeedback } from '@/Support/haptics';
 
 // The bottom tabs: always in the iOS and Android app, and on the web at phone width (wider screens keep the top nav).
-// Each opens its page at once (an instant visit: placeholders until its data arrives) and is fetched ahead of the tap.
+// Each tab's page is fetched ahead of the tap, so it opens at once.
 const props = defineProps({
     club: { type: Object, default: null },
     activeTab: { type: String, default: 'dashboard' },
@@ -14,14 +15,13 @@ const unread = computed(() => page.props.bell?.unread ?? 0);
 const onInbox = computed(() => page.component === 'Members/Notifications');
 
 const tabs = computed(() => [
-    { key: 'dashboard', label: 'Home', component: 'Members/Dashboard', href: route('members.dashboard'), icon: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
-    { key: 'calendar', label: 'Calendar', component: 'Members/Calendar', href: route('members.calendar'), icon: 'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M8 3v4M16 3v4' },
-    { key: 'events', label: 'Bookings', component: 'Members/AllEvents', href: route('members.events'), icon: 'M3 8a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2a2 2 0 0 0 0 4v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a2 2 0 0 0 0-4zM14 7v10' },
-    { key: 'inbox', label: 'Inbox', component: 'Members/Notifications', href: route('members.notifications'), icon: 'M4 4h16v16H4zM4 14h5l1 2h4l1-2h5' },
+    { key: 'dashboard', label: 'Home', href: route('members.dashboard'), icon: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
+    { key: 'calendar', label: 'Calendar', href: route('members.calendar'), icon: 'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M8 3v4M16 3v4' },
+    { key: 'events', label: 'Bookings', href: route('members.events'), icon: 'M3 8a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2a2 2 0 0 0 0 4v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a2 2 0 0 0 0-4zM14 7v10' },
+    { key: 'inbox', label: 'Inbox', href: route('members.notifications'), icon: 'M4 4h16v16H4zM4 14h5l1 2h4l1-2h5' },
     {
         key: 'lodge',
         label: 'Lodge',
-        component: 'Members/Lodges',
         // Always My lodges: the member's own lodges (each opens its members page), suggestions and those they follow.
         href: route('members.lodges'),
         icon: 'M3 21h18M5 21V10M19 21V10M9.5 21V10M14.5 21V10M2 10l10-6 10 6z',
@@ -44,7 +44,7 @@ function isActive(tab) {
                 <Link
                     :href="tab.href"
                     :prefetch="tab.key === 'inbox' ? 'click' : ['mount', 'click']"
-                    :component="tab.component"
+                    @click="tapFeedback"
                     :aria-current="isActive(tab) ? 'page' : undefined"
                     :class="['relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium', isActive(tab) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400']"
                 >

@@ -13,8 +13,9 @@ import { localDate } from '@/Utils/localDateTime';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
-    month: String,
-    monthLabel: String,
+    // Defaults for the moment an instant visit draws the page before its data arrives.
+    month: { type: String, default: () => new Date().toISOString().slice(0, 7) },
+    monthLabel: { type: String, default: '' },
     gridStart: String,
     gridEnd: String,
     items: { type: Array, default: () => [] },

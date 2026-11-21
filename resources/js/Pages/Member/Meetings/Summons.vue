@@ -4,6 +4,7 @@ import { formatMeetingDate } from '@/Utils/lodgeDates';
 import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { isOffline, queueReply, queuedStatus } from '@/Support/offlineReplies';
+import { savedFeedback } from '@/Support/haptics';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -118,6 +119,7 @@ const send = (value) => {
   }
   router.post(replyUrl.value, { attendance_status: value }, {
     preserveScroll: true,
+    onSuccess: savedFeedback,
     onNetworkError: () => { queueReply(replyUrl.value, value, userId); },
     onStart: () => { chosen.value = value; replying.value = value; },
     onFinish: () => { chosen.value = null; replying.value = null; },

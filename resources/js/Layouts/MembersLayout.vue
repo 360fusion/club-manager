@@ -11,7 +11,6 @@ import AppTabBar from '@/Components/AppTabBar.vue';
 import BiometricSignInOffer from '@/Components/BiometricSignInOffer.vue';
 import OfflineBanner from '@/Components/OfflineBanner.vue';
 import SavedCopyNotice from '@/Components/SavedCopyNotice.vue';
-import { pageLoading } from '@/Support/pageLoading';
 import PullToRefresh from '@/Components/PullToRefresh.vue';
 import { isNativeApp } from '@/Support/nativeApp';
 
@@ -174,16 +173,7 @@ provide('layoutHasHeading', !props.ownHeading);
                 <FlashMessages />
                 <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>
 
-                <!-- A tab opened instantly: placeholders until its own data arrives (Support/pageLoading.js). -->
-                <div v-if="pageLoading.instant" class="space-y-4" aria-busy="true" aria-label="Loading">
-                    <div class="h-8 w-2/5 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
-                    <div v-for="n in 3" :key="n" class="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-                        <div class="h-4 w-2/3 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                        <div class="h-3 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                        <div class="h-3 w-5/6 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-                    </div>
-                </div>
-                <slot v-else />
+                <slot />
             </main>
         </div>
     </div>

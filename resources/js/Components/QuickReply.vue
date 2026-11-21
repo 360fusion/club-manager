@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { isOffline, queueReply, queuedStatus } from '@/Support/offlineReplies';
+import { savedFeedback } from '@/Support/haptics';
 import Button from '@/Components/Ui/Button.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 
@@ -62,6 +63,7 @@ const reply = (status) => {
 
     router.post(replyUrl.value, { attendance_status: status }, {
         preserveScroll: true,
+        onSuccess: savedFeedback,
         onNetworkError: () => { if (props.item.type === 'meeting') queueReply(replyUrl.value, status, userId); },
         onFinish: () => { chosen.value = null; },
     });

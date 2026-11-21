@@ -8,7 +8,6 @@ import focusTrap from './Directives/focusTrap';
 import { startNativeApp } from './Support/nativeApp';
 import { startWebApp } from './Support/webPush';
 import { startOfflineReplies } from './Support/offlineReplies';
-import { trackInstantVisits } from './Support/pageLoading';
 import { startPageTimings } from './Support/pageTimings';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -65,7 +64,6 @@ createInertiaApp({
         startNativeApp(props.initialPage);
         startWebApp(props.initialPage);
         startOfflineReplies(props.initialPage);
-        trackInstantVisits();
         startPageTimings(props.initialPage);
 
         return app
